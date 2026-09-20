@@ -1,0 +1,275 @@
+@using metalurgicaMVC.ViewModels
+@model IEnumerable<ClienteVM>
+@{
+    ViewData["Title"] = "Inquilinos";
+    int cantidadPaginas = ViewBag.cantPag;
+    int pagina = ViewBag.pagina;
+    int paginaAnterior = pagina - 1;
+    int paginaSiguiente = pagina + 1;
+    int limit = ViewBag.cantidadPaginado;
+    string busqueda = ViewBag.busqueda;
+    string mensajeEliminar = "el Cliente";
+}
+
+<div class="container-fluid shadow border rounded-4 mt-1 bg-light-subtle position-relative">
+    <h1 class="text-center display-4">Clientes</h1>
+
+    <div class="row my-1">
+       <div class="col-6">
+            <form id="form_buscador" asp-action="Index" method="get" class="position-relative needs-validation">
+                <label for="buscador" class="form-label fw-bold">Buscar Inquilino</label>
+                <div class="input-group has-validation mb-3">
+                    <input type="text" id="buscador" name="buscador" class="form-control" placeholder="nombre o apellido del cliente" value="@busqueda">
+                    <span class="input-group-text" id="limpiar" style="cursor: pointer;">
+                        <i class="bi bi-x-lg" data-bs-toggle="tooltip" data-bs-title="Limpiar"></i>
+                    </span>
+                    <div id="tpe_form_buscador" class="invalid-tooltip"></div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-search"></i>
+                        Buscar
+                    </button>
+                </div>
+                <input type="hidden" name="limit" value="@limit">
+            </form>
+        </div>
+        <div class="col d-flex justify-content-end align-items-center mt-3 me-5">
+            <a class="btn btn-outline-dark" asp-action="Index" asp-route-limit="@limit" asp-route-offset="1">
+                <i class="bi bi-arrow-clockwise"></i>
+                Recargar Todos
+            </a>
+        </div>
+    </div>
+    <div class="table-responsive my-2 rounded-3 fixed-height-table-container">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>
+                        @Html.DisplayNameFor(model => model.Apellido).ToUpper()
+                    </th>
+                    <th>
+                        @Html.DisplayNameFor(model => model.Nombre).ToUpper()
+                    </th>
+                    <th colspan="2">
+                        @Html.DisplayNameFor(model => model.Direccion).ToUpper()
+                    </th>
+                    <th>
+                        @Html.DisplayNameFor(model => model.Telefono).ToUpper()
+                    </th>
+                    <th>
+                        @Html.DisplayNameFor(model => model.Cuit).ToUpper()
+                    </th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody id="cuerpo">
+                @foreach (var item in Model)
+                {
+                    <tr id="@item.Id">
+                        <td class="align-middle py-0 ps-2">
+                            @Html.DisplayFor(modelItem => item.Apellido)
+                        </td>
+                        <td class="align-middle py-0 ps-2">
+                            @Html.DisplayFor(modelItem => item.Nombre)
+                        </td>
+                        <td class="align-middle py-0 ps-2" colspan="2">
+                            @Html.DisplayFor(modelItem => item.Direccion)
+                        </td>
+                        <td class="align-middle py-0 ps-2">
+                            @Html.DisplayFor(modelItem => item.Telefono)
+                        </td>
+                        <td class="align-middle py-0 ps-2">
+                            @Html.DisplayFor(modelItem => item.Cuit)
+                        </td>
+                        <td>
+                            <div class="d-flex justify-content-evenly align-items-center">
+                                <i data-clienteId="@item.Id" class="bi bi-pencil-square fs-3 text-primary icon-hover" style="cursor: pointer;" data-bs-toggle="tooltip" data-bs-title="Editar"></i>
+                                <i data-clienteId="@item.Id" class="bi bi-trash fs-3 text-danger icon-hover" style="cursor: pointer;" data-bs-toggle="tooltip" data-bs-title="Eliminar"></i>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <nav>
+        <ul id="paginador" class="pagination justify-content-center">
+            <li id="flecha-pag-izq" class="page-item @(paginaAnterior == 0 ? "disabled" : "")" data-bs-toggle="tooltip" data-bs-title="Anterior">
+                <a asp-action="Index" asp-route-busqueda="@busqueda" asp-route-limit="@limit" asp-route-pagina="@paginaAnterior" class="page-link"><span>&laquo;</span></a>
+            </li>
+            @for (int i = 1; i <= cantidadPaginas; i++) {
+                <li class="page-item">
+                    <a asp-action="Index" asp-route-busqueda="@busqueda" asp-route-limit="@limit" asp-route-pagina="@i" class="page-link @(i == pagina ? "active" : "")">@i</a>
+                </li>
+            }
+            <li id="flecha-pag-der" class="page-item @(paginaSiguiente > cantidadPaginas ? "disabled" : "")" data-bs-toggle="tooltip" data-bs-title="Siguiente">
+                <a asp-action="Index" asp-route-busqueda="@busqueda" asp-route-limit="@limit" asp-route-pagina="@paginaSiguiente" class="page-link"><span>&raquo;</span></a>
+            </li>
+        </ul>
+    </nav>
+    <div id="btn_add" class="position-absolute bottom-0 end-0 me-4 mb-2" style="cursor: pointer;">
+        <i class="bi bi-plus-square fs-1 text-primary icon-hover d-inline-block" data-bs-toggle="tooltip" data-bs-title="Registrar Nuevo"></i>
+    </div>
+</div>
+
+@* <partial name="_InquilinoFormModal" model="@new Cliente()"/> *@
+<partial name="_ModalEliminar" model="mensajeEliminar"/>
+@if(!string.IsNullOrEmpty(ViewBag.MensajeError)) {
+    <partial name="_ModalMensaje" model="new ModalMensaje() { Mensaje = ViewBag.MensajeError, Tipo = TipoMensaje.ERROR }"/>
+}
+
+@section Scripts{
+    <script type="module">
+        import { getElementById, getFormInputValue, mostrarMensaje, mostrarPregunta } from "~/js/frontUtils.js";
+        import { 
+            setInvalidInputStyle, 
+            setValidInputStyle, 
+            validarNombreApellido, 
+            validarDNI, 
+            validarTelefono, 
+            validarEmail, 
+            resetValidationInputStyle ,
+            setValidationErrorMessage,
+            resetValidationErrorMessage
+        } from "./validaciones.js";
+
+
+        document.addEventListener("DOMContentLoaded", () => {
+
+        getElementById("btn_add").addEventListener("click", e => {
+            getElementById("nombre").value = "";
+            getElementById("apellido").value = "";
+            getElementById("dni").value = "";
+            getElementById("telefono").value = "";
+            getElementById("email").value = "";
+            getElementById("Id").value = 0;
+
+            resetValidationStatus();
+
+            const modalForm = getElementById('modal_formulario_inquilino');
+            const myModal = new bootstrap.Modal(modalForm, {});
+            myModal.show();
+        });
+
+        document.querySelectorAll("td .bi-pencil-square").forEach(i => {
+            i.addEventListener("click", e => {
+                const idFIla = e.target.dataset.clienteId;;
+                const fila = getElementById(idFIla);
+                const datosFila = getRawValues(fila);
+
+                getElementById("nombre").value = datosFila.nombre;
+                getElementById("apellido").value = datosFila.apellido;
+                getElementById("dni").value = datosFila.dni;
+                getElementById("telefono").value = datosFila.telefono;
+                getElementById("email").value = datosFila.email;
+                getElementById("Id").value = datosFila.id;
+
+                resetValidationStatus();
+                
+                const myModal = new bootstrap.Modal(getElementById('modal_formulario_cliente'), {});
+                myModal.show();
+            });
+        });
+
+        document.querySelectorAll("td .bi-trash")?.forEach(i => {
+            i.addEventListener("click", e => {
+                const idFila = e.target.dataset.clienteId;
+                getElementById("form_eliminar").action = `/Cliente/Eliminar/${idFila}`;
+                mostrarPregunta(null);
+            });
+        });
+
+        mostrarMensaje(false, null);
+
+        const form = getElementById("form-cliente");
+
+        form?.addEventListener("submit", (e) => {
+            e.preventDefault();
+            const formValues = getFormValues();
+            
+            if (validarFormulario(formValues)) {
+                form.submit();
+            }
+
+            return;
+        });
+
+        const formBuscador = getElementById("form_buscador");
+        formBuscador?.addEventListener("submit", e => {
+            e.preventDefault();
+            const valor = getElementById("buscador").value;
+            if (valor === undefined || valor === null) 
+                return;
+            if (valor.trim() == "") 
+                return;
+            if (valor.length > 50) {
+                setInvalidInputStyle("buscador"); 
+                setValidationErrorMessage("tpe_buscador", "Valor de búsqueda muy largo");
+                return;
+            }
+
+            formBuscador.submit();
+        });
+
+        getElementById("limpiar").addEventListener("click", _ => {
+            const valor = getElementById("buscador").value = "";
+            resetValidationInputStyle("buscador");
+        });
+
+        });
+
+        function getFormValues() {
+            return {
+                nombre: getFormInputValue("nombre"),
+                apellido: getFormInputValue("apellido"),
+                dni: getFormInputValue("dni"),
+                telefono: getFormInputValue("telefono"),
+                email: getFormInputValue("email")
+            };
+        }
+
+        function getRawValues(raw) {
+            const datos = raw.children;
+            return {
+                apellido: datos.item(0).innerText.trim(),
+                nombre: datos.item(1).innerText.trim(),
+                dni: datos.item(2).innerText.trim(),
+                telefono: datos.item(3).innerText.trim(),
+                email: datos.item(4).innerText.trim(),
+                id: raw.dataset.clienteId
+            };
+        }
+
+        function validarFormulario(values) {
+            const mapaValidador = new Map([
+                ["nombre", validarNombreApellido],
+                ["apellido", validarNombreApellido],
+                ["dni", validarDNI],
+                ["telefono", validarTelefono],
+                ["email", validarEmail]
+            ]);
+
+            return Object.keys(values)
+            .map(v => {
+                const result = mapaValidador.get(v)(values[v]);
+                if (result !== undefined) { setInvalidInputStyle(v); setValidationErrorMessage(`tpe_${v}`, result.errorMessage); } 
+                else { setValidInputStyle(v); resetValidationErrorMessage(`tpe_${v}`); }
+                return result === undefined;
+            })
+            .every(v => v);
+        }
+
+        function resetValidationStatus() {
+            resetValidationInputStyle("nombre");
+            resetValidationInputStyle("apellido");
+            resetValidationInputStyle("dni");
+            resetValidationInputStyle("telefono");
+            resetValidationInputStyle("email");
+
+            resetValidationErrorMessage("tpe_nombre");
+            resetValidationErrorMessage("tpe_apellido");
+            resetValidationErrorMessage("tpe_dni");
+            resetValidationErrorMessage("tpe_telefono");
+            resetValidationErrorMessage("tpe_email");
+        }
+    </script>
+}
