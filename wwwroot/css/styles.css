@@ -51,7 +51,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 }
 
 .active-link {
-    background-color: #c3e3fa !important;
+    background-color: #e2b6a5 !important;
     color: black !important;
     font-weight: bold;
 }
@@ -61,5 +61,13 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 }
 
 .nav-item:hover > .nav-link, .dropdown-menu .dropdown-item:hover {
-    background-color: #c9e1f3;
+    background-color: #e6cbc0;
+}
+
+.active-link:hover {
+    background-color: #e2b6a5 !important;
+}
+
+[v-cloak] {
+    display: none;
 }

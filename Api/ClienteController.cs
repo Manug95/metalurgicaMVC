@@ -44,8 +44,14 @@ public class ClienteController(IClienteRepository repo) : ControllerBase
         try
         {
             List<Cliente> clientes = await _repo.ListAsync(filters);
+            int cantidadClientes = await _repo.CountAsync(filters);
 
-            return Ok(new { data = ClienteVM.ParseList(clientes) });
+            decimal cp = Math.Ceiling((decimal)cantidadClientes / filters.Limit);
+
+            return Ok(new { 
+                clientes = ClienteVM.ParseList(clientes), 
+                cantidadPaginas = cp <= 0 ? 1 : cp 
+            });
         }
         catch (ClientException ex)
         {

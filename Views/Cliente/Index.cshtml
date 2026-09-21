@@ -1,30 +1,34 @@
+@using System.Text.Json
 @using metalurgicaMVC.ViewModels
 @model IEnumerable<ClienteVM>
 @{
-    ViewData["Title"] = "Inquilinos";
+    ViewData["Title"] = "Clientes";
     int cantidadPaginas = ViewBag.cantPag;
     int pagina = ViewBag.pagina;
     int paginaAnterior = pagina - 1;
     int paginaSiguiente = pagina + 1;
     int limit = ViewBag.cantidadPaginado;
-    string busqueda = ViewBag.busqueda;
+    string busqueda = ViewBag.busqueda ?? string.Empty;
     string mensajeEliminar = "el Cliente";
+    var serializationOptions = new JsonSerializerOptions {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+    };
 }
 
-<div class="container-fluid shadow border rounded-4 mt-1 bg-light-subtle position-relative">
+<div id="app-clientes" class="container-fluid shadow border rounded-4 bg-light-subtle position-relative">
     <h1 class="text-center display-4">Clientes</h1>
 
-    <div class="row my-1">
+    <div class="row">
        <div class="col-6">
-            <form id="form_buscador" asp-action="Index" method="get" class="position-relative needs-validation">
-                <label for="buscador" class="form-label fw-bold">Buscar Inquilino</label>
+            <form id="form_buscador" class="position-relative needs-validation" @@submit.prevent="onSubmit">
+                <label for="buscador" class="form-label fw-bold">Buscar Cliente</label>
                 <div class="input-group has-validation mb-3">
-                    <input type="text" id="buscador" name="buscador" class="form-control" placeholder="nombre o apellido del cliente" value="@busqueda">
-                    <span class="input-group-text" id="limpiar" style="cursor: pointer;">
+                    <input type="text" id="buscador" v-model="busqueda" class="form-control" placeholder="nombre o apellido del cliente" value="@busqueda">
+                    <span class="input-group-text" id="limpiar" style="cursor: pointer;" @@click="limpiar">
                         <i class="bi bi-x-lg" data-bs-toggle="tooltip" data-bs-title="Limpiar"></i>
                     </span>
                     <div id="tpe_form_buscador" class="invalid-tooltip"></div>
-                    <button type="submit" class="btn btn-primary">
+                    <button type="submit" class="btn btn-primary" :disabled="estaCargando">
                         <i class="bi bi-search"></i>
                         Buscar
                     </button>
@@ -33,16 +37,19 @@
             </form>
         </div>
         <div class="col d-flex justify-content-end align-items-center mt-3 me-5">
-            <a class="btn btn-outline-dark" asp-action="Index" asp-route-limit="@limit" asp-route-offset="1">
+            <button class="btn btn-outline-dark" @@click="pedirClientes(1)">
                 <i class="bi bi-arrow-clockwise"></i>
                 Recargar Todos
-            </a>
+            </button>
         </div>
     </div>
     <div class="table-responsive my-2 rounded-3 fixed-height-table-container">
         <table class="table table-hover mb-0">
             <thead class="table-light">
                 <tr>
+                    <th>
+                        @Html.DisplayNameFor(model => model.Id).ToUpper()
+                    </th>
                     <th>
                         @Html.DisplayNameFor(model => model.Apellido).ToUpper()
                     </th>
@@ -62,9 +69,26 @@
                 </tr>
             </thead>
             <tbody id="cuerpo">
-                @foreach (var item in Model)
+                <tr :id="c.id" v-for="c in clientes" :key="c.id" v-cloak>
+                    <td class="align-middle py-0 ps-2"> {{ c.id }} </td>
+                    <td class="align-middle py-0 ps-2"> {{ c.apellido }} </td>
+                    <td class="align-middle py-0 ps-2"> {{ c.nombre }} </td>
+                    <td class="align-middle py-0 ps-2" colspan="2"> {{ c.direccion }} </td>
+                    <td class="align-middle py-0 ps-2"> {{ c.telefono }} </td>
+                    <td class="align-middle py-0 ps-2"> {{ c.cuit }} </td>
+                    <td>
+                        <div class="d-flex justify-content-evenly align-items-center">
+                            <i :data-cliente-id="c.id" class="bi bi-pencil-square fs-3 text-primary icon-hover" style="cursor: pointer;" data-bs-toggle="tooltip" data-bs-title="Editar"></i>
+                            <i :data-cliente-id="c.id" class="bi bi-trash fs-3 text-danger icon-hover" style="cursor: pointer;" data-bs-toggle="tooltip" data-bs-title="Eliminar"></i>
+                        </div>
+                    </td>
+                </tr>
+                @* @foreach (var item in Model)
                 {
-                    <tr id="@item.Id">
+                    <tr id="@item.Id" class="borrar-filas">
+                        <td class="align-middle py-0 ps-2">
+                            @Html.DisplayFor(modelItem => item.Id)
+                        </td>
                         <td class="align-middle py-0 ps-2">
                             @Html.DisplayFor(modelItem => item.Apellido)
                         </td>
@@ -87,22 +111,20 @@
                             </div>
                         </td>
                     </tr>
-                }
+                } *@
             </tbody>
         </table>
     </div>
-    <nav>
-        <ul id="paginador" class="pagination justify-content-center">
-            <li id="flecha-pag-izq" class="page-item @(paginaAnterior == 0 ? "disabled" : "")" data-bs-toggle="tooltip" data-bs-title="Anterior">
-                <a asp-action="Index" asp-route-busqueda="@busqueda" asp-route-limit="@limit" asp-route-pagina="@paginaAnterior" class="page-link"><span>&laquo;</span></a>
+    <nav id="nav">
+        <ul id="paginador" class="pagination justify-content-center" v-cloak>
+            <li id="flecha-pag-izq" class="page-item" :class="{ disabled: esPrimeraPagina }" data-bs-toggle="tooltip" data-bs-title="Anterior" style="cursor: pointer;">
+                <span @@click="pedirClientes(paginaAnterior)" class="page-link"><span>&laquo;</span></span>
             </li>
-            @for (int i = 1; i <= cantidadPaginas; i++) {
-                <li class="page-item">
-                    <a asp-action="Index" asp-route-busqueda="@busqueda" asp-route-limit="@limit" asp-route-pagina="@i" class="page-link @(i == pagina ? "active" : "")">@i</a>
-                </li>
-            }
-            <li id="flecha-pag-der" class="page-item @(paginaSiguiente > cantidadPaginas ? "disabled" : "")" data-bs-toggle="tooltip" data-bs-title="Siguiente">
-                <a asp-action="Index" asp-route-busqueda="@busqueda" asp-route-limit="@limit" asp-route-pagina="@paginaSiguiente" class="page-link"><span>&raquo;</span></a>
+            <li class="page-item" v-for="p in cantidadPaginas" style="cursor: pointer;">
+                <a  @@click="pedirClientes(p)" class="page-link" :class="{ active: p == paginaActual, disabled: cantidadPaginas == 1 }">{{ p }}</a>
+            </li>
+            <li id="flecha-pag-der" class="page-item" :class="{ disabled: esUltimaPagina }" data-bs-toggle="tooltip" data-bs-title="Siguiente" style="cursor: pointer;">
+                <span @@click="pedirClientes(paginaSiguiente)" class="page-link"><span>&raquo;</span></span>
             </li>
         </ul>
     </nav>
@@ -111,165 +133,127 @@
     </div>
 </div>
 
-@* <partial name="_InquilinoFormModal" model="@new Cliente()"/> *@
 <partial name="_ModalEliminar" model="mensajeEliminar"/>
-@if(!string.IsNullOrEmpty(ViewBag.MensajeError)) {
+@* @if(!string.IsNullOrEmpty(ViewBag.MensajeError)) {
     <partial name="_ModalMensaje" model="new ModalMensaje() { Mensaje = ViewBag.MensajeError, Tipo = TipoMensaje.ERROR }"/>
-}
+} *@
+<partial name="_ModalMensaje" model="new ModalMensaje() { Mensaje = ViewBag.MensajeError, Tipo = TipoMensaje.ERROR }"/>
 
-@section Scripts{
+@section Scripts {
     <script type="module">
-        import { getElementById, getFormInputValue, mostrarMensaje, mostrarPregunta } from "~/js/frontUtils.js";
+        import { createApp } from 'https://unpkg.com/vue@3/dist/vue.esm-browser.js';
+        import { getElementById, getFormInputValue, mostrarMensaje, mostrarPregunta } from "/js/frontUtils.js";
         import { 
             setInvalidInputStyle, 
-            setValidInputStyle, 
-            validarNombreApellido, 
-            validarDNI, 
-            validarTelefono, 
-            validarEmail, 
+            setValidInputStyle,
             resetValidationInputStyle ,
             setValidationErrorMessage,
             resetValidationErrorMessage
-        } from "./validaciones.js";
+        } from "/js/validaciones.js";
 
+        document.addEventListener("DOMContentLoaded", _ => {
+            createApp({
+                /* todo lo que retorna data son las variables que manejara la app y son el estado de esta y se referencian con 'this.' */
+                data() {
+                    // inicializo vacio erreglo de los clientes y genero la tabla inicial con Razor
+                    // o inicializo el arrgeglo de los clientes con los valores del Model de la vista y luego se renderizan en el navegador con vue
+                    // por ahora uso la segunda opcion
+                    return {
+                        clientes: @Html.Raw(JsonSerializer.Serialize(Model, serializationOptions)),
+                        urlBase: "api/clientes",
+                        limit: @limit,
+                        paginaActual: @pagina,
+                        busqueda: "@busqueda",
+                        cantidadPaginas: @cantidadPaginas,
+                        paginaSiguiente: @paginaSiguiente,
+                        paginaAnterior: @paginaAnterior,
+                        esPrimeraPagina: @(paginaAnterior == 0 ? "true" : "false"),
+                        esUltimaPagina: @(paginaSiguiente > cantidadPaginas ? "true" : "false"),
+                        estaCargando: false,
+                        hayClientes: @(Model.Count() > 0 ? "true" : "false")
+                    }
+                },
+                methods: {
+                    async pedirClientes(page) {
+                        if (page <= 0 || page > this.cantidadPaginas)
+                            return;
 
-        document.addEventListener("DOMContentLoaded", () => {
+                        let url = `${this.urlBase}?Limit=${this.limit}&Pagina=${page}`;
+                        if (this.busqueda.length > 0)
+                            url += `&Busqueda=${this.busqueda}`;
+                        this.estaCargando = true;
+                        const data = await this.hacerPeticion(url);
+                        this.estaCargando = false;
+                        if (data) {
+                            this.actualizarDOM(data, page);
+                        }
+                    },
+                    async onSubmit() {
+                        if (this.busqueda === undefined || this.busqueda === null) 
+                            return;
+                        if (this.busqueda.trim() == "") 
+                            return;
+                        if (this.busqueda.length > 5) {
+                            setInvalidInputStyle("buscador"); 
+                            setValidationErrorMessage("tpe_buscador", "Valor de búsqueda muy largo");
+                            return;
+                        }
 
-        getElementById("btn_add").addEventListener("click", e => {
-            getElementById("nombre").value = "";
-            getElementById("apellido").value = "";
-            getElementById("dni").value = "";
-            getElementById("telefono").value = "";
-            getElementById("email").value = "";
-            getElementById("Id").value = 0;
+                        resetValidationInputStyle("buscador");
+                        resetValidationErrorMessage("tpe_buscador");
 
-            resetValidationStatus();
+                        let url = `${this.urlBase}?Limit=${this.limit}&Pagina=1&Busqueda=${this.busqueda}`;
+                        this.estaCargando = true;
+                        const data = await this.hacerPeticion(url);
+                        this.estaCargando = false;
+                        if (data) {
+                            this.actualizarDOM(data, 1);
+                        }
+                    },
+                    async hacerPeticion(url) {
+                        try{
+                            const response = await fetch(url);
+                            if (response.ok) {
+                                return await response.json();
+                            } else {
+                                const { mensaje } = await response.json();
+                                mostrarMensaje(false, mensaje);
+                            }
+                        }
+                        catch {
+                            mostrarMensaje(false, "Se produjo un error al hacer la petición");
+                        }
+                    },
+                    actualizarDOM(data, page) {
+                        borrarFilasRazor();
+                        this.clientes = data.clientes;
+                        this.hayClientes = this.clientes.length > 0;
+                        this.cantidadPaginas = data.cantidadPaginas;
+                        this.paginaActual = page;
+                        this.paginaAnterior = page - 1;
+                        this.paginaSiguiente = page + 1;
+                        this.esPrimeraPagina = this.paginaAnterior == 0;
+                        this.esUltimaPagina = this.paginaSiguiente > this.cantidadPaginas;
+                    },
+                    limpiar() {
+                        this.busqueda = "";
+                        resetValidationInputStyle("buscador");
+                        resetValidationErrorMessage("tpe_buscador");
+                    }
+                }
+            }).mount('#app-clientes');
 
-            const modalForm = getElementById('modal_formulario_inquilino');
-            const myModal = new bootstrap.Modal(modalForm, {});
-            myModal.show();
+            inicializarTooltips();
         });
 
-        document.querySelectorAll("td .bi-pencil-square").forEach(i => {
-            i.addEventListener("click", e => {
-                const idFIla = e.target.dataset.clienteId;;
-                const fila = getElementById(idFIla);
-                const datosFila = getRawValues(fila);
-
-                getElementById("nombre").value = datosFila.nombre;
-                getElementById("apellido").value = datosFila.apellido;
-                getElementById("dni").value = datosFila.dni;
-                getElementById("telefono").value = datosFila.telefono;
-                getElementById("email").value = datosFila.email;
-                getElementById("Id").value = datosFila.id;
-
-                resetValidationStatus();
-                
-                const myModal = new bootstrap.Modal(getElementById('modal_formulario_cliente'), {});
-                myModal.show();
-            });
-        });
-
-        document.querySelectorAll("td .bi-trash")?.forEach(i => {
-            i.addEventListener("click", e => {
-                const idFila = e.target.dataset.clienteId;
-                getElementById("form_eliminar").action = `/Cliente/Eliminar/${idFila}`;
-                mostrarPregunta(null);
-            });
-        });
-
-        mostrarMensaje(false, null);
-
-        const form = getElementById("form-cliente");
-
-        form?.addEventListener("submit", (e) => {
-            e.preventDefault();
-            const formValues = getFormValues();
-            
-            if (validarFormulario(formValues)) {
-                form.submit();
-            }
-
-            return;
-        });
-
-        const formBuscador = getElementById("form_buscador");
-        formBuscador?.addEventListener("submit", e => {
-            e.preventDefault();
-            const valor = getElementById("buscador").value;
-            if (valor === undefined || valor === null) 
-                return;
-            if (valor.trim() == "") 
-                return;
-            if (valor.length > 50) {
-                setInvalidInputStyle("buscador"); 
-                setValidationErrorMessage("tpe_buscador", "Valor de búsqueda muy largo");
-                return;
-            }
-
-            formBuscador.submit();
-        });
-
-        getElementById("limpiar").addEventListener("click", _ => {
-            const valor = getElementById("buscador").value = "";
-            resetValidationInputStyle("buscador");
-        });
-
-        });
-
-        function getFormValues() {
-            return {
-                nombre: getFormInputValue("nombre"),
-                apellido: getFormInputValue("apellido"),
-                dni: getFormInputValue("dni"),
-                telefono: getFormInputValue("telefono"),
-                email: getFormInputValue("email")
-            };
+        function inicializarTooltips() {
+            const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+            const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
         }
 
-        function getRawValues(raw) {
-            const datos = raw.children;
-            return {
-                apellido: datos.item(0).innerText.trim(),
-                nombre: datos.item(1).innerText.trim(),
-                dni: datos.item(2).innerText.trim(),
-                telefono: datos.item(3).innerText.trim(),
-                email: datos.item(4).innerText.trim(),
-                id: raw.dataset.clienteId
-            };
-        }
-
-        function validarFormulario(values) {
-            const mapaValidador = new Map([
-                ["nombre", validarNombreApellido],
-                ["apellido", validarNombreApellido],
-                ["dni", validarDNI],
-                ["telefono", validarTelefono],
-                ["email", validarEmail]
-            ]);
-
-            return Object.keys(values)
-            .map(v => {
-                const result = mapaValidador.get(v)(values[v]);
-                if (result !== undefined) { setInvalidInputStyle(v); setValidationErrorMessage(`tpe_${v}`, result.errorMessage); } 
-                else { setValidInputStyle(v); resetValidationErrorMessage(`tpe_${v}`); }
-                return result === undefined;
-            })
-            .every(v => v);
-        }
-
-        function resetValidationStatus() {
-            resetValidationInputStyle("nombre");
-            resetValidationInputStyle("apellido");
-            resetValidationInputStyle("dni");
-            resetValidationInputStyle("telefono");
-            resetValidationInputStyle("email");
-
-            resetValidationErrorMessage("tpe_nombre");
-            resetValidationErrorMessage("tpe_apellido");
-            resetValidationErrorMessage("tpe_dni");
-            resetValidationErrorMessage("tpe_telefono");
-            resetValidationErrorMessage("tpe_email");
+        function borrarFilasRazor() {
+            [...document.getElementsByClassName("borrar-filas")].forEach(el => { el.remove(); });
+            [...document.getElementsByClassName("borrar-paginas")].forEach(el => { el.remove(); });
         }
     </script>
 }

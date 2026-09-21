@@ -117,7 +117,7 @@ public class ClienteRepository : BaseRepository, IClienteRepository
             IQueryable<Cliente> clientes =  _context.Clientes;
 
             if (limit > 0 && offset > 0)
-                clientes = clientes.Take(limit).Skip(offset);
+                clientes = clientes.Skip(offset).Take(limit);
 
             return await clientes.ToListAsync();
         }
@@ -149,8 +149,8 @@ public class ClienteRepository : BaseRepository, IClienteRepository
                     .Where(c => EF.Functions.Like(c.Nombre, $"{filtros.Busqueda}%") || EF.Functions.Like(c.Apellido, $"{filtros.Busqueda}%"));
             }
 
-            if (filtros.Limit > 0 && filtros.Offset() > 0)
-                clientes = clientes.Take(filtros.Limit).Skip(filtros.Offset());
+            if (filtros.Limit > 0 && filtros.Offset() >= 0)
+                clientes = clientes.Skip(filtros.Offset()).Take(filtros.Limit);
 
             return await clientes.ToListAsync();
         }
