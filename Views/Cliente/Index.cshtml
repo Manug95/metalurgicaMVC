@@ -79,7 +79,7 @@
                     <td>
                         <div class="d-flex justify-content-evenly align-items-center">
                             <i :data-cliente-id="c.id" class="bi bi-pencil-square fs-3 text-primary icon-hover" style="cursor: pointer;" data-bs-toggle="tooltip" data-bs-title="Editar"></i>
-                            <i :data-cliente-id="c.id" class="bi bi-trash fs-3 text-danger icon-hover" style="cursor: pointer;" data-bs-toggle="tooltip" data-bs-title="Eliminar"></i>
+                            <i :data-cliente-id="c.id" class="bi bi-trash fs-3 text-danger icon-hover" style="cursor: pointer;" @@click="abrirModalEliminar(c.id)" data-bs-toggle="tooltip" data-bs-title="Eliminar"></i>
                         </div>
                     </td>
                 </tr>
@@ -131,9 +131,10 @@
     <div id="btn_add" class="position-absolute bottom-0 end-0 me-4 mb-2" style="cursor: pointer;">
         <i class="bi bi-plus-square fs-1 text-primary icon-hover d-inline-block" data-bs-toggle="tooltip" data-bs-title="Registrar Nuevo"></i>
     </div>
+
+    <partial name="_ModalEliminar" model="mensajeEliminar"/>
 </div>
 
-<partial name="_ModalEliminar" model="mensajeEliminar"/>
 @* @if(!string.IsNullOrEmpty(ViewBag.MensajeError)) {
     <partial name="_ModalMensaje" model="new ModalMensaje() { Mensaje = ViewBag.MensajeError, Tipo = TipoMensaje.ERROR }"/>
 } *@
@@ -152,6 +153,7 @@
         } from "/js/validaciones.js";
 
         document.addEventListener("DOMContentLoaded", _ => {
+            let modalEliminar;
             createApp({
                 /* todo lo que retorna data son las variables que manejara la app y son el estado de esta y se referencian con 'this.' */
                 data() {
@@ -170,7 +172,8 @@
                         esPrimeraPagina: @(paginaAnterior == 0 ? "true" : "false"),
                         esUltimaPagina: @(paginaSiguiente > cantidadPaginas ? "true" : "false"),
                         estaCargando: false,
-                        hayClientes: @(Model.Count() > 0 ? "true" : "false")
+                        hayClientes: @(Model.Count() > 0 ? "true" : "false"),
+                        clienteIdEliminar: 0
                     }
                 },
                 methods: {
@@ -225,7 +228,6 @@
                         }
                     },
                     actualizarDOM(data, page) {
-                        borrarFilasRazor();
                         this.clientes = data.clientes;
                         this.hayClientes = this.clientes.length > 0;
                         this.cantidadPaginas = data.cantidadPaginas;
@@ -239,6 +241,39 @@
                         this.busqueda = "";
                         resetValidationInputStyle("buscador");
                         resetValidationErrorMessage("tpe_buscador");
+                    },
+                    abrirModalEliminar(id) {
+                        this.clienteIdEliminar = id;
+                        if (modalEliminar  == undefined)
+                            modalEliminar = new bootstrap.Modal(getElementById('modal-eliminar'), {});
+                        modalEliminar.show();
+                    },
+                    async eliminarCliente() {
+                        if (this.clienteIdEliminar > 0) {
+                            try {
+                                const response = await fetch(`${this.urlBase}/${this.clienteIdEliminar}`, { method: "DELETE" });
+                                if (response.ok) {
+                                    let url = `${this.urlBase}?Limit=${this.limit}&Pagina=${this.paginaActual}`;
+                                    if (this.busqueda.length > 0)
+                                        url += `&Busqueda=${this.busqueda}`;
+                                    this.estaCargando = true;
+                                    const data = await this.hacerPeticion(url);
+                                    this.estaCargando = false;
+                                    if (data) {
+                                        this.actualizarDOM(data, this.paginaActual);
+                                    }
+                                    if (modalEliminar != undefined)
+                                        modalEliminar.hide();
+                                    mostrarMensaje(true, "Cliente eliminado");
+                                } else {
+                                    const { mensaje } = await response.json();
+                                    mostrarMensaje(false, mensaje);
+                                }
+                            }
+                            catch {
+                                mostrarMensaje(false, "Se produjo un error al hacer la petición");
+                            }
+                        }
                     }
                 }
             }).mount('#app-clientes');
@@ -249,11 +284,6 @@
         function inicializarTooltips() {
             const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
             const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
-        }
-
-        function borrarFilasRazor() {
-            [...document.getElementsByClassName("borrar-filas")].forEach(el => { el.remove(); });
-            [...document.getElementsByClassName("borrar-paginas")].forEach(el => { el.remove(); });
         }
     </script>
 }

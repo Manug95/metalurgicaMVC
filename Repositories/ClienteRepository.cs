@@ -110,11 +110,33 @@ public class ClienteRepository : BaseRepository, IClienteRepository
         }
     }
 
+    public async Task<Cliente?> FindByIdAsync(int id)
+    {
+        try
+        {
+            return await _context.Clientes.FirstOrDefaultAsync(c => c.Id > id && c.Activo);
+        }
+        catch (OperationCanceledException ex)
+        {
+            Util.LoguearExcepcion(ex);
+            throw new AppException("No se pudo completar la operación", ex);
+        }
+        catch (ArgumentNullException)
+        {
+            throw new ClientException("No se pasaron valores");
+        }
+        catch (Exception ex)
+        {
+            Util.LoguearExcepcion(ex);
+            throw new AppException("Ocurrió un error inesperado", ex);
+        }
+    }
+
     public async Task<List<Cliente>> ListAsync(int limit, int offset)
     {
         try
         {
-            IQueryable<Cliente> clientes =  _context.Clientes;
+            IQueryable<Cliente> clientes =  _context.Clientes.Where(c => c.Activo);
 
             if (limit > 0 && offset > 0)
                 clientes = clientes.Skip(offset).Take(limit);
@@ -148,6 +170,8 @@ public class ClienteRepository : BaseRepository, IClienteRepository
                 clientes = clientes
                     .Where(c => EF.Functions.Like(c.Nombre, $"{filtros.Busqueda}%") || EF.Functions.Like(c.Apellido, $"{filtros.Busqueda}%"));
             }
+
+            clientes = clientes.Where(c => c.Activo);
 
             if (filtros.Limit > 0 && filtros.Offset() >= 0)
                 clientes = clientes.Skip(filtros.Offset()).Take(filtros.Limit);
