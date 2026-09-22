@@ -1,6 +1,7 @@
 /* ESTILOS TABLAS */
 .fixed-height-table-container {
-    height: 650px;
+    /* height: 650px; */
+    height: 65vh;
     overflow-y: auto;
 }
 
@@ -35,6 +36,7 @@ thead th {
     height: 55px !important;
     min-height: 55px !important;
     max-height: 55px !important;
+    font-family: 'Inter', Arial, sans-serif;
 }
 
 .icon-hover, .icon-enlace {

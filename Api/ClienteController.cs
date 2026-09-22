@@ -64,6 +64,7 @@ public class ClienteController(IClienteRepository repo) : ControllerBase
     }
 
     [HttpPost]
+	[ValidateAntiForgeryToken]
     public async Task<IActionResult> PostCliente([FromBody] ClienteVM vm)
     {
         if (!ModelState.IsValid) 
@@ -74,7 +75,7 @@ public class ClienteController(IClienteRepository repo) : ControllerBase
         try
         {
             if ((await _repo.CreateAsync(cliente)) > 0)
-                return Created($"api/clientes/{cliente.Id}", new { data = cliente });
+                return Created($"api/clientes/{cliente.Id}", new { cliente });
             else
                 return UnprocessableEntity(new { mensaje = "No se pudo crear el cliente" });
         }
@@ -89,6 +90,7 @@ public class ClienteController(IClienteRepository repo) : ControllerBase
     }
 
     [HttpPut("{id}")]
+	[ValidateAntiForgeryToken]
     public async Task<IActionResult> PutCliente([FromRoute] int id, [FromBody] ClienteVM vm)
     {
         if (id <= 0)
@@ -102,7 +104,7 @@ public class ClienteController(IClienteRepository repo) : ControllerBase
         try
         {
             if (await _repo.UpdateAsync(Cliente.Parse(vm)))
-                return Ok(vm);
+                return Ok(new { cliente = vm });
             else
                 return BadRequest(new { mensaje = "No se pudo actualizar el cliente" });
         }

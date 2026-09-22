@@ -11,6 +11,9 @@
     <link rel="stylesheet" href="~/css/styles.css" asp-append-version="true" >
     <link rel="stylesheet" href="~/css/tablas.css" asp-append-version="true" >
     <link rel="stylesheet" href="~/metalurgicaMVC.styles.css" asp-append-version="true" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 </head>
 <body class="d-flex flex-column min-vh-100">
     <header class="position-sticky top-0 z-3">
@@ -37,26 +40,26 @@
             </div>
         </nav>
     </header>
-    <div class="container-fluid px-1 flex-grow-1">
+    <div class="container-fluid flex-grow-1">
         <main role="main">
             @RenderBody()
         </main>
     </div>
 
-    <footer class="border-top footer text-muted mt-auto" style="background-color: #fdebe3;">
-        <div class="container">
-            &copy; 2026 - metalurgicaMVC - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+    <footer class="border-top text-light-emphasis align-middle mt-auto" style="background-color: #fdebe3; height: 5vh;">
+        <div class="container h-100 d-flex justify-content-start align-items-center">
+            <span>&copy; 2026 - metalurgicaMVC - Gutierrez Manuel</span>
         </div>
     </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
-    <script>
+    @* <script>
         document.addEventListener("DOMContentLoaded", _ => {
             const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
             const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
         });
-    </script>
+    </script> *@
 </body>
 </html>
