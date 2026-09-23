@@ -13,6 +13,7 @@
     var serializationOptions = new JsonSerializerOptions {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase
     };
+    bool hayMensajeError = !string.IsNullOrWhiteSpace(ViewBag.MensajeError);
 }
 
 <div id="app-clientes" class="container-fluid bg-light-subtle position-relative">
@@ -27,13 +28,12 @@
                     <span class="input-group-text" id="limpiar" style="cursor: pointer;" @@click="limpiar">
                         <i class="bi bi-x-lg" data-bs-toggle="tooltip" data-bs-title="Limpiar"></i>
                     </span>
-                    <div id="tpe_form_buscador" class="invalid-tooltip"></div>
+                    <div id="error_form_buscador" class="invalid-tooltip"></div>
                     <button type="submit" class="btn btn-primary" :disabled="estaCargando">
                         <i class="bi bi-search"></i>
                         Buscar
                     </button>
                 </div>
-                <input type="hidden" name="limit" value="@limit">
             </form>
         </div>
         <div class="col d-flex justify-content-end align-items-center mt-3 me-5">
@@ -119,15 +119,12 @@
     <partial name="_FormModal" model="new ClienteVM()"/>
 </div>
 
-@* @if(!string.IsNullOrEmpty(ViewBag.MensajeError)) {
-    <partial name="_ModalMensaje" model="new ModalMensaje() { Mensaje = ViewBag.MensajeError, Tipo = TipoMensaje.ERROR }"/>
-} *@
 <partial name="_ModalMensaje" model="new ModalMensaje() { Mensaje = ViewBag.MensajeError, Tipo = TipoMensaje.ERROR }"/>
 
 @section Scripts {
     <script type="module">
         import { createApp } from 'https://unpkg.com/vue@3/dist/vue.esm-browser.js';
-        import { getElementById, getFormInputValue, mostrarMensaje, mostrarPregunta } from "/js/frontUtils.js";
+        import { getElementById, mostrarMensaje, inicializarTooltips } from "/js/frontUtils.js";
         import { 
             setInvalidInputStyle, 
             setValidInputStyle,
@@ -137,19 +134,17 @@
             validarNombreApellido,
             validarTelefono,
             validarDireccion,
-            validarCUIT
+            validarCUIT,
+            resetValidaciones
         } from "/js/validaciones.js";
+        import { hacerPeticionFn } from "/js/prueba.js";
 
         document.addEventListener("DOMContentLoaded", _ => {
             let modalEliminar;
             let formModal;
             const clientePorDefecto = { id: 0, nombre: "", apellido: "", telefono: "", direccion: "", cuit: "" }
             createApp({
-                /* todo lo que retorna data son las variables que manejara la app y son el estado de esta y se referencian con 'this.' */
                 data() {
-                    // inicializo vacio erreglo de los clientes y genero la tabla inicial con Razor
-                    // o inicializo el arrgeglo de los clientes con los valores del Model de la vista y luego se renderizan en el navegador con vue
-                    // por ahora uso la segunda opcion
                     return {
                         clientes: @Html.Raw(JsonSerializer.Serialize(Model, serializationOptions)),
                         urlBase: "api/clientes",
@@ -172,7 +167,6 @@
                     async pedirClientes(page) {
                         if (page <= 0 || page > this.cantidadPaginas)
                             return;
-
                         let url = `${this.urlBase}?Limit=${this.limit}&Pagina=${page}`;
                         if (this.busqueda.length > 0)
                             url += `&Busqueda=${this.busqueda}`;
@@ -188,15 +182,13 @@
                             return;
                         if (this.busqueda.trim() == "") 
                             return;
-                        if (this.busqueda.length > 5) {
+                        if (this.busqueda.length > 25) {
                             setInvalidInputStyle("buscador"); 
-                            setValidationErrorMessage("tpe_buscador", "Valor de búsqueda muy largo");
+                            setValidationErrorMessage("error_form_buscador", "Valor de búsqueda muy largo");
                             return;
                         }
-
                         resetValidationInputStyle("buscador");
-                        resetValidationErrorMessage("tpe_buscador");
-
+                        resetValidationErrorMessage("error_form_buscador");
                         let url = `${this.urlBase}?Limit=${this.limit}&Pagina=1&Busqueda=${this.busqueda}`;
                         this.estaCargando = true;
                         const data = await this.hacerPeticion(url);
@@ -211,8 +203,19 @@
                             if (response.ok) {
                                 return await response.json();
                             } else {
-                                const { mensaje } = await response.json();
-                                mostrarMensaje(false, mensaje);
+                                const { mensaje, errors } = await response.json();
+                                if (mensaje) {
+                                    mostrarMensaje(false, mensaje);
+                                }
+                                if (errors) {
+                                    mensaje = "";
+                                    Object.keys(errors).forEach((e, i) => {
+                                        mensaje += `${e}: ${errors[e].join(", ")}`;
+                                        if (i < errors.length-1)
+                                            mensaje += " - ";
+                                    });
+                                }
+                                return null;
                             }
                         }
                         catch {
@@ -232,7 +235,7 @@
                     limpiar() {
                         this.busqueda = "";
                         resetValidationInputStyle("buscador");
-                        resetValidationErrorMessage("tpe_buscador");
+                        resetValidationErrorMessage("error_form_buscador");
                     },
                     abrirModalEliminar(id) {
                         this.clienteIdEliminar = id;
@@ -281,35 +284,37 @@
                             formModal = new bootstrap.Modal(getElementById('modal_formulario_cliente'), {});
                         formModal.show();
                     },
+                    cancelarEditar() {
+                        this.estaEditando = false;
+                    },
                     async onSubmitCliente() {
                         this.estaCargando = true;
                         if (this.esFormularioValido()) {
                             let url = this.urlBase;
                             const opcionesFetch = { 
+                                method: "POST",
                                 headers: { 
                                     'Content-Type': 'application/json',
-                                    'RequestVerificationToken': document.getElementsByName("__RequestVerificationToken").item(0).value
+                                    'RequestVerificationToken': document.getElementsByName("__RequestVerificationToken")?.item(0)?.value
                                 },
                                 body: JSON.stringify(this.cliente)
                             };
                             if (this.estaEditando) {
                                 url += `/${this.cliente.id}`;
                                 opcionesFetch.method = "PUT";
-                            } else {
-                                opcionesFetch.method = "POST";
                             }
                             try{
                                 const response = await fetch(url, opcionesFetch);
                                 if (response.ok) {
                                     const data = await response.json();
                                     if (this.estaEditando) {
-                                        const indiceClienteActualizado = this.clientes.findIndex(c => c.id == data.cliente.id);
+                                        const indiceClienteActualizado = this.clientes.findIndex(c => c.id == data?.cliente.id);
                                         if (indiceClienteActualizado >= 0) {
-                                            this.clientes[indiceClienteActualizado] = data.cliente;
+                                            this.clientes[indiceClienteActualizado] = data?.cliente;
                                         }
                                     } else {
                                         if (this.clientes.length < this.limit) {
-                                            this.clientes.push(data.cliente);
+                                            this.clientes.push(data?.cliente);
                                         }
                                     }
                                     if (formModal != undefined){
@@ -321,15 +326,14 @@
                                     if (errors) {
                                         Object.keys(errors).forEach(e => {
                                             setInvalidInputStyle(e.toLowerCase()); 
-                                            setValidationErrorMessage(`tpe_${e.toLowerCase()}`, errors[e].join(", "));
+                                            setValidationErrorMessage(`error_${e.toLowerCase()}`, errors[e].join(", "));
                                         });
-                                    }
-                                    if (mensaje) {
-                                        mostrarMensaje(true, "La petición no es correcta");
+                                    } else {
+                                        mostrarMensaje(false, mensaje ?? "La petición no es correcta");
                                     }
                                 }
                             } catch {
-                                mostrarMensaje(true, "Se produjo un error al hacer la petición");
+                                mostrarMensaje(false, "Se produjo un error al hacer la petición");
                             }
                         }
                         this.estaEditando = false;
@@ -343,47 +347,35 @@
                             ["telefono", validarTelefono],
                             ["direccion", validarDireccion]
                         ]);
-
                         return Object.keys(this.cliente)
-                        .map(v => {
-                            if (v == "id")
-                                return true;
-                            const result = mapaValidador.get(v)(this.cliente[v]);
-                            if (result !== undefined) { 
-                                setInvalidInputStyle(v); 
-                                setValidationErrorMessage(`tpe_${v}`, result.errorMessage); 
-                            } 
-                            else { 
-                                setValidInputStyle(v); 
-                                resetValidationErrorMessage(`tpe_${v}`); 
-                            }
-                            return result === undefined;
-                        })
-                        .every(v => v);
+                            .map(key => {
+                                if (key == "id")
+                                    return true;
+                                const result = mapaValidador.get(key)(this.cliente[key]);
+                                if (result !== undefined) { 
+                                    setInvalidInputStyle(key); 
+                                    setValidationErrorMessage(`error_${key}`, result.errorMessage); 
+                                } 
+                                else { 
+                                    setValidInputStyle(key); 
+                                    resetValidationErrorMessage(`error_${key}`); 
+                                }
+                                return result === undefined;
+                            })
+                            .every(v => v);
+                    },
+                    limpiarFormulario() {
+                        this.cliente = { ...clientePorDefecto };
+                        resetValidaciones();
+                    }
+                },
+                mounted() {
+                    if (@(hayMensajeError.ToString().ToLower())) {
+                        mostrarMensaje(false, "@ViewBag.MensajeError");
                     }
                 }
             }).mount('#app-clientes');
-
             inicializarTooltips();
         });
-
-        function inicializarTooltips() {
-            const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
-            const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
-        }
-
-        function resetValidaciones() {
-            resetValidationInputStyle("nombre");
-            resetValidationInputStyle("apellido");
-            resetValidationInputStyle("cuit");
-            resetValidationInputStyle("telefono");
-            resetValidationInputStyle("direccion");
-
-            resetValidationErrorMessage("tpe_nombre");
-            resetValidationErrorMessage("tpe_apellido");
-            resetValidationErrorMessage("tpe_cuit");
-            resetValidationErrorMessage("tpe_telefono");
-            resetValidationErrorMessage("tpe_direccion");
-        }
     </script>
 }

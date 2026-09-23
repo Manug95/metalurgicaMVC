@@ -4,14 +4,14 @@ export function setValidInputStyle(id) {
   const input = getElementById(id);
   if (input !== null) {
     removerClases(input, "is-invalid");
-    agregarClases(input, "is-valid");
+    // agregarClases(input, "is-valid");
   }
 }
 
 export function setInvalidInputStyle(id) {
   const input = getElementById(id);
   if (input !== null) {
-    removerClases(input, "is-valid");
+    // removerClases(input, "is-valid");
     agregarClases(input, "is-invalid");
   }
 }
@@ -19,7 +19,7 @@ export function setInvalidInputStyle(id) {
 export function resetValidationInputStyle(id) {
   const input = getElementById(id);
   if (input !== null) {
-    removerClases(input, "is-valid");
+    // removerClases(input, "is-valid");
     removerClases(input, "is-invalid");
   }
 }
@@ -32,6 +32,16 @@ export function setValidationErrorMessage(tooltipId, message) {
 export function resetValidationErrorMessage(tooltipId) {
   const tooltip = getElementById(tooltipId);
   if (tooltip !== null) tooltip.innerText = "";
+}
+
+/**
+ * @param  {...string} campos 
+ */
+export function resetValidaciones(...campos) {
+    campos.forEach(c => {
+        resetValidationInputStyle(c);
+        resetValidationErrorMessage(`error_${c}`);
+    });
 }
 
 export function validarFormSelect(value) {

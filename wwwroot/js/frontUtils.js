@@ -1,16 +1,4 @@
 /**
- * Funcion manejadora que impide que se pude escribir un espacio en un input
- * @param {Event} event El evento que desato la funcion
- */
-function bloquearEspacios(event) {
-  if (event.key === " ") {
-    event.preventDefault();
-  }
-}
-
-
-
-/**
  * Oculta un elemento
  * @param {String} id id del elemento que se desa¿ea ocultar
  */
@@ -103,13 +91,14 @@ function mostrarPregunta(pregunta) {
  * @param {String} mensaje Es el mensaje a mostrar en el modal
  */
 function mensajeError(mensaje, elem_id) {
-  // const cartel = getElementById("mensaje");
   const cartel = getElementById(elem_id);
 
   removerClases(cartel, "text-success");
   agregarClases(cartel, "text-danger");
 
-  if (mensaje !== null) cartel.innerHTML = mensaje;
+  getElementById(`titulo-modal-${elem_id}`).textContent = "Error";
+  if (mensaje !== null) 
+    cartel.innerHTML = mensaje;
 }
 
 
@@ -119,13 +108,14 @@ function mensajeError(mensaje, elem_id) {
  * @param {String | null} mensaje Es el mensaje a mostrar en el modal
  */
 function mensajeExito(mensaje, elem_id) {
-  // const cartel = getElementById("mensaje");
   const cartel = getElementById(elem_id);
 
   removerClases(cartel, "text-danger");
   agregarClases(cartel, "text-success");
 
-  if (mensaje !== null) cartel.innerHTML = mensaje;
+  getElementById("titulo-modal-mensaje").textContent = "Mensaje";
+  if (mensaje !== null) 
+    cartel.innerHTML = mensaje;
 }
 
 
@@ -164,7 +154,7 @@ function createElement( el, { id, value, name, selected, disabled, content, type
   if (name !== undefined) elemento.name = name;
   if (type !== undefined) elemento.type = type;
   if (href !== undefined) elemento.href = href;
-  if (src !== undefined) elemento.href = src;
+  if (src !== undefined) elemento.src = src;
   if (selected) elemento.selected = selected;
   if (disabled) elemento.disabled = disabled;
   if (colSpan !== undefined) elemento.colSpan = colSpan;
@@ -182,29 +172,6 @@ function createElement( el, { id, value, name, selected, disabled, content, type
 
 
 /**
- * Recarga la pagina si el recurso se borro con exito
- */
-function recargar() {
-
-  if (getElementById("mensaje").classList.contains("text-success")) {
-    window.location.reload();
-  }
-  
-}
-
-
-
-/**
- * Captura el campo hidden del formulario de editar y devuelve su valor
- * @returns {String} Devuelve la id de la instancia del recurso
- */
-function obtenerIdDelCampoHidden() {
-  return document.querySelector('[type="hidden"]').value;
-}
-
-
-
-/**
  * Formatea una fecha string yyyy-MM-dd a dd/MM/yyyy
  * @param {string} cadena en formato yyyy-MM-dd o yyyy-MM-ddThh:mm:ss.mmmZ
  * @returns {string} La fecha formateada a dd/MM/yyyy
@@ -217,6 +184,16 @@ function aFechaLocal(cadena) {
 
 
 
+/**
+ * Inicializa los tooltips de la pagina
+ */
+function inicializarTooltips() {
+    const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+    const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
+}
+
+
+
 export {
   ocultarElemento,
   mostrarElemento,
@@ -225,11 +202,9 @@ export {
   cantidadHijosDeUnElemento,
   getElementById,
   getFormInputValue,
-  bloquearEspacios,
   mostrarMensaje,
   mostrarPregunta,
-  recargar,
-  obtenerIdDelCampoHidden,
   createElement,
-  aFechaLocal
+  aFechaLocal,
+  inicializarTooltips
 }

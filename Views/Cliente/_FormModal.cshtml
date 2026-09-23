@@ -6,7 +6,7 @@
         <div class="modal-content bg-light-subtle">
             <div class="modal-header">
                 <div id="titulo-modal" class="modal-title fs-5">Formulario</div>
-                <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close" @@click="cancelarEditar"></button>
             </div>
             <div class="modal-body justify-content-center align-items-center">
                 <div class="container-md">
@@ -14,51 +14,47 @@
                         <form 
                             id="form-cliente" 
                             @@submit.prevent="onSubmitCliente" 
-                            class="p-3 w-100 mx-auto border rounded-4 shadow-sm needs-validation bg-light" 
+                            class="p-3 w-100 mx-auto border rounded-4 needs-validation bg-light" 
                             asp-antiforgery="true"
                         >
 
                             <div class="row mb-md-4">
                                 <div class="col-12 col-md-6 mt-5 mt-md-3 mb-md-0">
-                                    <div class="position-relative">
-                                        <label asp-for="Nombre" class="form-label fw-bold">@Html.DisplayNameFor(model => model.Nombre)</label>
-                                        <input type="text" asp-for="Nombre" v-model="cliente.nombre" class="form-control" id="nombre">
-                                        <div id="tpe_nombre" class="invalid-tooltip"></div>
-                                    </div>
+                                    <label asp-for="Nombre" class="form-label fw-bold">
+                                        @Html.DisplayNameFor(model => model.Nombre)
+                                        <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="text" asp-for="Nombre" v-model="cliente.nombre" class="form-control" id="nombre" aria-describedby="error_nombre">
+                                    <div id="error_nombre" class="invalid-feedback"></div>
                                 </div>
                                 <div class="col-12 col-md-6 mt-5 mt-md-3 mb-md-0">
-                                    <div class="position-relative">
-                                        <label asp-for="Apellido" class="form-label fw-bold">@Html.DisplayNameFor(model => model.Apellido)</label>
-                                        <input type="text" asp-for="Apellido" v-model="cliente.apellido" class="form-control" id="apellido">
-                                        <div id="tpe_apellido" class="invalid-tooltip"></div>
-                                    </div>
+                                    <label asp-for="Apellido" class="form-label fw-bold">
+                                        @Html.DisplayNameFor(model => model.Apellido)
+                                        <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="text" asp-for="Apellido" v-model="cliente.apellido" class="form-control" id="apellido" aria-describedby="error_apellido">
+                                    <div id="error_apellido" class="invalid-feedback"></div>
                                 </div>
                             </div>
 
                             <div class="row mb-md-4">
                                 <div class="col-12 col-md-6 mt-5 mt-md-3 mb-md-0">
-                                    <div class="position-relative">
-                                        <label asp-for="Direccion" class="form-label fw-bold">@Html.DisplayNameFor(model => model.Direccion)</label>
-                                        <input type="text" asp-for="Direccion" v-model="cliente.direccion" class="form-control" id="direccion">
-                                        <div id="tpe_direccion" class="invalid-tooltip"></div>
-                                    </div>
+                                    <label asp-for="Direccion" class="form-label fw-bold">@Html.DisplayNameFor(model => model.Direccion)</label>
+                                    <input type="text" asp-for="Direccion" v-model="cliente.direccion" class="form-control" id="direccion" aria-describedby="error_direccion">
+                                    <div id="error_direccion" class="invalid-feedback"></div>
                                 </div>
                                 <div class="col-12 col-md-6 mt-5 mt-md-3 mb-md-0">
-                                    <div class="position-relative">
-                                        <label asp-for="Telefono" class="form-label fw-bold">@Html.DisplayNameFor(model => model.Telefono)</label>
-                                        <input type="text" asp-for="Telefono" v-model="cliente.telefono" class="form-control" id="telefono">
-                                        <div id="tpe_telefono" class="invalid-tooltip"></div>
-                                    </div>
+                                    <label asp-for="Telefono" class="form-label fw-bold">@Html.DisplayNameFor(model => model.Telefono)</label>
+                                    <input type="text" asp-for="Telefono" v-model="cliente.telefono" class="form-control" id="telefono" aria-describedby="error_telefono">
+                                    <div id="error_telefono" class="invalid-feedback"></div>
                                 </div>
                             </div>
 
-                            <div class="row mb-md-5">
+                            <div class="row mb-md-4">
                                 <div class="col-12 col-md-6 mt-5 mt-md-3 mb-md-0">
-                                    <div class="position-relative">
-                                        <label asp-for="Cuit" class="form-label fw-bold">@Html.DisplayNameFor(model => model.Cuit)</label>
-                                        <input type="text" asp-for="Cuit" v-model="cliente.cuit" class="form-control" id="cuit">
-                                        <div id="tpe_cuit" class="invalid-tooltip"></div>
-                                    </div>
+                                    <label asp-for="Cuit" class="form-label fw-bold">@Html.DisplayNameFor(model => model.Cuit)</label>
+                                    <input type="text" asp-for="Cuit" v-model="cliente.cuit" class="form-control" id="cuit" aria-describedby="error_cuit">
+                                    <div id="error_cuit" class="invalid-feedback"></div>
                                 </div>
                             </div>
 
@@ -69,13 +65,19 @@
                                     <button type="submit" class="btn btn-primary d-block mx-auto" :class="{ disabled: estaCargando }" :disabled="estaCargando">Guardar</button>
                                 </div>
                                 <div class="col-2 d-flex justify-content-center">
-                                    <button class="btn btn-outline-secondary" type="button" data-bs-dismiss="modal">Cancelar</button>
+                                    <button class="btn btn-secondary" type="button" @@click="limpiarFormulario">Limpiar</button>
+                                </div>
+                                <div class="col-2 d-flex justify-content-center">
+                                    <button class="btn btn-outline-danger" type="button" data-bs-dismiss="modal" @@click="cancelarEditar">Cancelar</button>
                                 </div>
                             </div>
                         </form>
 
                     </div>
                 </div>
+            </div>
+            <div class="d-flex justify-content-start align-items-center border-top p-3">
+                <span>Los campos con <span class="text-danger">*</span> son obligatorios.</span>
             </div>
         </div>
     </div>

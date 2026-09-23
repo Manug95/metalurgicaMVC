@@ -4,6 +4,7 @@ using metalurgicaMVC.Models;
 using metalurgicaMVC.ViewModels;
 using metalurgicaMVC.Utils;
 using Microsoft.EntityFrameworkCore;
+using MySqlConnector;
 
 namespace metalurgicaMVC.Repositories;
 
@@ -56,6 +57,14 @@ public class ClienteRepository : BaseRepository, IClienteRepository
         }
         catch (DbUpdateException ex)
         {
+            if (ex.InnerException is MySqlException exception)
+            {
+                if (exception.Number == ERR_UNIQUE)
+                {
+                    if (exception.Message.Contains("cuit"))
+                        throw new ClientException($"El CUIT {cliente.Cuit} ya existe");
+                }
+            }
             Util.LoguearExcepcion(ex);
             throw new AppException("No se pudo guardar el cliente", ex);
         }
@@ -220,6 +229,14 @@ public class ClienteRepository : BaseRepository, IClienteRepository
         }
         catch (DbUpdateException ex)
         {
+            if (ex.InnerException is MySqlException exception)
+            {
+                if (exception.Number == ERR_UNIQUE)
+                {
+                    if (exception.Message.Contains("cuit"))
+                        throw new ClientException($"El CUIT {clienteActualizado.Cuit} ya existe");
+                }
+            }
             Util.LoguearExcepcion(ex);
             throw new AppException("Error al actualizar el cliente", ex);
         }
