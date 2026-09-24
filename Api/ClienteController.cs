@@ -75,7 +75,10 @@ public class ClienteController(IClienteRepository repo) : ControllerBase
         try
         {
             if ((await _repo.CreateAsync(cliente)) > 0)
-                return Created($"api/clientes/{cliente.Id}", new { cliente });
+            {
+                vm.Id = cliente.Id;
+                return Created($"api/clientes/{cliente.Id}", new { cliente = vm });
+            }
             else
                 return UnprocessableEntity(new { mensaje = "No se pudo crear el cliente" });
         }

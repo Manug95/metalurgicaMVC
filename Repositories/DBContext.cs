@@ -7,7 +7,7 @@ public class DBContext : DbContext
 {
     public DBContext(DbContextOptions<DBContext> options) : base(options) { }
 
-    // public DbSet<Usuario> Usuarios { get; set; }
+    public DbSet<Usuario> Usuarios { get; set; }
     public DbSet<Cliente> Clientes { get; set; }
     // public DbSet<Trabajo> Trabajos { get; set; }
     // public DbSet<Pago> Pagos { get; set; }
