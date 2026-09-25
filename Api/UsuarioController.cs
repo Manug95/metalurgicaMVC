@@ -6,8 +6,10 @@ using metalurgicaMVC.ViewModels;
 using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 using Microsoft.AspNetCore.Mvc;
 
-namespace metalurgicaMVC.Controllers;
+namespace metalurgicaMVC.Api;
 
+[ApiController]
+[Route("api/usuarios")]
 public class UsuarioController(IUsuarioRepository repo, IConfiguration config) : ControllerBase
 {
     private readonly IUsuarioRepository _repo = repo;
@@ -107,7 +109,7 @@ public class UsuarioController(IUsuarioRepository repo, IConfiguration config) :
         try
         {
             if (await _repo.UpdateAsync(Usuario.From(vm)))
-                return Ok(new { cliente = vm });
+                return Ok(new { usuario = vm });
             else
                 return BadRequest(new { mensaje = "No se pudo actualizar el usuario" });
         }

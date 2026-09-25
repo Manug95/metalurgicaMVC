@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using metalurgicaMVC.ViewModels;
 
 namespace metalurgicaMVC.Models;
@@ -10,13 +11,14 @@ public class Usuario
 
     public string? Username { get; set; }
 
+    [Column("pwd")]
     public string? Password { get; set; }
 
     public string? Rol { get; set; }
 
     public string? Avatar { get; set; }
 
-    public bool Activo { get; set; }
+    public bool Activo { get; set; } = true;
 
     public static Usuario From(UsuarioVM vm)
     {
@@ -54,7 +56,6 @@ public class Usuario
     {
         Id = vm.Id;
         Username = vm.Username;
-        Password = vm.Password;
         Rol = vm.Rol;
         Avatar = vm.Avatar;
     }

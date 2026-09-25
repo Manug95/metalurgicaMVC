@@ -23,15 +23,17 @@ public class UsuarioVM
     [DataType(DataType.ImageUrl, ErrorMessage = "No es una URL de imagen")]
     public string? Avatar { get; set; }
 
+    public bool Activo { get; set; }
+
     public static UsuarioVM From(Usuario u)
     {
         return new()
         {
             Id = u.Id,
             Username = u.Username,
-            Password = u.Password,
             Rol = u.Rol,
-            Avatar = u.Avatar
+            Avatar = u.Avatar,
+            Activo = u.Activo
         };
     }
 
