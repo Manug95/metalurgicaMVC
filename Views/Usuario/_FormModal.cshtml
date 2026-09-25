@@ -45,16 +45,26 @@
                                         @Html.DisplayNameFor(model => model.Password)
                                         <span class="text-danger">*</span>
                                     </label>
-                                    <input 
-                                        type="text" 
-                                        asp-for="Password" 
-                                        v-model="usuario.password" 
-                                        class="form-control" 
-                                        :class="{ 'is-invalid': erroresUsuario.password }" 
-                                        id="password" 
-                                        aria-describedby="error_password"
-                                    >
-                                    <div id="error_password" class="invalid-feedback" v-if="erroresUsuario.password">{{ erroresUsuario.password }}</div>
+                                    <div class="input-group has-validation">
+                                        <input 
+                                            :type="passwordInputType" 
+                                            asp-for="Password" 
+                                            v-model="usuario.password" 
+                                            class="form-control" 
+                                            :class="{ 'is-invalid': erroresUsuario.password }" 
+                                            id="password" 
+                                            aria-describedby="error_password"
+                                        >
+                                        <span class="input-group-text" id="inputGroupPrepend" @@click="mostrarOcultarPasssword" style="cursor: pointer;">
+                                            <i 
+                                                id="i-password"
+                                                class="bi text-secondary" 
+                                                :class="{ 'bi-eye': !mostrarPassword, 'bi-eye-slash': mostrarPassword }"
+                                                data-bs-toggle="tooltip" :data-bs-title="passwordTooltip"
+                                            ></i>
+                                        </span>
+                                        <div id="error_password" class="invalid-feedback" v-if="erroresUsuario.password">{{ erroresUsuario.password }}</div>
+                                    </div>
                                 </div>
                             </div>
 

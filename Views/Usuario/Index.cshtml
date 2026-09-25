@@ -159,7 +159,10 @@
                         erroresUsuario: { ...erroresUsuarioDefault },
                         estaEditando: false,
                         mensaje: "",
-                        esMensajeError: false
+                        esMensajeError: false,
+                        mostrarPassword: false,
+                        passwordInputType: "password",
+                        passwordTooltip: "Mostrar Contraseña"
                     }
                 },
                 methods: {
@@ -282,6 +285,7 @@
                     },
                     cancelarEditar() {
                         this.estaEditando = false;
+                        this.passwordInputType = "password";
                     },
                     async onSubmitUsuario() {
                         this.estaCargando = true;
@@ -356,19 +360,33 @@
                     limpiarFormulario() {
                         this.usuario = { ...usuarioDefault };
                         this.erroresUsuario = { ...erroresUsuarioDefault };
+                        this.passwordInputType = "password";
                     },
                     mostrarMensaje(mensaje, ok = true) {console.log(ok);
                         this.mensaje = mensaje;
                         this.esMensajeError = !ok;
                         const myModal = new bootstrap.Modal(document.getElementById('modal-mensaje'), {});
                         myModal.show();
+                    },
+                    mostrarOcultarPasssword() {
+                        this.mostrarPassword = !this.mostrarPassword;
+                        if (this.mostrarPassword) {
+                            this.passwordInputType = "text";
+                            this.passwordTooltip = "Ocultar Contraseña";
+                            tooltipList[tooltipList.findIndex(t => t._element.id == "i-password")].setContent({ '.tooltip-inner': this.passwordTooltip });
+                        }
+                         else{
+                            this.passwordInputType = "password";
+                            this.passwordTooltip = "Mostrar Contraseña";
+                            tooltipList[tooltipList.findIndex(t => t._element.id == "i-password")].setContent({ '.tooltip-inner': this.passwordTooltip });
+                        }
                     }
                 },
                 mounted() {
                     if (@(hayMensajeError.ToString().ToLower())) {
                         this.mostrarMensaje("@ViewBag.MensajeError", false);
                     }
-                    @* this.abrirFormModal(); *@
+                    this.abrirFormModal();
                 }
             }).mount('#app-usuarios');
             const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
