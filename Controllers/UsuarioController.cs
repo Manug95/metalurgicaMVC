@@ -2,7 +2,7 @@ using metalurgicaMVC.Exceptions;
 using metalurgicaMVC.Interfaces;
 using metalurgicaMVC.Models;
 using metalurgicaMVC.Utils;
-using metalurgicaMVC.ViewModels;
+using metalurgicaMVC.ViewModels.UsuarioViewModels;
 using Microsoft.AspNetCore.Mvc;
 
 namespace metalurgicaMVC.Controllers;

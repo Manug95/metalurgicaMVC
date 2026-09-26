@@ -1,5 +1,5 @@
 using metalurgicaMVC.Models;
-using metalurgicaMVC.ViewModels;
+using metalurgicaMVC.ViewModels.UsuarioViewModels;
 
 namespace metalurgicaMVC.Interfaces;
 

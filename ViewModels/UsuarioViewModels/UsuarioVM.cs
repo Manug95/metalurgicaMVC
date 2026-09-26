@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using metalurgicaMVC.Models;
 
-namespace metalurgicaMVC.ViewModels;
+namespace metalurgicaMVC.ViewModels.UsuarioViewModels;
 
 public class UsuarioVM
 {

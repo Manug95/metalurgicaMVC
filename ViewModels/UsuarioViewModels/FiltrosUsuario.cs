@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
 
-namespace metalurgicaMVC.ViewModels;
+namespace metalurgicaMVC.ViewModels.UsuarioViewModels;
 
 public enum EstadoUsuario
 {

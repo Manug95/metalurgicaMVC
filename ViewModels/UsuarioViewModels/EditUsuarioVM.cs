@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace metalurgicaMVC.ViewModels;
+namespace metalurgicaMVC.ViewModels.UsuarioViewModels;
 
 public class EditUsuarioVM
 {
