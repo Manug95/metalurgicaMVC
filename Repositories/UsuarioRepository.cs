@@ -225,19 +225,11 @@ public class UsuarioRepository(DBContext context) : BaseRepository(context), IUs
         }
     }
 
-    public async Task<bool> UpdateAsync(Usuario usuarioActualizado)
+    public async Task<bool> UpdateAsync(Usuario usuario)
     {
-        Usuario? usuario = await GetByIdAsync(usuarioActualizado.Id);
-        
         try
         {
-            if (usuario != null)
-            {
-                usuario.CopyFrom(usuarioActualizado);
-                return (await _context.SaveChangesAsync()) > 0;
-            }
-            else
-                throw new ClientException("El usuario no existe");
+            return (await _context.SaveChangesAsync()) > 0;
         }
         catch (OperationCanceledException ex)
         {
@@ -256,7 +248,7 @@ public class UsuarioRepository(DBContext context) : BaseRepository(context), IUs
                 if (exception.Number == ERR_UNIQUE)
                 {
                     if (exception.Message.Contains("username"))
-                        throw new ClientException($"El nombre de usuario '{usuarioActualizado.Username}' ya existe");
+                        throw new ClientException($"El nombre de usuario '{usuario.Username}' ya existe");
                     if (exception.Message.Contains("avatar"))
                         throw new ClientException($"El avatar ya existe");
                 }

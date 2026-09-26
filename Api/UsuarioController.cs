@@ -104,12 +104,14 @@ public class UsuarioController(IUsuarioRepository repo, IConfiguration config) :
         if (!ModelState.IsValid)
             return BadRequest(new { mensaje = "Datos incorrectos", errors = Util.ModelStateJsonError(ModelState) });
 
-        vm.Id = id;
-
         try
         {
-            if (await _repo.UpdateAsync(Usuario.From(vm)))
-                return Ok(new { usuario = vm });
+            Usuario? usuario = await _repo.GetByIdAsync(id);
+            if (usuario == null)
+                return BadRequest(new { mensaje = "El usuario no existe" });
+
+            if (await _repo.UpdateAsync(usuario))
+                return Ok(new { usuario = UsuarioVM.From(usuario) });
             else
                 return BadRequest(new { mensaje = "No se pudo actualizar el usuario" });
         }
@@ -146,7 +148,7 @@ public class UsuarioController(IUsuarioRepository repo, IConfiguration config) :
         }
     }
 
-    [HttpPatch("{id}")]
+    [HttpPatch("password/{id}")]
     public async Task<IActionResult> ChangePassword([FromRoute] int id, [FromBody] UpdatePasswordVM vm)
     {
         if (id <= 0)
@@ -180,6 +182,40 @@ public class UsuarioController(IUsuarioRepository repo, IConfiguration config) :
                 return Ok();
             else
                 return BadRequest(new { mensaje = "No se pudo actualizar la contraseña" });
+        }
+        catch (ClientException ex)
+        {
+            return BadRequest(new { mensaje = ex.Message });
+        }
+        catch (AppException)
+        {
+            return StatusCode(500, new { mensaje = "Error interno del servidor" });
+        }
+    }
+
+    [HttpPatch("{id}")]
+	[ValidateAntiForgeryToken]
+    public async Task<IActionResult> EditUsuario([FromRoute] int id, [FromBody] EditUsuarioVM vm)
+    {
+        if (id <= 0)
+            return BadRequest();
+            
+        if (!ModelState.IsValid)
+            return BadRequest(new { mensaje = "Datos incorrectos", errors = Util.ModelStateJsonError(ModelState) });
+
+        try
+        {
+            Usuario? usuario = await _repo.GetByIdAsync(id);
+            if (usuario == null)
+                return NotFound();
+
+            usuario.Username = vm.Username;
+            usuario.Rol = vm.Rol;
+
+            if (await _repo.UpdateAsync(usuario))
+                return Ok();
+            else
+                return BadRequest(new { mensaje = "No se pudo actualizar el usuario" });
         }
         catch (ClientException ex)
         {

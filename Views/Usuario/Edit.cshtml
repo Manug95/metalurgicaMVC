@@ -1,0 +1,235 @@
+@using System.Text.Json
+@using metalurgicaMVC.Utils
+@using metalurgicaMVC.ViewModels
+@model EditUsuarioVM
+@{
+    ViewData["Title"] = "Editar Usuario";
+    var serializationOptions = new JsonSerializerOptions {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+    };
+    bool hayMensajeError = !string.IsNullOrWhiteSpace(ViewBag.MensajeError);
+}
+
+<div id="app-edit-usuario" class="container-md mt-2" v-cloak>
+    <h1 class="text-center display-4">Modificar Datos</h1>
+    <div class="row mt-2 mb-3">
+        <form 
+            id="form-datos-usuario" 
+            class="p-3 w-75 mx-auto border rounded-4 shadow-sm bg-light"
+            @@submit.prevent="onSubmitUpdateDatosUsuario" 
+            asp-antiforgery="true"
+        >
+            <span class="display-6">Editar Datos de Usuario</span>
+            <div class="row mt-3 mb-md-4 pb-3 bg-light-subtle">
+                <div class="col-12 col-md-6 mt-5 mt-md-1 mb-md-0">
+                    <label asp-for="Username" class="form-label fw-bold">@Html.DisplayNameFor(model => model.Username)</label>
+                    <input 
+                        type="text" 
+                        asp-for="Username" 
+                        v-model="editUsuario.username" 
+                        class="form-control" 
+                        :class="{ 'is-invalid': erroresEditUsuario.username }" 
+                        id="username" 
+                        aria-describedby="error_username"
+                    >
+                    <span 
+                        asp-validation-for="Username" 
+                        id="error_username" 
+                        class="invalid-feedback" 
+                        @* v-if="erroresEditUsuario.username" *@
+                    >
+                        {{ erroresEditUsuario.username }}
+                    </span>
+                </div>
+                <div class="col-12 col-md-6 mt-5 mt-md-1 mb-md-0">
+                    <label asp-for="Rol" class="form-label fw-bold">@Html.DisplayNameFor(model => model.Rol)</label>
+                    <select 
+                        asp-for="Rol" 
+                        id="rol" 
+                        v-model="editUsuario.rol" 
+                        class="form-select" 
+                        :class="{ 'is-invalid': erroresEditUsuario.rol }" 
+                        aria-describedby="error_rol"
+                    >
+                        <option value="@Rol.ADMIN" selected="@(Model.Rol==Rol.ADMIN.ToString())">@Rol.ADMIN</option>
+                        <option value="@Rol.EMPLEADO" selected="@(Model.Rol==Rol.EMPLEADO.ToString())">@Rol.EMPLEADO</option>
+                    </select>
+                    <span 
+                        asp-validation-for="Rol" 
+                        id="error_rol" 
+                        class="invalid-feedback" 
+                        @* v-if="erroresEditUsuario.rol" *@
+                    >
+                        {{ erroresEditUsuario.rol }}
+                    </span>
+                </div>
+            </div>
+
+            <div class="row mb-2 mt-5 mt-md-4 justify-content-center">
+                <div class="col-2 d-flex justify-content-center">
+                    <input type="submit" value="Guardar" class="btn btn-primary d-block mx-auto" :class="{ disabled: estaCargando }" :disabled="estaCargando">
+                </div>
+            </div>
+        </form>
+    </div>
+
+    @* <div class="row mt-2 mb-3">
+        <form asp-action="CambiarContrasenia" id="form-datos-usuario" class="p-3 w-75 mx-auto border rounded-4 shadow-sm bg-light">
+            <legend>Cambiar Contraseña</legend>
+            <div class="row mb-md-4 border rounded-4 shadow-sm bg-light-subtle pb-3">
+                <div class="col-12 col-md-6 mt-5 mt-md-1 mb-md-0">
+                    <label asp-for="UpdatePasswordVM.PasswordNuevo" class="form-label fw-bold">Contraseña Nueva</label>
+                    <input type="password" asp-for="UpdatePasswordVM.PasswordNuevo" class="form-control" id="nueva">
+                    <span asp-validation-for="UpdatePasswordVM.PasswordNuevo" class="text-danger small"></span>
+                </div>
+                @if (!User.IsInRole(Rol.ADMIN.ToString()) 
+                    || (User.IsInRole(Rol.ADMIN.ToString()) && User.Claims.FirstOrDefault(c => c.Type == "id")?.Value == Model.Id.ToString())) 
+                {
+                    <div class="col-12 col-md-6 mt-5 mt-md-1 mb-md-0">
+                        <label asp-for="UpdatePasswordVM.PasswordActual" class="form-label fw-bold">Contraseña Vieja</label>
+                        <input type="password" asp-for="UpdatePasswordVM.PasswordActual" class="form-control" id="vieja">
+                        <span asp-validation-for="UpdatePasswordVM.PasswordActual" class="text-danger small"></span>
+                    </div>
+                }
+            </div>
+            <input type="hidden" asp-for="Id"/>
+            <div class="row mb-2 mt-5 mt-md-4 justify-content-center">
+                <div class="col-2 d-flex justify-content-center">
+                    <input type="submit" value="Guardar" class="btn btn-primary d-block mx-auto">
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="row mt-2 mb-3">
+        <div class="row bg-light w-75 mx-auto border rounded-4 shadow-sm px-0">
+            <div class="col-12 @(!string.IsNullOrWhiteSpace(Model.Avatar)?"col-md-8":"") mt-5 mt-md-1 mb-md-0 px-1">
+                <form asp-action="ActualizarAvatar" enctype="multipart/form-data" id="form-avatar-usuario" class="mt-2 mb-3 bg-light-subtle">
+                    <legend class="ps-3">Cambiar el Avatar</legend>
+                    <div class="border rounded-4 shadow-sm p-3">
+                        <label asp-for="AvatarFile" class="form-label fw-bold">Avatar</label>
+                        <input type="file" asp-for="AvatarFile" class="form-control" id="Avatar" accept="image/*">
+                        <span asp-validation-for="AvatarFile" class="text-danger small"></span>
+                    </div>
+                    <input type="hidden" asp-for="Id"/>
+                    <input type="submit" value="Guardar" class="btn btn-primary d-block mx-auto mt-3">
+                </form>
+            </div>
+            @if(!string.IsNullOrWhiteSpace(Model.Avatar)){
+                <div class="col-12 col-md-4 mt-2 mb-3 bg-light-subtle d-flex justify-content-evenly align-items-center">
+                    <img src="@Model.Avatar" alt="" width="48" class="rounded-circle" data-bs-toggle="tooltip" data-bs-title="Mi Avatar"/>
+                    <form asp-action="EliminarAvatar" asp-route-id="@Model.Id" method="post" class="">
+                        <button type="submit" class="btn btn-danger btn-sm">
+                            <i class="bi bi-trash"></i> Eliminar
+                        </button>
+                    </form>
+                </div>
+            }
+        </div>
+    </div> *@
+    <partial name="_ModalMensaje"/>
+</div>
+
+@section Scripts {
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", _ => {
+            const { createApp } = Vue;
+            const editUsuarioDefault = { username: null, rol: null };
+            const erroresEditUsuarioDefault = { username: null, rol: null };
+
+            createApp({
+                data() {
+                    return {
+                        usuarioId: @Model.Id,
+                        urlBase: "/api/usuarios",
+                        opcionesFetch: { 
+                            method: "PATCH",
+                            headers: { 
+                                'Content-Type': 'application/json'
+                            },
+                            body: null
+                        },
+                        editUsuario: { username: "@Model.Username", rol: "@Model.Rol" },
+                        erroresEditUsuario: { ...erroresEditUsuarioDefault },
+                        mensaje: "",
+                        esMensajeError: false,
+                        mostrarPassword: false,
+                        passwordInputType: "password",
+                        passwordTooltip: "Mostrar Contraseña",
+                        estaCargando: false
+                    }
+                },
+                methods: {
+                    mostrarMensaje(mensaje, ok = true) {
+                        this.mensaje = mensaje;
+                        this.esMensajeError = !ok;
+                        const myModal = new bootstrap.Modal(document.getElementById('modal-mensaje'), {});
+                        myModal.show();
+                    },
+                    async onSubmitUpdateDatosUsuario() {
+                        this.estaCargando = true;
+                        if (this.esFormularioEditValido()) {
+                            let url = `${this.urlBase}/${this.usuarioId}`;
+                            this.opcionesFetch.body = JSON.stringify(this.editUsuario);
+                            this.opcionesFetch.headers['RequestVerificationToken'] = document.getElementsByName("__RequestVerificationToken")?.item(0)?.value;
+                            try{
+                                const response = await fetch(url, this.opcionesFetch);
+                                if (response.ok) {
+                                    @* const data = await response.json(); *@
+                                    this.mostrarMensaje("Datos de Usuario Actualizados");
+                                } else {
+                                    const { mensaje, errors } = await response.json();
+                                    if (errors) {
+                                        Object.keys(errors).forEach(e => {
+                                            this.erroresEditUsuario[e.toLowerCase()] = errors[e].join(", ");
+                                        });
+                                    } else {
+                                        this.mostrarMensaje(mensaje ?? "La petición no es correcta", false);
+                                    }
+                                }
+                            } catch {
+                                this.mostrarMensaje("Se produjo un error al hacer la petición", false);
+                            }
+                        }
+                        this.estaCargando = false;
+                    },
+                    esFormularioEditValido() {
+                        const mapaValidador = new Map([
+                            ["username", validarUsername],
+                            ["rol", validarRol]
+                        ]);
+                        Object.keys(this.editUsuario)
+                            .forEach(key => {
+                                this.erroresEditUsuario[key] = mapaValidador.get(key)(this.editUsuario[key]);
+                            }
+                        );
+                        return !Object.keys(this.erroresEditUsuario).some(v => this.erroresEditUsuario[v]);
+                    }
+                },
+                mounted() {
+                    if (@(hayMensajeError.ToString().ToLower())) {
+                        this.mostrarMensaje("@ViewBag.MensajeError", false);
+                    }
+                }
+            }).mount('#app-edit-usuario');
+
+            function validarUsername(cadena) {
+                if (!cadena)
+                    return "El nombre de usuario no puede estar vacío";
+                if (cadena.trim().length == 0)
+                    return "El nombre de usuario no puede estar vacío";
+                if (cadena.length > 20)
+                    return "El máximo de carateres permitidos es 20";
+                return;
+            }
+
+            function validarRol(valor) {
+                if (!valor)
+                    return "El rol es obligatorio";
+                return;
+            }
+        });
+    </script>
+}

@@ -47,4 +47,25 @@ public class UsuarioController(IUsuarioRepository repo) : Controller
 
         return View(new List<UsuarioVM>());
     }
+
+    [HttpGet]
+    public async Task<IActionResult> Edit([FromRoute] int id)
+    {
+        ViewBag.MensajeError = TempData["MensajeError"] as string;
+        Usuario? usuario = await _repo.GetByIdAsync(id);
+
+        if (usuario == null)
+        {
+            TempData["MensajeError"] = "El usuario no existe";
+            return RedirectToAction(nameof(Index));
+        }
+
+        return View(new EditUsuarioVM() { 
+            UpdatePasswordVM = new UpdatePasswordVM(),
+            Id = id,
+            Avatar = usuario.Avatar,
+            Username = usuario.Username,
+            Rol = usuario.Rol
+        });
+    }
 }

@@ -56,9 +56,6 @@
             <thead class="table-light">
                 <tr>
                     <th>
-                        @Html.DisplayNameFor(model => model.Id).ToUpper()
-                    </th>
-                    <th>
                         @Html.DisplayNameFor(model => model.Avatar).ToUpper()
                     </th>
                     <th>
@@ -70,25 +67,27 @@
                     <th>
                         @Html.DisplayNameFor(model => model.Activo).ToUpper()
                     </th>
-                    <th></th>
+                    <th>ACCIONES</th>
                 </tr>
             </thead>
             <tbody id="cuerpo">
                 <tr :id="u.id" v-for="u in usuarios" :key="u.id">
-                    <td class="align-middle py-0 ps-2"> {{ u.id }} </td>
-                    <td class="align-middle py-0 ps-2"> {{ u.avatar }} </td>
+                    <td class="align-middle py-0 ps-2">
+                        <img :src="u.avatar" alt="foto perfil usuario" width="32" class="rounded-circle">
+                    </td>
                     <td class="align-middle py-0 ps-2"> {{ u.username }} </td>
                     <td class="align-middle py-0 ps-2"> {{ u.rol }} </td>
                     <td class="align-middle py-0 ps-2"> {{ u.activo ? "activo" : "inactivo" }} </td>
                     <td>
                         <div class="d-flex justify-content-evenly align-items-center">
-                            <i 
-                                :data-user-id="u.id" 
-                                class="bi bi-pencil-square fs-3 text-primary icon-hover" 
-                                style="cursor: pointer;" 
-                                @@click="abrirFormModal(u)" 
-                                data-bs-toggle="tooltip" data-bs-title="Editar"
-                            ></i>
+                            <a class="icon-enlace" :href="`Usuario/Edit/${u.id}`">
+                                <i 
+                                    :data-user-id="u.id" 
+                                    class="bi bi-pencil-square fs-3 text-primary icon-hover" 
+                                    style="cursor: pointer;"
+                                    data-bs-toggle="tooltip" data-bs-title="Editar"
+                                ></i>
+                            </a>
                             <i 
                                 :data-user-id="u.id" 
                                 class="bi bi-trash fs-3 text-danger icon-hover" 
@@ -130,10 +129,11 @@
 
 
 @section Scripts {
-    <script type="module">
-        import { createApp } from 'https://unpkg.com/vue@3/dist/vue.esm-browser.js';
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script>
 
         document.addEventListener("DOMContentLoaded", _ => {
+            const { createApp } = Vue;
             let modalEliminar;
             let formModal;
             const usuarioDefault = { id: 0, username: null, password: null, rol: "", avatar: null };
@@ -143,6 +143,13 @@
                     return {
                         usuarios: @Html.Raw(JsonSerializer.Serialize(Model, serializationOptions)),
                         urlBase: "api/usuarios",
+                        opcionesFetch: { 
+                            method: "POST",
+                            headers: { 
+                                'Content-Type': 'application/json'
+                            },
+                            body: null
+                        },
                         limit: @limit,
                         paginaActual: @pagina,
                         busqueda: "@busqueda",
@@ -157,7 +164,6 @@
                         usuarioIdEliminar: 0,
                         usuario: { ...usuarioDefault },
                         erroresUsuario: { ...erroresUsuarioDefault },
-                        estaEditando: false,
                         mensaje: "",
                         esMensajeError: false,
                         mostrarPassword: false,
@@ -270,57 +276,30 @@
                                 modalEliminar.hide();
                         }
                     },
-                    abrirFormModal(usuario) {console.log(usuario);
-                        if (!usuario || usuario instanceof Event) {
-                            this.usuario = { ...usuarioDefault };
-                        }
-                        else {
-                            this.usuario = { ...usuario };
-                            this.estaEditando = true; // o this.usuario.id > 0
-                        }
+                    abrirFormModal() {
+                        this.usuario = { ...usuarioDefault };
                         this.erroresUsuario = { ...erroresUsuarioDefault };
+                        this.ocultarPassswordFn();
                         if (!formModal)
                             formModal = new bootstrap.Modal(document.getElementById('modal_formulario_usuario'), {});
                         formModal.show();
                     },
-                    cancelarEditar() {
-                        this.estaEditando = false;
-                        this.passwordInputType = "password";
-                    },
                     async onSubmitUsuario() {
                         this.estaCargando = true;
                         if (this.esFormularioValido()) {
-                            let url = this.urlBase;
-                            const opcionesFetch = { 
-                                method: "POST",
-                                headers: { 
-                                    'Content-Type': 'application/json',
-                                    'RequestVerificationToken': document.getElementsByName("__RequestVerificationToken")?.item(0)?.value
-                                },
-                                body: JSON.stringify(this.usuario)
-                            };
-                            if (this.estaEditando) {
-                                url += `/${this.usuario.id}`;
-                                opcionesFetch.method = "PUT";
-                            }
-                            try{console.log(this.estaEditando);
-                                const response = await fetch(url, opcionesFetch);
+                            this.opcionesFetch.body = JSON.stringify(this.usuario);
+                            this.opcionesFetch.headers['RequestVerificationToken'] = document.getElementsByName("__RequestVerificationToken")?.item(0)?.value;
+                            try{
+                                const response = await fetch(this.urlBase, this.opcionesFetch);
                                 if (response.ok) {
                                     const data = await response.json();
-                                    if (this.estaEditando) {
-                                        const indiceUsuarioActualizado = this.usuarios.findIndex(c => c.id == data?.usuario.id);
-                                        if (indiceUsuarioActualizado >= 0) {
-                                            this.usuarios[indiceUsuarioActualizado] = data?.usuario;
-                                        }
-                                    } else {
-                                        if (this.usuarios.length < this.limit) {
-                                            this.usuarios.push(data?.usuario);
-                                        }
-                                    }
-                                    if (formModal){
+                                    if (this.usuarios.length < this.limit) 
+                                        this.usuarios.push(data?.usuario);
+                                    else if (this.cantidadPaginas == 1)
+                                        this.cantidadPaginas++;
+                                    if (formModal)
                                         formModal.hide();
-                                    }
-                                    this.mostrarMensaje(`Usuario ${this.estaEditando ? "Actualizado" : "Registrado"}`);
+                                    this.mostrarMensaje("Usuario Registrado");
                                 } else {
                                     const { mensaje, errors } = await response.json();
                                     if (errors) {
@@ -335,7 +314,6 @@
                                 this.mostrarMensaje("Se produjo un error al hacer la petición", false);
                             }
                         }
-                        this.estaEditando = false;
                         this.estaCargando = false;
                     },
                     esFormularioValido() {
@@ -348,7 +326,7 @@
                             .forEach(key => {
                                 if (key == "id" || key == "avatar")
                                     return;
-                                if (key == "password" && this.estaEditando){
+                                if (key == "password"){
                                     console.log(key);
                                     return;
                                 }
@@ -362,7 +340,7 @@
                         this.erroresUsuario = { ...erroresUsuarioDefault };
                         this.passwordInputType = "password";
                     },
-                    mostrarMensaje(mensaje, ok = true) {console.log(ok);
+                    mostrarMensaje(mensaje, ok = true) {
                         this.mensaje = mensaje;
                         this.esMensajeError = !ok;
                         const myModal = new bootstrap.Modal(document.getElementById('modal-mensaje'), {});
@@ -371,22 +349,29 @@
                     mostrarOcultarPasssword() {
                         this.mostrarPassword = !this.mostrarPassword;
                         if (this.mostrarPassword) {
-                            this.passwordInputType = "text";
-                            this.passwordTooltip = "Ocultar Contraseña";
-                            tooltipList[tooltipList.findIndex(t => t._element.id == "i-password")].setContent({ '.tooltip-inner': this.passwordTooltip });
+                            this.mostrarPasswordFn();
                         }
-                         else{
-                            this.passwordInputType = "password";
-                            this.passwordTooltip = "Mostrar Contraseña";
-                            tooltipList[tooltipList.findIndex(t => t._element.id == "i-password")].setContent({ '.tooltip-inner': this.passwordTooltip });
+                        else {
+                            this.ocultarPassswordFn();
                         }
+                    },
+                    mostrarPasswordFn() {
+                        this.passwordInputType = "text";
+                        this.passwordTooltip = "Ocultar Contraseña";
+                        tooltipList[tooltipList.findIndex(t => t._element.id == "i-password")].setContent({ '.tooltip-inner': this.passwordTooltip });
+                    },
+                    ocultarPassswordFn() {
+                        this.mostrarPassword = false;
+                        this.passwordInputType = "password";
+                        this.passwordTooltip = "Mostrar Contraseña";
+                        tooltipList[tooltipList.findIndex(t => t._element.id == "i-password")].setContent({ '.tooltip-inner': this.passwordTooltip });
                     }
                 },
                 mounted() {
                     if (@(hayMensajeError.ToString().ToLower())) {
                         this.mostrarMensaje("@ViewBag.MensajeError", false);
                     }
-                    this.abrirFormModal();
+                    @* this.abrirFormModal(); *@
                 }
             }).mount('#app-usuarios');
             const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');

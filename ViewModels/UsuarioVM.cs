@@ -9,6 +9,7 @@ public class UsuarioVM
 
     [Required(ErrorMessage = "El nombre de usuario es requerido")]
     [StringLength(20, ErrorMessage = "El nombre de ususario debe tener entre 3 y 20 caracteres", MinimumLength = 3)]
+    [Display(Name = "Nombre de Usuario")]
     public string? Username { get; set; }
 
     [Required(ErrorMessage = "La contraseña es requerida")]
@@ -21,6 +22,7 @@ public class UsuarioVM
 
     [MaxLength(255, ErrorMessage = "La URL del avatar es muy larga")]
     [DataType(DataType.ImageUrl, ErrorMessage = "No es una URL de imagen")]
+    [Display(Name = "Foto Perfil")]
     public string? Avatar { get; set; }
 
     public bool Activo { get; set; }
