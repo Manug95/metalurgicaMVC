@@ -73,35 +73,89 @@
         </form>
     </div>
 
-    @* <div class="row mt-2 mb-3">
-        <form asp-action="CambiarContrasenia" id="form-datos-usuario" class="p-3 w-75 mx-auto border rounded-4 shadow-sm bg-light">
-            <legend>Cambiar Contraseña</legend>
-            <div class="row mb-md-4 border rounded-4 shadow-sm bg-light-subtle pb-3">
+    <div class="row mt-2 mb-3">
+        <form 
+            id="form-datos-usuario" 
+            class="p-3 w-75 mx-auto border rounded-4 shadow-sm bg-light"
+            @@submit.prevent="onSubmitUpdatePassword" 
+            asp-antiforgery="true"
+        >
+            <span class="display-6">Cambiar Contraseña</span>
+            <div class="row mt-3 mb-md-4 bg-light-subtle pb-3">
                 <div class="col-12 col-md-6 mt-5 mt-md-1 mb-md-0">
-                    <label asp-for="UpdatePasswordVM.PasswordNuevo" class="form-label fw-bold">Contraseña Nueva</label>
-                    <input type="password" asp-for="UpdatePasswordVM.PasswordNuevo" class="form-control" id="nueva">
-                    <span asp-validation-for="UpdatePasswordVM.PasswordNuevo" class="text-danger small"></span>
-                </div>
-                @if (!User.IsInRole(Rol.ADMIN.ToString()) 
-                    || (User.IsInRole(Rol.ADMIN.ToString()) && User.Claims.FirstOrDefault(c => c.Type == "id")?.Value == Model.Id.ToString())) 
-                {
-                    <div class="col-12 col-md-6 mt-5 mt-md-1 mb-md-0">
-                        <label asp-for="UpdatePasswordVM.PasswordActual" class="form-label fw-bold">Contraseña Vieja</label>
-                        <input type="password" asp-for="UpdatePasswordVM.PasswordActual" class="form-control" id="vieja">
-                        <span asp-validation-for="UpdatePasswordVM.PasswordActual" class="text-danger small"></span>
+                    <label asp-for="UpdatePasswordVM.PasswordNuevo" class="form-label fw-bold">
+                        @Html.DisplayNameFor(model => model.UpdatePasswordVM!.PasswordNuevo)
+                    </label>
+                    <div class="input-group has-validation">
+                        <input 
+                            :type="passwordNuevoInputType"
+                            asp-for="UpdatePasswordVM.PasswordNuevo"
+                            v-model="editPassword.passwordNuevo" 
+                            class="form-control" 
+                            :class="{ 'is-invalid': erroresEditPassword.passwordNuevo }" 
+                            id="nueva" 
+                            aria-describedby="error_nueva"
+                        >
+                        <span class="input-group-text" id="inputGroupPrepend" @@click="mostrarOcultarPasssword('passwordNuevo')" style="cursor: pointer;">
+                            <i 
+                                id="i-password-nuevo"
+                                class="bi text-secondary-subtle" 
+                                :class="{ 'bi-eye': !mostrarPasswordNuevo, 'bi-eye-slash': mostrarPasswordNuevo }"
+                                data-bs-toggle="tooltip" :data-bs-title="passwordNuevoTooltip"
+                            ></i>
+                        </span>
+                        <span 
+                            asp-validation-for="UpdatePasswordVM.PasswordNuevo" 
+                            id="error_nueva"
+                            class="invalid-feedback" 
+                            @* v-if="erroresEditPassword.passwordNuevo" *@
+                        >
+                            {{ erroresEditPassword.passwordNuevo }}
+                        </span>
                     </div>
-                }
+                </div>
+                <div class="col-12 col-md-6 mt-5 mt-md-1 mb-md-0">
+                    <label asp-for="UpdatePasswordVM.PasswordActual" class="form-label fw-bold">
+                        @Html.DisplayNameFor(model => model.UpdatePasswordVM!.PasswordActual)
+                    </label>
+                    <div class="input-group has-validation">
+                        <input 
+                            :type="passwordActualInputType" 
+                            asp-for="UpdatePasswordVM.PasswordActual" 
+                            v-model="editPassword.passwordActual" 
+                            class="form-control" 
+                            :class="{ 'is-invalid': erroresEditPassword.passwordActual }" 
+                            id="actual"
+                            aria-describedby="error_actual"
+                        >
+                        <span class="input-group-text" id="inputGroupPrepend" @@click="mostrarOcultarPasssword('passwordActual')" style="cursor: pointer;">
+                            <i 
+                                id="i-password-actual"
+                                class="bi text-secondary-subtle" 
+                                :class="{ 'bi-eye': !mostrarPasswordActual, 'bi-eye-slash': mostrarPasswordActual }"
+                                data-bs-toggle="tooltip" :data-bs-title="passwordActualTooltip"
+                            ></i>
+                        </span>
+                        <span 
+                            asp-validation-for="UpdatePasswordVM.PasswordActual"  
+                            id="error_actual"
+                            class="invalid-feedback"
+                            @* v-if="erroresEditPassword.passwordActual" *@
+                        >
+                            {{ erroresEditPassword.passwordActual }}
+                        </span>
+                    </div>
+                </div>
             </div>
-            <input type="hidden" asp-for="Id"/>
             <div class="row mb-2 mt-5 mt-md-4 justify-content-center">
                 <div class="col-2 d-flex justify-content-center">
-                    <input type="submit" value="Guardar" class="btn btn-primary d-block mx-auto">
+                    <input type="submit" value="Guardar" class="btn btn-primary d-block mx-auto" :class="{ disabled: estaCargando }" :disabled="estaCargando">
                 </div>
             </div>
         </form>
     </div>
 
-    <div class="row mt-2 mb-3">
+    @* <div class="row mt-2 mb-3">
         <div class="row bg-light w-75 mx-auto border rounded-4 shadow-sm px-0">
             <div class="col-12 @(!string.IsNullOrWhiteSpace(Model.Avatar)?"col-md-8":"") mt-5 mt-md-1 mb-md-0 px-1">
                 <form asp-action="ActualizarAvatar" enctype="multipart/form-data" id="form-avatar-usuario" class="mt-2 mb-3 bg-light-subtle">
@@ -138,6 +192,8 @@
             const { createApp } = Vue;
             const editUsuarioDefault = { username: null, rol: null };
             const erroresEditUsuarioDefault = { username: null, rol: null };
+            const editPasswordDefault = { passwordActual: null, passwordNuevo: null };
+            const erroresEditPasswordDefault = { passwordActual: null, passwordNuevo: null };
 
             createApp({
                 data() {
@@ -153,12 +209,20 @@
                         },
                         editUsuario: { username: "@Model.UpdateDatosVM!.Username", rol: "@Model.UpdateDatosVM!.Rol" },
                         erroresEditUsuario: { ...erroresEditUsuarioDefault },
+                        editPassword: { ...editPasswordDefault },
+                        erroresEditPassword: { ...erroresEditPasswordDefault },
                         mensaje: "",
                         esMensajeError: false,
                         mostrarPassword: false,
                         passwordInputType: "password",
                         passwordTooltip: "Mostrar Contraseña",
-                        estaCargando: false
+                        estaCargando: false,
+                        mostrarPasswordNuevo: false,
+                        passwordNuevoInputType: "password",
+                        passwordNuevoTooltip: "Mostrar Contraseña",
+                        mostrarPasswordActual: false,
+                        passwordActualInputType: "password",
+                        passwordActualTooltip: "Mostrar Contraseña"
                     }
                 },
                 methods: {
@@ -206,6 +270,71 @@
                             }
                         );
                         return !Object.keys(this.erroresEditUsuario).some(v => this.erroresEditUsuario[v]);
+                    },
+                    async onSubmitUpdatePassword() {
+                        this.estaCargando = true;
+                        if (this.esFormularioEditPasswordValido()) {
+                            let url = `${this.urlBase}/password/${this.usuarioId}`;
+                            this.opcionesFetch.body = JSON.stringify(this.editPassword);
+                            this.opcionesFetch.headers['RequestVerificationToken'] = document.getElementsByName("__RequestVerificationToken")?.item(1)?.value;
+                            try{
+                                const response = await fetch(url, this.opcionesFetch);
+                                if (response.ok) {
+                                    @* const data = await response.json(); *@
+                                    this.editPassword = { ...editPasswordDefault };
+                                    this.mostrarMensaje("Contraseña Actualizada");
+                                } else {
+                                    const { mensaje, errors } = await response.json();
+                                    if (errors) {
+                                        Object.keys(errors).forEach(e => {
+                                            this.erroresEditPassword[e.toLowerCase()] = errors[e].join(", ");
+                                        });
+                                    } else {
+                                        this.mostrarMensaje(mensaje ?? "La petición no es correcta", false);
+                                    }
+                                }
+                            } catch {
+                                this.mostrarMensaje("Se produjo un error al hacer la petición", false);
+                            }
+                        }
+                        this.estaCargando = false;
+                    },
+                    esFormularioEditPasswordValido() {
+                        const mapaValidador = new Map([
+                            ["passwordNuevo", validarPasswordNuevo],
+                            ["passwordActual", validarPasswordActual]
+                        ]);
+                        Object.keys(this.editPassword)
+                            .forEach(key => {
+                                this.erroresEditPassword[key] = mapaValidador.get(key)(this.editPassword[key]);
+                            }
+                        );
+                        return !Object.keys(this.erroresEditPassword).some(v => this.erroresEditPassword[v]);
+                    },
+                    mostrarOcultarPasssword(clavePasswrod) {
+                        const clave = `mostrarP${clavePasswrod.slice(1)}`;
+                        this[clave] = !this[clave];
+                        if (this[clave]) {
+                            this.mostrarPasswordFn(clavePasswrod);
+                        }
+                        else {
+                            this.ocultarPassswordFn(clavePasswrod);
+                        }
+                    },
+                    mostrarPasswordFn(clavePasswrod) {
+                        this[`${clavePasswrod}InputType`] = "text";
+                        this[`${clavePasswrod}Tooltip`] = "Ocultar Contraseña";
+                        tooltipList[tooltipList
+                            .findIndex(t => t._element.id == `i-password-${clavePasswrod == "passwordActual" ? "actual" : "nuevo"}`)]
+                            .setContent({ '.tooltip-inner': this[`${clavePasswrod}Tooltip`] });
+                    },
+                    ocultarPassswordFn(clavePasswrod) {
+                        this.mostrarPassword = false;
+                        this[`${clavePasswrod}InputType`] = "password";
+                        this[`${clavePasswrod}Tooltip`] = "Mostrar Contraseña";
+                        tooltipList[tooltipList
+                            .findIndex(t => t._element.id == `i-password-${clavePasswrod == "passwordActual" ? "actual" : "nuevo"}`)]
+                            .setContent({ '.tooltip-inner': this[`${clavePasswrod}Tooltip`] });
                     }
                 },
                 mounted() {
@@ -215,21 +344,42 @@
                 }
             }).mount('#app-edit-usuario');
 
-            function validarUsername(cadena) {
-                if (!cadena)
-                    return "El nombre de usuario no puede estar vacío";
-                if (cadena.trim().length == 0)
-                    return "El nombre de usuario no puede estar vacío";
-                if (cadena.length > 20)
-                    return "El máximo de carateres permitidos es 20";
-                return;
-            }
-
-            function validarRol(valor) {
-                if (!valor)
-                    return "El rol es obligatorio";
-                return;
-            }
+            const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+            const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
         });
+
+        function validarUsername(valor) {
+            if (!valor)
+                return "El nombre de usuario no puede estar vacío";
+            if (valor.trim().length == 0)
+                return "El nombre de usuario no puede estar vacío";
+            if (valor.length > 20)
+                return "El máximo de carateres permitidos es 20";
+            return;
+        }
+
+        function validarRol(valor) {
+            if (!valor)
+                return "El rol es obligatorio";
+            return;
+        }
+
+        function validarPasswordNuevo(valor) {
+            if (!valor)
+                return "No ingresó la contraseña nueva";
+            if (valor.trim().length == 0)
+                return "No ingresó la contraseña nueva";
+            if (valor.length < 8)
+                return "La contraseña debe tener al menos 8 caracteres";
+            return;
+        }
+
+        function validarPasswordActual(valor) {
+            if (!valor)
+                return "No ingresó la contraseña actual";
+            if (valor.trim().length == 0)
+                return "No ingresó la contraseña actual";
+            return;
+        }
     </script>
 }

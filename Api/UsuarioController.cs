@@ -76,6 +76,8 @@ public class UsuarioController(IUsuarioRepository repo, IConfiguration config) :
 
         try
         {
+            usuario.Password = HashearPassword(usuario.Password!);
+
             if ((await _repo.CreateAsync(usuario)) > 0)
             {
                 vm.Id = usuario.Id;
@@ -159,22 +161,19 @@ public class UsuarioController(IUsuarioRepository repo, IConfiguration config) :
 
         try
         {
+            if (vm.PasswordNuevo == null)
+                return BadRequest(new { mensaje = "Falta la contraseña nueva" });
+
+            if (vm.PasswordActual == null)
+                return BadRequest(new { mensaje = "Falta la contraseña actual" });
+
             Usuario? usuario = await _repo.GetByIdAsync(id);
 
             if (usuario == null)
                 return BadRequest(new { mensaje = "El usuario no existe" });
-            
-            if (vm.PasswordNuevo != null)
-            {
-                if (vm.PasswordActual != null && usuario.Password != HashearPassword(vm.PasswordActual))
-                {
-                    return BadRequest(new { mensaje = "La contraseña actual no es correcta" });
-                }
-            }
-            else
-            {
-                return BadRequest(new { mensaje = "Falta la contraseña nueva" });
-            }
+
+            if (usuario.Password != HashearPassword(vm.PasswordActual))
+                return BadRequest(new { mensaje = "La contraseña actual no es correcta" });
 
             usuario.Password = HashearPassword(vm.PasswordNuevo);
 
@@ -229,6 +228,8 @@ public class UsuarioController(IUsuarioRepository repo, IConfiguration config) :
 
     private string HashearPassword(string password)
     {
+        if (password == null)
+            throw new ClientException("No se ingresó una contraseña");
         return Convert.ToBase64String(KeyDerivation.Pbkdf2(
             password: password,
             salt: System.Text.Encoding.ASCII.GetBytes(_config["Salt"] ?? "el mejor condimento del asado"),
