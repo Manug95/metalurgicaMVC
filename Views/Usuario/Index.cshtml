@@ -295,8 +295,10 @@
                                     const data = await response.json();
                                     if (this.usuarios.length < this.limit) 
                                         this.usuarios.push(data?.usuario);
-                                    else if (this.cantidadPaginas == 1)
+                                    else if (this.esUltimaPagina) {
                                         this.cantidadPaginas++;
+                                        this.esUltimaPagina = false;
+                                    }
                                     if (formModal)
                                         formModal.hide();
                                     this.mostrarMensaje("Usuario Registrado");
@@ -326,10 +328,6 @@
                             .forEach(key => {
                                 if (key == "id" || key == "avatar")
                                     return;
-                                if (key == "password"){
-                                    console.log(key);
-                                    return;
-                                }
                                 this.erroresUsuario[key] = mapaValidador.get(key)(this.usuario[key]);
                             }
                         );

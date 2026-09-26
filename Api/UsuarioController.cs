@@ -195,7 +195,7 @@ public class UsuarioController(IUsuarioRepository repo, IConfiguration config) :
 
     [HttpPatch("{id}")]
 	[ValidateAntiForgeryToken]
-    public async Task<IActionResult> EditUsuario([FromRoute] int id, [FromBody] EditUsuarioVM vm)
+    public async Task<IActionResult> EditUsuario([FromRoute] int id, [FromBody] UpdateDatosVM vm)
     {
         if (id <= 0)
             return BadRequest();

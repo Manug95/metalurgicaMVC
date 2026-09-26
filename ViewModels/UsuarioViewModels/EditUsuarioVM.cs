@@ -1,20 +1,16 @@
-using System.ComponentModel.DataAnnotations;
-
 namespace metalurgicaMVC.ViewModels.UsuarioViewModels;
 
+/// <summary>
+/// Esta clase es para los datos de la vista
+/// Las propiedades UpdatePasswordVM, UpdateDatosVM y UpdateAvatarVM son
+///  los modelos que enviaran las peticiones ajax
+/// </summary>
 public class EditUsuarioVM
 {
     public int Id { get; set; }
     public UpdatePasswordVM? UpdatePasswordVM { get; set; }
 
-    [Display(Name = "Nombre de Usuario")]
-    public string? Username { get; set; }
+    public UpdateDatosVM? UpdateDatosVM { get; set; }
 
-    [Display(Name = "ROL")]
-    public string? Rol { get; set; }
-
-    [Display(Name = "Foto Perfil")]
-    public string? Avatar { get; set; }
-
-    public IFormFile? AvatarFile { get; set; }
+    public UpdateAvatarVM? UpdateAvatarVM { get; set; }
 }

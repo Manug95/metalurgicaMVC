@@ -22,10 +22,10 @@
             <span class="display-6">Editar Datos de Usuario</span>
             <div class="row mt-3 mb-md-4 pb-3 bg-light-subtle">
                 <div class="col-12 col-md-6 mt-5 mt-md-1 mb-md-0">
-                    <label asp-for="Username" class="form-label fw-bold">@Html.DisplayNameFor(model => model.Username)</label>
+                    <label asp-for="UpdateDatosVM.Username" class="form-label fw-bold">@Html.DisplayNameFor(model => model.UpdateDatosVM!.Username)</label>
                     <input 
                         type="text" 
-                        asp-for="Username" 
+                        asp-for="UpdateDatosVM.Username" 
                         v-model="editUsuario.username" 
                         class="form-control" 
                         :class="{ 'is-invalid': erroresEditUsuario.username }" 
@@ -33,7 +33,7 @@
                         aria-describedby="error_username"
                     >
                     <span 
-                        asp-validation-for="Username" 
+                        asp-validation-for="UpdateDatosVM.Username" 
                         id="error_username" 
                         class="invalid-feedback" 
                         @* v-if="erroresEditUsuario.username" *@
@@ -42,20 +42,20 @@
                     </span>
                 </div>
                 <div class="col-12 col-md-6 mt-5 mt-md-1 mb-md-0">
-                    <label asp-for="Rol" class="form-label fw-bold">@Html.DisplayNameFor(model => model.Rol)</label>
+                    <label asp-for="UpdateDatosVM.Rol" class="form-label fw-bold">@Html.DisplayNameFor(model => model.UpdateDatosVM!.Rol)</label>
                     <select 
-                        asp-for="Rol" 
+                        asp-for="UpdateDatosVM.Rol" 
                         id="rol" 
                         v-model="editUsuario.rol" 
                         class="form-select" 
                         :class="{ 'is-invalid': erroresEditUsuario.rol }" 
                         aria-describedby="error_rol"
                     >
-                        <option value="@Rol.ADMIN" selected="@(Model.Rol==Rol.ADMIN.ToString())">@Rol.ADMIN</option>
-                        <option value="@Rol.EMPLEADO" selected="@(Model.Rol==Rol.EMPLEADO.ToString())">@Rol.EMPLEADO</option>
+                        <option value="@Rol.ADMIN" selected="@(Model.UpdateDatosVM!.Rol==Rol.ADMIN.ToString())">@Rol.ADMIN</option>
+                        <option value="@Rol.EMPLEADO" selected="@(Model.UpdateDatosVM.Rol==Rol.EMPLEADO.ToString())">@Rol.EMPLEADO</option>
                     </select>
                     <span 
-                        asp-validation-for="Rol" 
+                        asp-validation-for="UpdateDatosVM.Rol" 
                         id="error_rol" 
                         class="invalid-feedback" 
                         @* v-if="erroresEditUsuario.rol" *@
@@ -151,7 +151,7 @@
                             },
                             body: null
                         },
-                        editUsuario: { username: "@Model.Username", rol: "@Model.Rol" },
+                        editUsuario: { username: "@Model.UpdateDatosVM!.Username", rol: "@Model.UpdateDatosVM!.Rol" },
                         erroresEditUsuario: { ...erroresEditUsuarioDefault },
                         mensaje: "",
                         esMensajeError: false,

@@ -61,11 +61,17 @@ public class UsuarioController(IUsuarioRepository repo) : Controller
         }
 
         return View(new EditUsuarioVM() { 
-            UpdatePasswordVM = new UpdatePasswordVM(),
             Id = id,
-            Avatar = usuario.Avatar,
-            Username = usuario.Username,
-            Rol = usuario.Rol
+            UpdateDatosVM = new UpdateDatosVM()
+            {
+                Username = usuario.Username,
+                Rol = usuario.Rol
+            },
+            UpdatePasswordVM = new UpdatePasswordVM(),
+            UpdateAvatarVM = new UpdateAvatarVM()
+            {
+                Avatar = usuario.Avatar
+            }
         });
     }
 }
