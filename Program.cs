@@ -1,5 +1,6 @@
 using metalurgicaMVC.Interfaces;
 using metalurgicaMVC.Repositories;
+using metalurgicaMVC.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -9,6 +10,7 @@ builder.Services.AddControllersWithViews();
 
 builder.Services.AddScoped<IClienteRepository, ClienteRepository>();
 builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
+builder.Services.AddScoped<IFileService, FileService>();
 
 var configuration = builder.Configuration;
 
