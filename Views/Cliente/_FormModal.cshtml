@@ -10,7 +10,7 @@
             </div>
             <div class="modal-body justify-content-center align-items-center">
                 <div class="container-md">
-                    <div class="d-flex justify-content-center align-items-center vh-50 w-100">
+                    <div class="row mt-2 mb-3">
                         <form 
                             id="form-cliente" 
                             @@submit.prevent="onSubmitCliente" 
@@ -24,51 +24,103 @@
                                         @Html.DisplayNameFor(model => model.Nombre)
                                         <span class="text-danger">*</span>
                                     </label>
-                                    <input type="text" asp-for="Nombre" v-model="cliente.nombre" class="form-control" id="nombre" aria-describedby="error_nombre">
-                                    <div id="error_nombre" class="invalid-feedback"></div>
+                                    <input 
+                                        type="text" 
+                                        asp-for="Nombre" 
+                                        v-model="cliente.nombre" 
+                                        class="form-control" 
+                                        :class="{ 'is-invalid': erroresCliente.nombre }"
+                                        id="nombre" 
+                                        aria-describedby="error_nombre"
+                                    >
+                                    <div id="error_nombre" class="invalid-feedback" v-if="erroresCliente.nombre">{{ erroresCliente.nombre }}</div>
                                 </div>
                                 <div class="col-12 col-md-6 mt-5 mt-md-3 mb-md-0">
                                     <label asp-for="Apellido" class="form-label fw-bold">
                                         @Html.DisplayNameFor(model => model.Apellido)
                                         <span class="text-danger">*</span>
                                     </label>
-                                    <input type="text" asp-for="Apellido" v-model="cliente.apellido" class="form-control" id="apellido" aria-describedby="error_apellido">
-                                    <div id="error_apellido" class="invalid-feedback"></div>
+                                    <input 
+                                        type="text" 
+                                        asp-for="Apellido" 
+                                        v-model="cliente.apellido" 
+                                        class="form-control" 
+                                        :class="{ 'is-invalid': erroresCliente.apellido }"
+                                        id="apellido" 
+                                        aria-describedby="error_apellido"
+                                    >
+                                    <div id="error_apellido" class="invalid-feedback" v-if="erroresCliente.apellido">{{ erroresCliente.apellido }}</div>
                                 </div>
                             </div>
 
                             <div class="row mb-md-4">
                                 <div class="col-12 col-md-6 mt-5 mt-md-3 mb-md-0">
-                                    <label asp-for="Direccion" class="form-label fw-bold">@Html.DisplayNameFor(model => model.Direccion)</label>
-                                    <input type="text" asp-for="Direccion" v-model="cliente.direccion" class="form-control" id="direccion" aria-describedby="error_direccion">
-                                    <div id="error_direccion" class="invalid-feedback"></div>
+                                    <label asp-for="Direccion" class="form-label fw-bold">
+                                        @Html.DisplayNameFor(model => model.Direccion)
+                                    </label>
+                                    <input 
+                                        type="text" 
+                                        asp-for="Direccion" 
+                                        v-model="cliente.direccion" 
+                                        class="form-control" 
+                                        :class="{ 'is-invalid': erroresCliente.direccion }"
+                                        id="direccion" 
+                                        aria-describedby="error_direccion"
+                                    >
+                                    <div id="error_direccion" class="invalid-feedback" v-if="erroresCliente.direccion">{{ erroresCliente.direccion }}</div>
                                 </div>
                                 <div class="col-12 col-md-6 mt-5 mt-md-3 mb-md-0">
-                                    <label asp-for="Telefono" class="form-label fw-bold">@Html.DisplayNameFor(model => model.Telefono)</label>
-                                    <input type="text" asp-for="Telefono" v-model="cliente.telefono" class="form-control" id="telefono" aria-describedby="error_telefono">
-                                    <div id="error_telefono" class="invalid-feedback"></div>
+                                    <label asp-for="Telefono" class="form-label fw-bold">
+                                        @Html.DisplayNameFor(model => model.Telefono)
+                                    </label>
+                                    <input 
+                                        type="text" 
+                                        asp-for="Telefono" 
+                                        v-model="cliente.telefono" 
+                                        class="form-control" 
+                                        :class="{ 'is-invalid': erroresCliente.telefono }"
+                                        id="telefono" 
+                                        aria-describedby="error_telefono"
+                                    >
+                                    <div id="error_telefono" class="invalid-feedback" v-if="erroresCliente.telefono">{{ erroresCliente.telefono }}</div>
                                 </div>
                             </div>
 
                             <div class="row mb-md-4">
                                 <div class="col-12 col-md-6 mt-5 mt-md-3 mb-md-0">
-                                    <label asp-for="Cuit" class="form-label fw-bold">@Html.DisplayNameFor(model => model.Cuit)</label>
-                                    <input type="text" asp-for="Cuit" v-model="cliente.cuit" class="form-control" id="cuit" aria-describedby="error_cuit">
-                                    <div id="error_cuit" class="invalid-feedback"></div>
+                                    <label asp-for="Cuit" class="form-label fw-bold">
+                                        @Html.DisplayNameFor(model => model.Cuit)
+                                    </label>
+                                    <input 
+                                        type="text" 
+                                        asp-for="Cuit" 
+                                        v-model="cliente.cuit" 
+                                        class="form-control" 
+                                        :class="{ 'is-invalid': erroresCliente.cuit }"
+                                        id="cuit" 
+                                        aria-describedby="error_cuit"
+                                    >
+                                    <div id="error_cuit" class="invalid-feedback" v-if="erroresCliente.cuit">{{ erroresCliente.cuit }}</div>
                                 </div>
                             </div>
 
                             <input id="clienteId" type="hidden" asp-for="Id" v-model="cliente.id" aria-hidden="true"/>
 
-                            <div class="row mb-2 mt-5 mt-md-4 justify-content-evenly align-items-end pt-3">
-                                <div class="col-2 d-flex justify-content-center">
-                                    <button type="submit" class="btn btn-primary d-block mx-auto" :class="{ disabled: estaCargando }" :disabled="estaCargando">Guardar</button>
+                            <div class="row mb-2 pt-5 pt-md-4 justify-content-around align-items-end">
+                                <div class="col justify-content-center">
+                                    <button type="submit" class="btn btn-primary d-block mx-auto" :class="{ disabled: estaCargando }" :disabled="estaCargando">
+                                        <i class="bi bi-floppy"></i> Guardar
+                                    </button>
                                 </div>
-                                <div class="col-2 d-flex justify-content-center">
-                                    <button class="btn btn-secondary" type="button" @@click="limpiarFormulario">Limpiar</button>
+                                <div class="col justify-content-center">
+                                    <button type="button" class="btn btn-secondary d-block mx-auto" @@click="limpiarFormulario">
+                                        <i class="bi bi-eraser"></i> Limpiar
+                                    </button>
                                 </div>
-                                <div class="col-2 d-flex justify-content-center">
-                                    <button class="btn btn-outline-danger" type="button" data-bs-dismiss="modal" @@click="cancelarEditar">Cancelar</button>
+                                <div class="col justify-content-center">
+                                    <button type="button" class="btn btn-outline-danger d-block mx-auto" data-bs-dismiss="modal" @@click="cancelarEditar">
+                                        <i class="bi bi-x-circle"></i> Cancelar
+                                    </button>
                                 </div>
                             </div>
                         </form>

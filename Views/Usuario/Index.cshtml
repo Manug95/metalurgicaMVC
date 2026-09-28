@@ -134,6 +134,8 @@
 
         document.addEventListener("DOMContentLoaded", _ => {
             const { createApp } = Vue;
+            const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+            const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
             let modalEliminar;
             let formModal;
             const usuarioDefault = { id: 0, username: null, password: null, rol: "", avatar: null };
@@ -369,11 +371,8 @@
                     if (@(hayMensajeError.ToString().ToLower())) {
                         this.mostrarMensaje("@ViewBag.MensajeError", false);
                     }
-                    @* this.abrirFormModal(); *@
                 }
             }).mount('#app-usuarios');
-            const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
-            const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
         });
 
         function validarUsername(cadena) {
