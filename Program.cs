@@ -10,6 +10,7 @@ builder.Services.AddControllersWithViews();
 
 builder.Services.AddScoped<IClienteRepository, ClienteRepository>();
 builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
+builder.Services.AddScoped<IEmpleadoRepository, EmpleadoRepository>();
 builder.Services.AddScoped<IFileService, FileService>();
 
 var configuration = builder.Configuration;
