@@ -39,6 +39,8 @@ public class EmpleadoVM
     [Display(Name = "Fecha Fin")]
     public DateTime? FechaFin { get; set; }
 
+    public bool Activo { get; set; }
+
     public static EmpleadoVM From(Empleado empleado)
     {
         EmpleadoVM vm = new()
@@ -50,7 +52,8 @@ public class EmpleadoVM
             Seccion = empleado.Seccion,
             Sueldo = empleado.Sueldo,
             FechaContratado = empleado.FechaContratado,
-            FechaFin = empleado.FechaFin
+            FechaFin = empleado.FechaFin,
+            Activo = empleado.Activo
         };
 
         return vm;

@@ -34,7 +34,7 @@
                         value="@busqueda"
                     >
                     <span class="input-group-text" id="limpiar" style="cursor: pointer;" @@click="limpiar">
-                        <i class="bi bi-x-lg" data-bs-toggle="tooltip" data-bs-title="Limpiar"></i>
+                        <i class="bi bi-x-lg" data-bs-toggle="tooltip" data-bs-title="Limpiar Búsqueda"></i>
                     </span>
                     <div id="error_form_buscador" class="invalid-tooltip" v-if="errorBusqueda">{{ errorBusqueda }}</div>
                     <button type="submit" class="btn btn-primary" :disabled="estaCargando" role="button">
@@ -45,7 +45,7 @@
             </form>
         </div>
         <div class="col d-flex justify-content-end align-items-center mt-3 me-5">
-            <button class="btn btn-outline-dark" @@click="pedirUsuarios(1)">
+            <button class="btn btn-outline-dark" @@click="recargar">
                 <i class="bi bi-arrow-clockwise"></i>
                 Recargar Todos
             </button>
@@ -77,7 +77,7 @@
                     </td>
                     <td class="align-middle py-0 ps-2"> {{ u.username }} </td>
                     <td class="align-middle py-0 ps-2"> {{ u.rol }} </td>
-                    <td class="align-middle py-0 ps-2"> {{ u.activo ? "activo" : "inactivo" }} </td>
+                    <td class="align-middle py-0 ps-2"> {{ isActive(u) }} </td>
                     <td>
                         <div class="d-flex justify-content-evenly align-items-center">
                             <a class="icon-enlace" :href="`Usuario/Edit/${u.id}`">
@@ -170,7 +170,9 @@
                         esMensajeError: false,
                         mostrarPassword: false,
                         passwordInputType: "password",
-                        passwordTooltip: "Mostrar Contraseña"
+                        passwordTooltip: "Mostrar Contraseña",
+                        tooltipTriggerList: [],
+                        tooltipList: []
                     }
                 },
                 methods: {
@@ -239,10 +241,15 @@
                         this.paginaSiguiente = page + 1;
                         this.esPrimeraPagina = this.paginaAnterior == 0;
                         this.esUltimaPagina = this.paginaSiguiente > this.cantidadPaginas;
+                        setTimeout(() => { this.inicializarTooltips(); }, 2000);
                     },
                     limpiar() {
                         this.busqueda = "";
                         this.errorBusqueda = null;
+                    },
+                    recargar() {
+                        this.limpiar();
+                        this.pedirUsuarios(1);
                     },
                     abrirModalEliminar(id) {
                         this.usuarioIdEliminar = id;
@@ -365,12 +372,20 @@
                         this.passwordInputType = "password";
                         this.passwordTooltip = "Mostrar Contraseña";
                         tooltipList[tooltipList.findIndex(t => t._element.id == "i-password")].setContent({ '.tooltip-inner': this.passwordTooltip });
+                    },
+                    isActive(u) {
+                        return u.activo ? "✔" : "❌";
+                    },
+                    inicializarTooltips() {
+                        this.tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+                        this.tooltipList = [...this.tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
                     }
                 },
                 mounted() {
                     if (@(hayMensajeError.ToString().ToLower())) {
                         this.mostrarMensaje("@ViewBag.MensajeError", false);
                     }
+                    this.inicializarTooltips();
                 }
             }).mount('#app-usuarios');
         });

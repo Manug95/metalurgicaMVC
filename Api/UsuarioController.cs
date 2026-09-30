@@ -1,7 +1,6 @@
 using metalurgicaMVC.Exceptions;
 using metalurgicaMVC.Interfaces;
 using metalurgicaMVC.Models;
-using metalurgicaMVC.Utils;
 using metalurgicaMVC.ViewModels.UsuarioViewModels;
 using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 using Microsoft.AspNetCore.Mvc;
@@ -69,9 +68,6 @@ public class UsuarioController(IUsuarioRepository repo, IConfiguration config) :
 	[ValidateAntiForgeryToken]
     public async Task<IActionResult> PostUsuario([FromBody] UsuarioVM vm)
     {
-        if (!ModelState.IsValid) 
-            return BadRequest(new { mensaje = "Datos incorrectos", errors = Util.ModelStateJsonError(ModelState) });
-
         Usuario usuario = Usuario.From(vm);
 
         try
@@ -103,9 +99,6 @@ public class UsuarioController(IUsuarioRepository repo, IConfiguration config) :
         if (id <= 0)
             return BadRequest();
             
-        if (!ModelState.IsValid)
-            return BadRequest(new { mensaje = "Datos incorrectos", errors = Util.ModelStateJsonError(ModelState) });
-
         try
         {
             Usuario? usuario = await _repo.GetByIdAsync(id);
@@ -157,9 +150,6 @@ public class UsuarioController(IUsuarioRepository repo, IConfiguration config) :
         if (id <= 0)
             return BadRequest();
             
-        if (!ModelState.IsValid)
-            return BadRequest(new { mensaje = "Datos incorrectos", errors = Util.ModelStateJsonError(ModelState) });
-
         try
         {
             if (vm.PasswordNuevo == null)
@@ -200,9 +190,6 @@ public class UsuarioController(IUsuarioRepository repo, IConfiguration config) :
         if (id <= 0)
             return BadRequest();
             
-        if (!ModelState.IsValid)
-            return BadRequest(new { mensaje = "Datos incorrectos", errors = Util.ModelStateJsonError(ModelState) });
-
         try
         {
             Usuario? usuario = await _repo.GetByIdAsync(id);
@@ -234,9 +221,6 @@ public class UsuarioController(IUsuarioRepository repo, IConfiguration config) :
         if (id <= 0)
             return BadRequest();
             
-        if (!ModelState.IsValid)
-            return BadRequest(new { mensaje = "Datos incorrectos", errors = Util.ModelStateJsonError(ModelState) });
-
         try
         {
             Usuario? usuario = await _repo.GetByIdAsync(id);

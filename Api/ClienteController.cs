@@ -1,7 +1,6 @@
 using metalurgicaMVC.Exceptions;
 using metalurgicaMVC.Interfaces;
 using metalurgicaMVC.Models;
-using metalurgicaMVC.Utils;
 using metalurgicaMVC.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 
@@ -67,9 +66,6 @@ public class ClienteController(IClienteRepository repo) : ControllerBase
 	[ValidateAntiForgeryToken]
     public async Task<IActionResult> PostCliente([FromBody] ClienteVM vm)
     {
-        if (!ModelState.IsValid) 
-            return BadRequest(new { mensaje = "Datos incorrectos", errors = Util.ModelStateJsonError(ModelState) });
-
         Cliente cliente = Cliente.Parse(vm);
 
         try
@@ -99,9 +95,6 @@ public class ClienteController(IClienteRepository repo) : ControllerBase
         if (id <= 0)
             return BadRequest();
             
-        if (!ModelState.IsValid)
-            return BadRequest(new { mensaje = "Datos incorrectos", errors = Util.ModelStateJsonError(ModelState) });
-
         vm.Id = id;
 
         try

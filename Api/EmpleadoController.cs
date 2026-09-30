@@ -1,7 +1,6 @@
 using metalurgicaMVC.Exceptions;
 using metalurgicaMVC.Interfaces;
 using metalurgicaMVC.Models;
-using metalurgicaMVC.Utils;
 using metalurgicaMVC.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 
@@ -67,9 +66,6 @@ public class EmpleadoController(IEmpleadoRepository repo) : ControllerBase
 	[ValidateAntiForgeryToken]
     public async Task<IActionResult> PostEmpleado([FromBody] EmpleadoVM vm)
     {
-        if (!ModelState.IsValid) 
-            return BadRequest(new { mensaje = "Datos incorrectos", errors = Util.ModelStateJsonError(ModelState) });
-
         Empleado empleado = Empleado.From(vm);
 
         try
@@ -99,9 +95,6 @@ public class EmpleadoController(IEmpleadoRepository repo) : ControllerBase
         if (id <= 0)
             return BadRequest(new { mensaje = "id incorrecta" });
             
-        if (!ModelState.IsValid)
-            return BadRequest(new { mensaje = "Datos incorrectos", errors = Util.ModelStateJsonError(ModelState) });
-
         try
         {
             Empleado? empleado = await _repo.GetByIdAsync(id);

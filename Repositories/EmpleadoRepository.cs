@@ -70,7 +70,7 @@ public class EmpleadoRepository(DBContext context) : BaseRepository(context), IE
 
         try
         {
-            empleado?.FechaFin = DateTime.Today;
+            empleado?.Activo = false;
             return await _context.SaveChangesAsync() > 0;
         }
         catch (OperationCanceledException ex)

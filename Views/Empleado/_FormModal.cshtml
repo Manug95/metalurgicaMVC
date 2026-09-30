@@ -1,7 +1,7 @@
 @using metalurgicaMVC.ViewModels
-@model ClienteVM
+@model EmpleadoVM
 
-<div id="modal_formulario_cliente" class="modal fade modal-lg" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-describedby="titulo-modal">
+<div id="modal_formulario_empleado" class="modal fade modal-lg" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-describedby="titulo-modal">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content bg-light-subtle">
             <div class="modal-header">
@@ -12,8 +12,8 @@
                 <div class="container-md">
                     <div class="row mt-2 mb-3">
                         <form 
-                            id="form-cliente" 
-                            @@submit.prevent="onSubmitCliente" 
+                            id="form-empleado" 
+                            @@submit.prevent="onSubmitEmpleado" 
                             class="p-3 w-100 mx-auto border rounded-4 needs-validation bg-light" 
                             asp-antiforgery="true"
                         >
@@ -27,13 +27,13 @@
                                     <input 
                                         type="text" 
                                         asp-for="Nombre" 
-                                        v-model="cliente.nombre" 
+                                        v-model="empleado.nombre" 
                                         class="form-control" 
-                                        :class="{ 'is-invalid': erroresCliente.nombre }"
+                                        :class="{ 'is-invalid': erroresEmpleado.nombre }"
                                         id="nombre" 
                                         aria-describedby="error_nombre"
                                     >
-                                    <div id="error_nombre" class="invalid-feedback" v-if="erroresCliente.nombre">{{ erroresCliente.nombre }}</div>
+                                    <div id="error_nombre" class="invalid-feedback" v-if="erroresEmpleado.nombre">{{ erroresEmpleado.nombre }}</div>
                                 </div>
                                 <div class="col-12 col-md-6 mt-5 mt-md-3 mb-md-0">
                                     <label asp-for="Apellido" class="form-label fw-bold">
@@ -43,31 +43,70 @@
                                     <input 
                                         type="text" 
                                         asp-for="Apellido" 
-                                        v-model="cliente.apellido" 
+                                        v-model="empleado.apellido" 
                                         class="form-control" 
-                                        :class="{ 'is-invalid': erroresCliente.apellido }"
+                                        :class="{ 'is-invalid': erroresEmpleado.apellido }"
                                         id="apellido" 
                                         aria-describedby="error_apellido"
                                     >
-                                    <div id="error_apellido" class="invalid-feedback" v-if="erroresCliente.apellido">{{ erroresCliente.apellido }}</div>
+                                    <div id="error_apellido" class="invalid-feedback" v-if="erroresEmpleado.apellido">{{ erroresEmpleado.apellido }}</div>
                                 </div>
                             </div>
 
                             <div class="row mb-md-4">
                                 <div class="col-12 col-md-6 mt-5 mt-md-3 mb-md-0">
-                                    <label asp-for="Direccion" class="form-label fw-bold">
-                                        @Html.DisplayNameFor(model => model.Direccion)
+                                    <label asp-for="Seccion" class="form-label fw-bold">
+                                        @Html.DisplayNameFor(model => model.Seccion)
+                                        <span class="text-danger">*</span>
+                                    </label>
+                                    <select 
+                                        asp-for="Seccion" 
+                                        v-model="empleado.seccion" 
+                                        class="form-select" 
+                                        :class="{ 'is-invalid': erroresEmpleado.seccion }"
+                                        id="seccion" 
+                                        aria-describedby="error_seccion"
+                                    >
+                                        <option value="" disabled>Seleccionar sección</option>
+                                        <option value="OFICINA">OFICINA</option>
+                                        <option value="TALLER">TALLER</option>
+                                    </select>
+                                    <div id="error_seccion" class="invalid-feedback" v-if="erroresEmpleado.seccion">{{ erroresEmpleado.seccion }}</div>
+                                </div>
+                                <div class="col-12 col-md-6 mt-5 mt-md-3 mb-md-0">
+                                    <label asp-for="Sueldo" class="form-label fw-bold">
+                                        @Html.DisplayNameFor(model => model.Sueldo)
+                                        <span class="text-danger">*</span>
+                                    </label>
+                                    <input
+                                        type="number" 
+                                        asp-for="Sueldo" 
+                                        v-model="empleado.sueldo" 
+                                        class="form-control" 
+                                        :class="{ 'is-invalid': erroresEmpleado.sueldo }"
+                                        id="sueldo" 
+                                        aria-describedby="error_sueldo"
+                                    >
+                                    <div id="error_sueldo" class="invalid-feedback" v-if="erroresEmpleado.sueldo">{{ erroresEmpleado.sueldo }}</div>
+                                </div>
+                            </div>
+
+                            <div class="row mb-md-4">
+                                <div class="col-12 col-md-6 mt-5 mt-md-3 mb-md-0">
+                                    <label asp-for="FechaContratado" class="form-label fw-bold">
+                                        @Html.DisplayNameFor(model => model.FechaContratado)
+                                        <span class="text-danger">*</span>
                                     </label>
                                     <input 
-                                        type="text" 
-                                        asp-for="Direccion" 
-                                        v-model="cliente.direccion" 
+                                        type="date" 
+                                        asp-for="FechaContratado" 
+                                        v-model="empleado.fechaContratado" 
                                         class="form-control" 
-                                        :class="{ 'is-invalid': erroresCliente.direccion }"
-                                        id="direccion" 
-                                        aria-describedby="error_direccion"
+                                        :class="{ 'is-invalid': erroresEmpleado.fechaContratado }"
+                                        id="fechaContratado" 
+                                        aria-describedby="error_fechaContratado"
                                     >
-                                    <div id="error_direccion" class="invalid-feedback" v-if="erroresCliente.direccion">{{ erroresCliente.direccion }}</div>
+                                    <div id="error_fechaContratado" class="invalid-feedback" v-if="erroresEmpleado.fechaContratado">{{ erroresEmpleado.fechaContratado }}</div>
                                 </div>
                                 <div class="col-12 col-md-6 mt-5 mt-md-3 mb-md-0">
                                     <label asp-for="Telefono" class="form-label fw-bold">
@@ -76,35 +115,17 @@
                                     <input 
                                         type="text" 
                                         asp-for="Telefono" 
-                                        v-model="cliente.telefono" 
+                                        v-model="empleado.telefono" 
                                         class="form-control" 
-                                        :class="{ 'is-invalid': erroresCliente.telefono }"
+                                        :class="{ 'is-invalid': erroresEmpleado.telefono }"
                                         id="telefono" 
                                         aria-describedby="error_telefono"
                                     >
-                                    <div id="error_telefono" class="invalid-feedback" v-if="erroresCliente.telefono">{{ erroresCliente.telefono }}</div>
+                                    <div id="error_telefono" class="invalid-feedback" v-if="erroresEmpleado.telefono">{{ erroresEmpleado.telefono }}</div>
                                 </div>
                             </div>
 
-                            <div class="row mb-md-4">
-                                <div class="col-12 col-md-6 mt-5 mt-md-3 mb-md-0">
-                                    <label asp-for="Cuit" class="form-label fw-bold">
-                                        @Html.DisplayNameFor(model => model.Cuit)
-                                    </label>
-                                    <input 
-                                        type="text" 
-                                        asp-for="Cuit" 
-                                        v-model="cliente.cuit" 
-                                        class="form-control" 
-                                        :class="{ 'is-invalid': erroresCliente.cuit }"
-                                        id="cuit" 
-                                        aria-describedby="error_cuit"
-                                    >
-                                    <div id="error_cuit" class="invalid-feedback" v-if="erroresCliente.cuit">{{ erroresCliente.cuit }}</div>
-                                </div>
-                            </div>
-
-                            <input id="clienteId" type="hidden" asp-for="Id" v-model="cliente.id" aria-hidden="true"/>
+                            <input id="empleadoId" type="hidden" asp-for="Id" v-model="empleado.id" aria-hidden="true"/>
 
                             <div class="row mb-2 pt-5 pt-md-4 justify-content-around align-items-end">
                                 <div class="col justify-content-center">

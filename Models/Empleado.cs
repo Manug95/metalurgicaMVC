@@ -22,6 +22,8 @@ public class Empleado
 
     public DateTime? FechaFin { get; set; }
 
+    public bool Activo { get; set; } = true;
+
     public static Empleado From(EmpleadoVM vm)
     {
         Empleado empleado = new()
@@ -61,6 +63,7 @@ public class Empleado
         Sueldo = e.Sueldo;
         FechaContratado = e.FechaContratado;
         FechaFin = e.FechaFin;
+        Activo = e.Activo;
     }
 
     public void CopyFrom(EmpleadoVM vm)
