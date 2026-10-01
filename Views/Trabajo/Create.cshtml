@@ -1,0 +1,290 @@
+<div id="app" class="container" v-cloak>
+    <div class="row border rounded-4 p-3 mt-3">
+        <div class="col-12 col-md-6 col-lg mt-2 mt-lg-0 position-relative">
+            <label for="" class="form-label fw-bold">Cliente</label>
+            <!-- Input Group con ícono y campo de búsqueda -->
+            <div class="input-group mb-3">
+                <!-- Ícono de Lupa (Bootstrap Icons) -->
+                <span class="input-group-text bg-transparent border-end-0">
+                    <i class="bi bi-search text-muted"></i>
+                </span>
+                
+                <!-- Campo de entrada -->
+                <input 
+                    type="search" 
+                    id="searchInput" 
+                    class="form-control border-start-0 ps-0" 
+                    placeholder="Buscar..." 
+                    aria-label="Buscar"
+                    v-model="search"
+                    @@input="searchInputListener"
+                    @@focus="mostrarItemsClientes(true)"
+                    @@focusOut="mostrarItemsClientes(false)"
+                >
+
+                <!-- Botón opcional para limpiar la búsqueda -->
+                <button 
+                    type="button" id="clearBtn" 
+                    class="btn btn-outline-secondary d-none" 
+                    :class="{ 'd-none': search.trim().length > 0 }"
+                    @@click="limpiarSearch"
+                    style="cursor: pointer;"
+                >
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+
+            <!-- Contenedor o lista donde se muestran/filtran los resultados -->
+            <div id="resultsList" class="list-group position-absolute z-3 overflow-y-auto w-100" v-show="itemsClientes.length > 0 && searchFocused" style="height: 8em;">
+                <button 
+                    type="button" 
+                    class="list-group-item list-group-item-action search-item" 
+                    :class="{ active: index == 0, selected: index == 0 }"
+                    :autofocus="index == 0"
+                    v-for="(c, index) in itemsClientes" :key="c.id"
+                    @@click="seleccionarCliente(c)"
+                >
+                    {{ c.apellido + ", " + c.nombre }}
+                </button>
+            </div>
+        </div>
+        <div class="col-12 col-md-6 col-lg mt-3 mt-lg-0">
+            <label for="" class="form-label fw-bold">Fecha Solicitado</label>
+            <input type="date" class="form-control" v-model="trabajo.fechaSolicitado">
+        </div>
+    </div>
+    <div class="row border rounded-4 p-3 mt-3">
+        <h3 class="display-4">Detalle</h3>
+        <div class="col mt-1">
+            <div class="row">
+                <div class="col-12 col-md-6 col-lg">
+                    <label for="tipoOperacion" class="form-label fw-bold">Tipo Operación</label>
+                    <select id="tipoOperacion" class="form-select" :class="{ 'is-invalid': erroresDetalle.tipoOperacion }" v-model="itemDetalle.tipoOperacion">
+                        <option value="" selected disabled>Seleccionar...</option>
+                        <option value="Corte">Corte</option>
+                        <option value="Corte Plasma">Corte Plasma</option>
+                        <option value="Plegado">Plegado</option>
+                        <option value="Cilindrado">Cilindrado</option>
+                    </select>
+                    <div id="error_tipoOperacion" class="invalid-feedback" v-if="erroresDetalle.tipoOperacion">{{ erroresDetalle.tipoOperacion }}</div>
+                </div>
+                <div class="col-12 col-md-6 col-lg mt-3 mt-md-0">
+                    <label for="chapa" class="form-label fw-bold">Chapa</label>
+                    <select id="chapa" class="form-select" :class="{ 'is-invalid': erroresDetalle.chapa }" v-model="itemDetalle.chapa">
+                        <option value="" selected disabled>Seleccionar...</option>
+                        <option value="Acero al Carbono">Acero al Carbono</option>
+                        <option value="Acero Inoxidable">Acero Inoxidable</option>
+                        <option value="Galvanizada">Galvanizada</option>
+                        <option value="Prepintada">Prepintada</option>
+                    </select>
+                    <div id="error_chapa" class="invalid-feedback" v-if="erroresDetalle.chapa">{{ erroresDetalle.chapa }}</div>
+                </div>
+                <div class="col-12 col-md-6 col-lg mt-3 mt-lg-0">
+                    <label for="numero" class="form-label fw-bold">N°</label>
+                    <select id="numero" class="form-select" :class="{ 'is-invalid': erroresDetalle.numero }" v-model="itemDetalle.numero">
+                        <option value="" selected disabled>Seleccionar...</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="4">4</option>
+                        <option value="8">8</option>
+                        <option value="10">10</option>
+                        <option value="12">12</option>
+                        <option value="14">14</option>
+                        <option value="16">16</option>
+                        <option value="18">18</option>
+                        <option value="20">20</option>
+                        <option value="22">22</option>
+                        <option value=""24>24</option>
+                        <option value="26">26</option>
+                    </select>
+                    <div id="error_numero" class="invalid-feedback" v-if="erroresDetalle.numero">{{ erroresDetalle.numero }}</div>
+                </div>
+                <div class="col-12 col-md-6 col-lg mt-3 mt-lg-0">
+                    <label for="largo" class="form-label fw-bold">Largo (mm)</label>
+                    <input type="number" id="largo" class="form-control" :class="{ 'is-invalid': erroresDetalle.largo }" v-model="itemDetalle.largo">
+                    <div id="error_largo" class="invalid-feedback" v-if="erroresDetalle.largo">{{ erroresDetalle.largo }}</div>
+                </div>
+                <div class="col-12 col-md-6 col-lg mt-3 mt-lg-0">
+                    <label for="ancho" class="form-label fw-bold">Ancho (mm)</label>
+                    <input type="number" id="ancho" class="form-control" :class="{ 'is-invalid': erroresDetalle.ancho }" v-model="itemDetalle.ancho">
+                    <div id="error_ancho" class="invalid-feedback" v-if="erroresDetalle.ancho">{{ erroresDetalle.ancho }}</div>
+                </div>
+                <div class="col-12 col-md-6 col-lg mt-3 mt-lg-0">
+                    <label for="cantidad" class="form-label fw-bold">Cantidad</label>
+                    <input type="number" id="cantidad" class="form-control" :class="{ 'is-invalid': erroresDetalle.cantidad }" v-model="itemDetalle.cantidad">
+                    <div id="error_cantidad" class="invalid-feedback" v-if="erroresDetalle.cantidad">{{ erroresDetalle.cantidad }}</div>
+                </div>
+                <div class="col-12 mt-4 d-flex justify-content-evenly">
+                    <button type="button" class="btn btn-secondary" @@click="limpiar">{{ getTextoBotonLimpiar }}</button>
+                    <button type="button" class="btn btn-primary" @@click="add">{{ getTextoBotonAdd }}</button>
+                    <button type="button" class="btn btn-danger" @@click="borrarDetalle">Borrar Detalle</button>
+                </div>
+            </div>
+            <div class="row mt-4">
+                <div class="col">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between align-items-center" v-for="i in listaDetalle" :key="i.id">
+                            <span>
+                                {{ mostrar(i) }}
+                                <span>
+                                    <i class="bi bi-pencil-square text-primary icon-hover fs-5 ms-3" data-bs-toggle="tooltip" data-bs-title="Editar" @@click="editarDetalle(i)"></i>
+                                    <i class="bi bi-trash text-danger icon-hover fs-5 ms-3" data-bs-toggle="tooltip" data-bs-title="Eliminar" @@click="eliminarDetalle(i)"></i>
+                                </span>
+                            </span>
+                            <span class="badge text-bg-primary rounded-pill">{{ i.cantidad }}</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    
+</div>
+
+@section Scripts {
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script>
+        const { createApp } = Vue;
+        const itemDetalleDefault = { id: 0, tipoOperacion: "", chapa: "", numero: "", largo: 0, ancho: 0, cantidad: 0 };
+        const erroresDetalleDefault = { tipoOperacion: null, chapa: null, numero: null, largo: null, ancho: null, cantidad: null };
+        const trabajoDefault = { id: 0, fechaSolicitado: null, clienteId: 0, detalle: [] };
+
+        createApp({
+            data() {
+                return {
+                    listaDetalle: [
+                        { id: 1, tipoOperacion: "Corte", chapa: "Acero al Carbono", numero: "14", largo: 1200, ancho: 560, cantidad: 3 },
+                        { id: 2, tipoOperacion: "Plegado", chapa: "Acero al Carbono", numero: "14", largo: 1200, ancho: 560, cantidad: 3 },
+                        { id: 3, tipoOperacion: "Cilindrado", chapa: "Acero al Carbono", numero: "16", largo: 850, ancho: 300, cantidad: 1 }
+                    ],
+                    itemDetalle: { ...itemDetalleDefault },
+                    erroresDetalle: { ...erroresDetalleDefault },
+                    estaEditandoDetalle: false,
+                    trabajo: { ...trabajoDefault },
+                    search: "",
+                    searchFocused: false,
+                    itemsClientes: [],
+                    timeout: null,
+                    clienteSeleccionado: null,
+                    tooltipTriggerList: [],
+                    tooltipList: []
+                }
+            },
+            methods: {
+                limpiar() {
+                    if (this.estaEditandoDetalle)
+                        this.estaEditandoDetalle = false;
+                    this.itemDetalle = { ...itemDetalleDefault };
+                    this.erroresDetalle = { ...erroresDetalleDefault };
+                },
+                limpiarSearch() {
+                    this.search = "";
+                    this.itemsClientes = [];
+                    this.searchFocused = false;
+                },
+                add() {
+                    if (!this.esDetalleValido())
+                        return;
+                    if (!this.estaEditandoDetalle) {
+                        this.itemDetalle.id = this.listaDetalle.length+1;
+                        this.listaDetalle.push(this.itemDetalle);
+                        this.itemDetalle = { ...this.itemDetalle };
+                    } else {
+                        const indiceItemEditado = this.listaDetalle.findIndex(d => d.id == this.itemDetalle.id);
+                        if (indiceItemEditado >= 0)
+                            this.listaDetalle[indiceItemEditado] = this.itemDetalle;
+                        this.estaEditandoDetalle = false;
+                    }
+                    this.erroresDetalle = { ...erroresDetalleDefault };
+                },
+                esDetalleValido() {
+                    const mapaValidador = new Map([
+                        ["tipoOperacion", validarFormSelect],
+                        ["chapa", validarFormSelect],
+                        ["numero", validarFormSelect],
+                        ["largo", validarInputNumber],
+                        ["ancho", validarInputNumber],
+                        ["cantidad", validarInputNumber]
+                    ]);
+                    Object.keys(this.itemDetalle)
+                        .forEach(key => {
+                            if (key == "id") return;
+                            this.erroresDetalle[key] = mapaValidador.get(key)(this.itemDetalle[key]);
+                        }
+                    );
+                    return !Object.keys(this.erroresDetalle).some(v => this.erroresDetalle[v]);
+                },
+                editarDetalle(detalle) {
+                    this.itemDetalle = { ...detalle };
+                    this.estaEditandoDetalle = true;
+                },
+                eliminarDetalle(detalle) {
+                    this.listaDetalle.splice(this.listaDetalle.findIndex(d => d == detalle), 1);
+                },
+                mostrar(item) {
+                    return `${item.tipoOperacion} en chapa ${item.chapa} ${item.numero} ${item.largo} x ${item.ancho}`;
+                },
+                borrarDetalle() {
+                    this.listaDetalle = [];
+                },
+                async searchInputListener(e) {
+                    if (this.search.trim() == 0) {
+                        this.itemsClientes = [];
+                        return;
+                    }
+                    // Debounce: espera 300ms después de que el usuario deja de escribir
+                    clearTimeout(this.timeout);
+                    this.timeout = setTimeout(async () => {
+                        if (this.search.trim() == 0)
+                            return;
+                        // Lógica de filtrado
+                        try {
+                            const response = await fetch(`/api/clientes?busqueda=${this.search}`);
+                            const data = await response.json();
+
+                            this.itemsClientes = data.clientes;
+
+                        } catch (error) {
+                            console.error("Error en la búsqueda:", error);
+                        }
+                    }, 300);
+                },
+                seleccionarCliente(c) {
+                    this.clienteSeleccionado = c;
+                },
+                mostrarItemsClientes(valor) {
+                    this.searchFocused = valor;
+                },
+                inicializarTooltips() {
+                    this.tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+                    this.tooltipList = [...this.tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
+                }
+            },
+            computed: {
+                getTextoBotonAdd() {
+                    return this.estaEditandoDetalle ? "Confirmar Edición" : "Agregar"
+                },
+                getTextoBotonLimpiar() {
+                    return this.estaEditandoDetalle ? "Cancelar Edición" : "Limpiar Campos";
+                },
+            },
+            mounted() {
+                this.inicializarTooltips();
+            }
+        }).mount("#app");
+
+        function validarFormSelect(valor) {
+            if (!valor || valor.trim().length == 0)
+                return "Requerido";
+            return;
+        }
+
+        function validarInputNumber(valor) {
+            if (typeof valor == "string")
+                return "Requerido";
+            if (valor <= 0)
+                return "Debe ser mayor a 0";
+        }
+    </script>
+}
