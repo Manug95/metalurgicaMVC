@@ -1,5 +1,5 @@
 <div id="app" class="container" v-cloak>
-    <div class="row border rounded-4 p-3 mt-3">
+    <div class="row border rounded-4 p-3 mt-2">
         <div class="col-12 col-md-6 col-lg mt-2 mt-lg-0 position-relative">
             <label for="" class="form-label fw-bold">Cliente</label>
             <!-- Input Group con ícono y campo de búsqueda -->
@@ -53,7 +53,7 @@
             <input type="date" class="form-control" v-model="trabajo.fechaSolicitado">
         </div>
     </div>
-    <div class="row border rounded-4 p-3 mt-3">
+    <div class="row border rounded-4 p-3 mt-2">
         <h3 class="display-4">Detalle</h3>
         <div class="col mt-1">
             <div class="row">
@@ -62,42 +62,44 @@
                     <select id="tipoOperacion" class="form-select" :class="{ 'is-invalid': erroresDetalle.tipoOperacion }" v-model="itemDetalle.tipoOperacion">
                         <option value="" selected disabled>Seleccionar...</option>
                         <option value="Corte">Corte</option>
-                        <option value="Corte Plasma">Corte Plasma</option>
                         <option value="Plegado">Plegado</option>
+                        <option value="Corte y Plegado">Corte y Plegado</option>
+                        <option value="Corte Plasma">Corte Plasma</option>
                         <option value="Cilindrado">Cilindrado</option>
                     </select>
                     <div id="error_tipoOperacion" class="invalid-feedback" v-if="erroresDetalle.tipoOperacion">{{ erroresDetalle.tipoOperacion }}</div>
                 </div>
                 <div class="col-12 col-md-6 col-lg mt-3 mt-md-0">
                     <label for="chapa" class="form-label fw-bold">Chapa</label>
-                    <select id="chapa" class="form-select" :class="{ 'is-invalid': erroresDetalle.chapa }" v-model="itemDetalle.chapa">
+                    <select id="chapa" class="form-select" :class="{ 'is-invalid': erroresDetalle.chapa }" v-model="itemDetalle.chapa" @@change="resetSelectEspesor">
                         <option value="" selected disabled>Seleccionar...</option>
                         <option value="Acero al Carbono">Acero al Carbono</option>
-                        <option value="Acero Inoxidable">Acero Inoxidable</option>
                         <option value="Galvanizada">Galvanizada</option>
                         <option value="Prepintada">Prepintada</option>
                     </select>
                     <div id="error_chapa" class="invalid-feedback" v-if="erroresDetalle.chapa">{{ erroresDetalle.chapa }}</div>
                 </div>
                 <div class="col-12 col-md-6 col-lg mt-3 mt-lg-0">
-                    <label for="numero" class="form-label fw-bold">N°</label>
-                    <select id="numero" class="form-select" :class="{ 'is-invalid': erroresDetalle.numero }" v-model="itemDetalle.numero">
+                    <label for="espesor" class="form-label fw-bold">Espesor</label>
+                    <select id="espesor" class="form-select" :class="{ 'is-invalid': erroresDetalle.espesor }" v-model="itemDetalle.espesor">
                         <option value="" selected disabled>Seleccionar...</option>
-                        <option value="1">1</option>
-                        <option value="2">2</option>
-                        <option value="4">4</option>
-                        <option value="8">8</option>
-                        <option value="10">10</option>
-                        <option value="12">12</option>
-                        <option value="14">14</option>
-                        <option value="16">16</option>
-                        <option value="18">18</option>
-                        <option value="20">20</option>
-                        <option value="22">22</option>
-                        <option value=""24>24</option>
-                        <option value="26">26</option>
+                        <option value="1/2" v-if="itemDetalle.chapa=='Acero al Carbono'">1/2</option>
+                        <option value="3/8" v-if="itemDetalle.chapa=='Acero al Carbono'">3/8</option>
+                        <option value="5/16" v-if="itemDetalle.chapa=='Acero al Carbono'">5/16</option>
+                        <option value="1/4" v-if="itemDetalle.chapa=='Acero al Carbono'">1/4</option>
+                        <option value="3/16" v-if="itemDetalle.chapa=='Acero al Carbono'">3/16</option>
+                        <option value="1/8" v-if="itemDetalle.chapa=='Acero al Carbono'">1/8</option>
+                        <option value="12" v-if="itemDetalle.chapa=='Acero al Carbono'">12</option>
+                        <option value="14" v-if="itemDetalle.chapa=='Acero al Carbono'||itemDetalle.chapa=='Galvanizada'">14</option>
+                        <option value="16" v-if="itemDetalle.chapa=='Acero al Carbono'||itemDetalle.chapa=='Galvanizada'">16</option>
+                        <option value="18" v-if="itemDetalle.chapa=='Acero al Carbono'||itemDetalle.chapa=='Galvanizada'">18</option>
+                        <option value="20" v-if="itemDetalle.chapa=='Acero al Carbono'||itemDetalle.chapa=='Galvanizada'">20</option>
+                        <option value="22" v-if="itemDetalle.chapa=='Acero al Carbono'||itemDetalle.chapa=='Galvanizada'">22</option>
+                        <option value="24">24</option>
+                        <option value="27" v-if="itemDetalle.chapa=='Galvanizada'">27</option>
+                        <option value="30" v-if="itemDetalle.chapa=='Galvanizada'">30</option>
                     </select>
-                    <div id="error_numero" class="invalid-feedback" v-if="erroresDetalle.numero">{{ erroresDetalle.numero }}</div>
+                    <div id="error_espesor" class="invalid-feedback" v-if="erroresDetalle.espesor">{{ erroresDetalle.espesor }}</div>
                 </div>
                 <div class="col-12 col-md-6 col-lg mt-3 mt-lg-0">
                     <label for="largo" class="form-label fw-bold">Largo (mm)</label>
@@ -123,12 +125,24 @@
             <div class="row mt-4">
                 <div class="col">
                     <ul class="list-group list-group-flush">
-                        <li class="list-group-item d-flex justify-content-between align-items-center" v-for="i in listaDetalle" :key="i.id">
+                        <li class="list-group-item d-flex justify-content-between align-items-center" v-for="(i, index) in listaDetalle" :key="i.id">
                             <span>
                                 {{ mostrar(i) }}
                                 <span>
-                                    <i class="bi bi-pencil-square text-primary icon-hover fs-5 ms-3" data-bs-toggle="tooltip" data-bs-title="Editar" @@click="editarDetalle(i)"></i>
-                                    <i class="bi bi-trash text-danger icon-hover fs-5 ms-3" data-bs-toggle="tooltip" data-bs-title="Eliminar" @@click="eliminarDetalle(i)"></i>
+                                    <i 
+                                        class="bi bi-pencil-square text-primary icon-hover fs-5 ms-3" 
+                                        data-bs-toggle="tooltip" 
+                                        data-bs-title="Editar" 
+                                        :data-item="index"
+                                        @@click="editarDetalle(i)"
+                                    ></i>
+                                    <i 
+                                        class="bi bi-trash text-danger icon-hover fs-5 ms-3" 
+                                        data-bs-toggle="tooltip" 
+                                        data-bs-title="Eliminar" 
+                                        :data-item="index"
+                                        @@click="eliminarDetalle(i, index)"
+                                    ></i>
                                 </span>
                             </span>
                             <span class="badge text-bg-primary rounded-pill">{{ i.cantidad }}</span>
@@ -136,6 +150,28 @@
                     </ul>
                 </div>
             </div>
+        </div>
+        <div class="col-12 border-top pt-2">
+            <span class="fs-4">Cantidad de chapas estimada</span>
+            <div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item fs-5" v-for="(value, key) in cantidadesChapas">
+                        {{ getTipoChapa(key) }}: {{ value }}
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="row border rounded-4 p-3 mt-2">
+        <div class="col-12 d-flex flex-row-reverse p-1">
+            <span class="fs-4">Importe: $ {{ formatearImporte }}</span>
+        </div>
+        <div class="col-12 d-flex flex-row-reverse p-1">
+            <span class="fs-4">IVA: $ {{ formatearIVA }}</span>
+        </div>
+        <div class="col-12 d-flex flex-row-reverse p-1">
+            <span class="fs-4">Importe Total: $ {{ formatearImporteTotal }}</span>
         </div>
     </div>
 
@@ -146,17 +182,213 @@
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script>
         const { createApp } = Vue;
-        const itemDetalleDefault = { id: 0, tipoOperacion: "", chapa: "", numero: "", largo: 0, ancho: 0, cantidad: 0 };
-        const erroresDetalleDefault = { tipoOperacion: null, chapa: null, numero: null, largo: null, ancho: null, cantidad: null };
+        const itemDetalleDefault = { id: 0, tipoOperacion: "", chapa: "", espesor: "", largo: 0, ancho: 0, cantidad: 0 };
+        @* const itemDetalleDefault = { id: 4, tipoOperacion: "Corte", chapa: "Acero al Carbono", espesor: "14", largo: 1200, ancho: 560, cantidad: 3 }; *@
+        const erroresDetalleDefault = { tipoOperacion: null, chapa: null, espesor: null, largo: null, ancho: null, cantidad: null };
         const trabajoDefault = { id: 0, fechaSolicitado: null, clienteId: 0, detalle: [] };
+        const importeDefault = { monto: 0, iva: 0, total: 0 };
+        const cantidadesChapasDefault = { galvanizada: 0, Acarbono: 0, prepintada: 0 };
+        const chapas = {
+            galvanizada: {
+                '14': {
+                    largo: 2.44,
+                    ancho: 1.22,
+                    peso: 48.5,
+                    pesoXm2: 16.08,
+                    precio: 1090,
+                    precioXkg: 4500
+                },
+                '16': {
+                    largo: 2.44,
+                    ancho: 1.22,
+                    peso: 38.5,
+                    pesoXm2: 12.73,
+                    precio: 1090,
+                    precioXkg: 4600
+                },
+                '18': {
+                    largo: 2.44,
+                    ancho: 1.22,
+                    peso: 30,
+                    pesoXm2: 10.1,
+                    precio: 1090,
+                    precioXkg: 4700
+                },
+                '20': {
+                    largo: 2.44,
+                    ancho: 1.22,
+                    peso: 21.5,
+                    pesoXm2: 7.35,
+                    precio: 1090,
+                    precioXkg: 4700
+                },
+                '22': {
+                    largo: 2.44,
+                    ancho: 1.22,
+                    peso: 17.5,
+                    pesoXm2: 5.8,
+                    precio: 1090,
+                    precioXkg: 4800
+                },
+                '24': {
+                    largo: 2.44,
+                    ancho: 1.22,
+                    peso: 12.5,
+                    pesoXm2: 4.2,
+                    precio: 1,
+                    precioXkg: 4900
+                },
+                '27': {
+                    largo: 2.44,
+                    ancho: 1.22,
+                    peso: 10.5,
+                    pesoXm2: 3.35,
+                    precio: 1,
+                    precioXkg: 4500
+                },
+                '30': {
+                    largo: 2.44,
+                    ancho: 1.22,
+                    peso: 7.5,
+                    pesoXm2: 2.5,
+                    precio: 1,
+                    precioXkg: 4500
+                }
+            },
+            Acarbono: {
+                '1/2': {
+                    largo: 3,
+                    ancho: 1.5,
+                    peso: 450,
+                    pesoXm2: 100.48,
+                    precio: 2203,
+                    precioXkg: 3800
+                },
+                '3/8': {
+                    largo: 3,
+                    ancho: 1.5,
+                    peso: 340,
+                    pesoXm2: 75.4,
+                    precio: 2203,
+                    precioXkg: 4000
+                },
+                '5/16': {
+                    largo: 3,
+                    ancho: 1.5,
+                    peso: 283,
+                    pesoXm2: 62.8,
+                    precio: 2203,
+                    precioXkg: 4000
+                },
+                '1/4': {
+                    largo: 3,
+                    ancho: 1.5,
+                    peso: 226,
+                    pesoXm2: 50.24,
+                    precio: 2203,
+                    precioXkg: 4400
+                },
+                '3/16': {
+                    largo: 3,
+                    ancho: 1.5,
+                    peso: 172,
+                    pesoXm2: 37.58,
+                    precio: 2203,
+                    precioXkg: 4700
+                },
+                '1/8': {
+                    largo: 3,
+                    ancho: 1.5,
+                    peso: 116,
+                    pesoXm2: 25.12,
+                    precio: 2203,
+                    precioXkg: 3900
+                },
+                '12': {
+                    largo: 2.44,
+                    ancho: 1.22,
+                    peso: 60.5,
+                    pesoXm2: 21.666,
+                    precio: 2203,
+                    precioXkg: 3700
+                },
+                '14': {
+                    largo: 2.44,
+                    ancho: 1.22,
+                    peso: 48.5,
+                    pesoXm2: 16.5,
+                    precio: 2203,
+                    precioXkg: 3900
+                },
+                '16': {
+                    largo: 2.44,
+                    ancho: 1.22,
+                    peso: 38.5,
+                    pesoXm2: 13,
+                    precio: 1090,
+                    precioXkg: 4100
+                },
+                '18': {
+                    largo: 2.44,
+                    ancho: 1.22,
+                    peso: 30,
+                    pesoXm2: 10,
+                    precio: 1090,
+                    precioXkg: 4500
+                },
+                '20': {
+                    largo: 2.44,
+                    ancho: 1.22,
+                    peso: 20.5,
+                    pesoXm2: 7.12,
+                    precio: 1090,
+                    precioXkg: 4800
+                },
+                '22': {
+                    largo: 2.44,
+                    ancho: 1.22,
+                    peso: 17.5,
+                    pesoXm2: 5.7,
+                    precio: 1090,
+                    precioXkg: 4800
+                },
+                '24': {
+                    largo: 2.44,
+                    ancho: 1.22,
+                    peso: 13.5,
+                    pesoXm2: 4.4,
+                    precio: 1090,
+                    precioXkg: 4800
+                }
+            },
+            prepintada: {
+                '24': {
+                    largo: 2.44,
+                    ancho: 1.22,
+                    peso: 12.5,
+                    pesoXm2: 4.2,
+                    precio: 2203,
+                    precioXkg: 7100
+                }
+            }
+        };
+        const mapaChapas = new Map([
+            ["Galvanizada", "galvanizada"],
+            ["Acero al Carbono", "Acarbono"],
+            ["Prepintada", "prepintada"]
+        ]);
+        const formateador = new Intl.NumberFormat('es-ES', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
 
         createApp({
             data() {
                 return {
                     listaDetalle: [
-                        { id: 1, tipoOperacion: "Corte", chapa: "Acero al Carbono", numero: "14", largo: 1200, ancho: 560, cantidad: 3 },
-                        { id: 2, tipoOperacion: "Plegado", chapa: "Acero al Carbono", numero: "14", largo: 1200, ancho: 560, cantidad: 3 },
-                        { id: 3, tipoOperacion: "Cilindrado", chapa: "Acero al Carbono", numero: "16", largo: 850, ancho: 300, cantidad: 1 }
+                        { id: 1, tipoOperacion: "Corte", chapa: "Acero al Carbono", espesor: "14", largo: 1200, ancho: 560, cantidad: 3 },
+                        { id: 2, tipoOperacion: "Plegado", chapa: "Acero al Carbono", espesor: "14", largo: 1200, ancho: 560, cantidad: 3 },
+                        { id: 3, tipoOperacion: "Cilindrado", chapa: "Acero al Carbono", espesor: "16", largo: 850, ancho: 300, cantidad: 1 }
                     ],
                     itemDetalle: { ...itemDetalleDefault },
                     erroresDetalle: { ...erroresDetalleDefault },
@@ -168,7 +400,9 @@
                     timeout: null,
                     clienteSeleccionado: null,
                     tooltipTriggerList: [],
-                    tooltipList: []
+                    tooltipList: [],
+                    importe: { ...importeDefault },
+                    cantidadesChapas: { ...cantidadesChapasDefault }
                 }
             },
             methods: {
@@ -190,19 +424,22 @@
                         this.itemDetalle.id = this.listaDetalle.length+1;
                         this.listaDetalle.push(this.itemDetalle);
                         this.itemDetalle = { ...this.itemDetalle };
+                        setTimeout(() => { this.inicializarTooltips(); }, 1000+(this.listaDetalle.length*100));
                     } else {
                         const indiceItemEditado = this.listaDetalle.findIndex(d => d.id == this.itemDetalle.id);
                         if (indiceItemEditado >= 0)
                             this.listaDetalle[indiceItemEditado] = this.itemDetalle;
                         this.estaEditandoDetalle = false;
+                        this.itemDetalle = { ...itemDetalleDefault };
                     }
                     this.erroresDetalle = { ...erroresDetalleDefault };
+                    this.calcularPrecio();
                 },
-                esDetalleValido() {
+                esDetalleValido() {console.log(this.itemDetalle.espesor);
                     const mapaValidador = new Map([
                         ["tipoOperacion", validarFormSelect],
                         ["chapa", validarFormSelect],
-                        ["numero", validarFormSelect],
+                        ["espesor", validarFormSelect],
                         ["largo", validarInputNumber],
                         ["ancho", validarInputNumber],
                         ["cantidad", validarInputNumber]
@@ -219,14 +456,21 @@
                     this.itemDetalle = { ...detalle };
                     this.estaEditandoDetalle = true;
                 },
-                eliminarDetalle(detalle) {
+                eliminarDetalle(detalle, index) {
+                    this.tooltipList = this.tooltipList.filter(tooltip => {
+                        if (tooltip._element.dataset["item"] == index)
+                            tooltip.dispose(); // esto hace que tooltip._element sea null
+                        return tooltip._element; // si tooltip._element es null, ese tooltip se borro y no lo quiero en la lista
+                    });
                     this.listaDetalle.splice(this.listaDetalle.findIndex(d => d == detalle), 1);
+                    this.calcularPrecio();
                 },
                 mostrar(item) {
-                    return `${item.tipoOperacion} en chapa ${item.chapa} ${item.numero} ${item.largo} x ${item.ancho}`;
+                    return `${item.tipoOperacion} en chapa ${item.chapa} ${item.espesor} ${item.largo} x ${item.ancho}`;
                 },
                 borrarDetalle() {
                     this.listaDetalle = [];
+                    this.importe = { ...importeDefault };
                 },
                 async searchInputListener(e) {
                     if (this.search.trim() == 0) {
@@ -259,6 +503,37 @@
                 inicializarTooltips() {
                     this.tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
                     this.tooltipList = [...this.tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
+                },
+                calcularPrecio() {
+                    this.importe.monto = 0;
+                    this.listaDetalle.forEach(d => {
+                        /*
+                            largo y ancho estan en mm y pesoXm2 esta en m
+                            ¿deberia pasar los mm a m?
+                        */
+                        const area = (d.largo / 1000) * (d.ancho / 1000); // los pase m, pero despues veo bien
+                        const peso = area * chapas[mapaChapas.get(d.chapa)][d.espesor].pesoXm2;
+                        const nose = peso * chapas[mapaChapas.get(d.chapa)][d.espesor].precioXkg;
+
+                        this.importe.monto += Math.ceil(nose);
+                    });
+                    this.importe.iva = this.importe.monto * 0.21;
+                    this.importe.total = this.importe.monto + this.importe.iva;
+                    @* this.importe.total = this.importe.monto * 1.21; *@
+                },
+                calcularCantidadChapas() {
+                    this.listaDetalle.forEach(d => {
+                        const areaDeseada = (d.largo/1000 * d.ancho/1000) * d.cantidad;
+                        const chapa = chapas[mapaChapas.get(d.chapa)][d.espesor];
+                        const areaChapa = chapa.largo * chapa.ancho;
+                        this.cantidadesChapas[mapaChapas.get(d.chapa)] += Math.ceil(areaDeseada / areaChapa);
+                    });
+                },
+                resetSelectEspesor() {
+                    this.itemDetalle.espesor = "";
+                },
+                getTipoChapa(clave) {
+                    return mapaChapas.entries().find(entry => entry[1] == clave)[0];
                 }
             },
             computed: {
@@ -268,9 +543,20 @@
                 getTextoBotonLimpiar() {
                     return this.estaEditandoDetalle ? "Cancelar Edición" : "Limpiar Campos";
                 },
+                formatearImporte() {
+                    return formateador.format(this.importe.monto);
+                },
+                formatearIVA() {
+                    return formateador.format(this.importe.iva);
+                },
+                formatearImporteTotal() {
+                    return formateador.format(this.importe.total);
+                }
             },
             mounted() {
                 this.inicializarTooltips();
+                this.calcularPrecio();
+                this.calcularCantidadChapas();
             }
         }).mount("#app");
 
