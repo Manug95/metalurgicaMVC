@@ -54,12 +54,15 @@
         </div>
     </div>
     <div class="row border rounded-4 p-3 mt-2">
-        <h3 class="display-4">Detalle</h3>
+        <div class="col-12 d-flex justify-content-between align-items-start">
+            <h3 class="display-4">Detalle</h3>
+            <button type="button" class="btn btn-danger mt-2 mt-md-0" @@click="borrarDetalle">Borrar Detalle</button>
+        </div>
         <div class="col mt-1">
             <div class="row">
                 <div class="col-12 col-md-6 col-lg">
                     <label for="tipoOperacion" class="form-label fw-bold">Tipo Operación</label>
-                    <select id="tipoOperacion" class="form-select" :class="{ 'is-invalid': erroresDetalle.tipoOperacion }" v-model="itemDetalle.tipoOperacion">
+                    <select id="tipoOperacion" class="form-select" :class="{ 'is-invalid': erroresDetalleChapa.tipoOperacion }" v-model="itemDetalle.tipoOperacion">
                         <option value="" selected disabled>Seleccionar...</option>
                         <option value="Corte">Corte</option>
                         <option value="Plegado">Plegado</option>
@@ -67,21 +70,21 @@
                         <option value="Corte Plasma">Corte Plasma</option>
                         <option value="Cilindrado">Cilindrado</option>
                     </select>
-                    <div id="error_tipoOperacion" class="invalid-feedback" v-if="erroresDetalle.tipoOperacion">{{ erroresDetalle.tipoOperacion }}</div>
+                    <div id="error_tipoOperacion" class="invalid-feedback" v-if="erroresDetalleChapa.tipoOperacion">{{ erroresDetalleChapa.tipoOperacion }}</div>
                 </div>
                 <div class="col-12 col-md-6 col-lg mt-3 mt-md-0">
                     <label for="chapa" class="form-label fw-bold">Chapa</label>
-                    <select id="chapa" class="form-select" :class="{ 'is-invalid': erroresDetalle.chapa }" v-model="itemDetalle.chapa" @@change="resetSelectEspesor">
+                    <select id="chapa" class="form-select" :class="{ 'is-invalid': erroresDetalleChapa.chapa }" v-model="itemDetalle.chapa" @@change="resetSelectEspesor">
                         <option value="" selected disabled>Seleccionar...</option>
                         <option value="Acero al Carbono">Acero al Carbono</option>
                         <option value="Galvanizada">Galvanizada</option>
                         <option value="Prepintada">Prepintada</option>
                     </select>
-                    <div id="error_chapa" class="invalid-feedback" v-if="erroresDetalle.chapa">{{ erroresDetalle.chapa }}</div>
+                    <div id="error_chapa" class="invalid-feedback" v-if="erroresDetalleChapa.chapa">{{ erroresDetalleChapa.chapa }}</div>
                 </div>
                 <div class="col-12 col-md-6 col-lg mt-3 mt-lg-0">
                     <label for="espesor" class="form-label fw-bold">Espesor</label>
-                    <select id="espesor" class="form-select" :class="{ 'is-invalid': erroresDetalle.espesor }" v-model="itemDetalle.espesor">
+                    <select id="espesor" class="form-select" :class="{ 'is-invalid': erroresDetalleChapa.espesor }" v-model="itemDetalle.espesor">
                         <option value="" selected disabled>Seleccionar...</option>
                         <option value="1/2" v-if="itemDetalle.chapa=='Acero al Carbono'">1/2</option>
                         <option value="3/8" v-if="itemDetalle.chapa=='Acero al Carbono'">3/8</option>
@@ -99,27 +102,26 @@
                         <option value="27" v-if="itemDetalle.chapa=='Galvanizada'">27</option>
                         <option value="30" v-if="itemDetalle.chapa=='Galvanizada'">30</option>
                     </select>
-                    <div id="error_espesor" class="invalid-feedback" v-if="erroresDetalle.espesor">{{ erroresDetalle.espesor }}</div>
+                    <div id="error_espesor" class="invalid-feedback" v-if="erroresDetalleChapa.espesor">{{ erroresDetalleChapa.espesor }}</div>
                 </div>
                 <div class="col-12 col-md-6 col-lg mt-3 mt-lg-0">
                     <label for="largo" class="form-label fw-bold">Largo (mm)</label>
-                    <input type="number" id="largo" class="form-control" :class="{ 'is-invalid': erroresDetalle.largo }" v-model="itemDetalle.largo">
-                    <div id="error_largo" class="invalid-feedback" v-if="erroresDetalle.largo">{{ erroresDetalle.largo }}</div>
+                    <input type="number" id="largo" class="form-control" :class="{ 'is-invalid': erroresDetalleChapa.largo }" v-model="itemDetalle.largo">
+                    <div id="error_largo" class="invalid-feedback" v-if="erroresDetalleChapa.largo">{{ erroresDetalleChapa.largo }}</div>
                 </div>
                 <div class="col-12 col-md-6 col-lg mt-3 mt-lg-0">
                     <label for="ancho" class="form-label fw-bold">Ancho (mm)</label>
-                    <input type="number" id="ancho" class="form-control" :class="{ 'is-invalid': erroresDetalle.ancho }" v-model="itemDetalle.ancho">
-                    <div id="error_ancho" class="invalid-feedback" v-if="erroresDetalle.ancho">{{ erroresDetalle.ancho }}</div>
+                    <input type="number" id="ancho" class="form-control" :class="{ 'is-invalid': erroresDetalleChapa.ancho }" v-model="itemDetalle.ancho">
+                    <div id="error_ancho" class="invalid-feedback" v-if="erroresDetalleChapa.ancho">{{ erroresDetalleChapa.ancho }}</div>
                 </div>
                 <div class="col-12 col-md-6 col-lg mt-3 mt-lg-0">
                     <label for="cantidad" class="form-label fw-bold">Cantidad</label>
-                    <input type="number" id="cantidad" class="form-control" :class="{ 'is-invalid': erroresDetalle.cantidad }" v-model="itemDetalle.cantidad">
-                    <div id="error_cantidad" class="invalid-feedback" v-if="erroresDetalle.cantidad">{{ erroresDetalle.cantidad }}</div>
+                    <input type="number" id="cantidad" class="form-control" :class="{ 'is-invalid': erroresDetalleChapa.cantidad }" v-model="itemDetalle.cantidad">
+                    <div id="error_cantidad" class="invalid-feedback" v-if="erroresDetalleChapa.cantidad">{{ erroresDetalleChapa.cantidad }}</div>
                 </div>
                 <div class="col-12 mt-4 d-flex justify-content-evenly">
-                    <button type="button" class="btn btn-secondary" @@click="limpiar">{{ getTextoBotonLimpiar }}</button>
-                    <button type="button" class="btn btn-primary" @@click="add">{{ getTextoBotonAdd }}</button>
-                    <button type="button" class="btn btn-danger" @@click="borrarDetalle">Borrar Detalle</button>
+                    <button type="button" class="btn btn-secondary" @@click="limpiarInputsChapas">{{ getTextoBotonLimpiar }}</button>
+                    <button type="button" class="btn btn-primary" @@click="addItemChapas">{{ getTextoBotonAdd }}</button>
                 </div>
             </div>
             <div class="row mt-4">
@@ -127,17 +129,17 @@
                     <ul class="list-group list-group-flush">
                         <li class="list-group-item d-flex justify-content-between align-items-center" v-for="(i, index) in listaDetalle" :key="i.id">
                             <span>
-                                {{ mostrar(i) }}
+                                {{ mostrarItemDetalle(i) }}
                                 <span>
                                     <i 
-                                        class="bi bi-pencil-square text-primary icon-hover fs-5 ms-3" 
+                                        class="bi bi-pencil-square text-primary icon-hover fs-5 ms-2 ms-md-3" 
                                         data-bs-toggle="tooltip" 
                                         data-bs-title="Editar" 
                                         :data-item="index"
                                         @@click="editarDetalle(i)"
                                     ></i>
                                     <i 
-                                        class="bi bi-trash text-danger icon-hover fs-5 ms-3" 
+                                        class="bi bi-trash text-danger icon-hover fs-5 ms-2 ms-md-3" 
                                         data-bs-toggle="tooltip" 
                                         data-bs-title="Eliminar" 
                                         :data-item="index"
@@ -182,9 +184,9 @@
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script>
         const { createApp } = Vue;
-        const itemDetalleDefault = { id: 0, tipoOperacion: "", chapa: "", espesor: "", largo: 0, ancho: 0, cantidad: 0 };
-        @* const itemDetalleDefault = { id: 4, tipoOperacion: "Corte", chapa: "Acero al Carbono", espesor: "14", largo: 1200, ancho: 560, cantidad: 3 }; *@
-        const erroresDetalleDefault = { tipoOperacion: null, chapa: null, espesor: null, largo: null, ancho: null, cantidad: null };
+        const itemDetalleDefault = { id: 0, tipo: "", tipoOperacion: "", chapa: "", espesor: "", largo: 0, ancho: 0, cantidad: 0 };
+        @* const itemDetalleDefault = { id: 4, tipo: "chapa", tipoOperacion: "Corte", chapa: "Acero al Carbono", espesor: "14", largo: 1200, ancho: 560, cantidad: 3 }; *@
+        const erroresDetalleChapaDefault = { tipoOperacion: null, chapa: null, espesor: null, largo: null, ancho: null, cantidad: null };
         const trabajoDefault = { id: 0, fechaSolicitado: null, clienteId: 0, detalle: [] };
         const importeDefault = { monto: 0, iva: 0, total: 0 };
         const cantidadesChapasDefault = { galvanizada: 0, Acarbono: 0, prepintada: 0 };
@@ -386,12 +388,12 @@
             data() {
                 return {
                     listaDetalle: [
-                        { id: 1, tipoOperacion: "Corte", chapa: "Acero al Carbono", espesor: "14", largo: 1200, ancho: 560, cantidad: 3 },
-                        { id: 2, tipoOperacion: "Plegado", chapa: "Acero al Carbono", espesor: "14", largo: 1200, ancho: 560, cantidad: 3 },
-                        { id: 3, tipoOperacion: "Cilindrado", chapa: "Acero al Carbono", espesor: "16", largo: 850, ancho: 300, cantidad: 1 }
+                        { id: 1, tipo: "chapa", tipoOperacion: "Corte", chapa: "Acero al Carbono", espesor: "14", largo: 1200, ancho: 560, cantidad: 3 },
+                        { id: 2, tipo: "chapa", tipoOperacion: "Plegado", chapa: "Acero al Carbono", espesor: "14", largo: 1200, ancho: 560, cantidad: 3 },
+                        { id: 3, tipo: "chapa", tipoOperacion: "Cilindrado", chapa: "Acero al Carbono", espesor: "16", largo: 850, ancho: 300, cantidad: 1 }
                     ],
                     itemDetalle: { ...itemDetalleDefault },
-                    erroresDetalle: { ...erroresDetalleDefault },
+                    erroresDetalleChapa: { ...erroresDetalleChapaDefault },
                     estaEditandoDetalle: false,
                     trabajo: { ...trabajoDefault },
                     search: "",
@@ -406,36 +408,37 @@
                 }
             },
             methods: {
-                limpiar() {
+                limpiarInputsChapas() {
                     if (this.estaEditandoDetalle)
                         this.estaEditandoDetalle = false;
                     this.itemDetalle = { ...itemDetalleDefault };
-                    this.erroresDetalle = { ...erroresDetalleDefault };
+                    this.erroresDetalleChapa = { ...erroresDetalleChapaDefault };
                 },
                 limpiarSearch() {
                     this.search = "";
                     this.itemsClientes = [];
                     this.searchFocused = false;
                 },
-                add() {
-                    if (!this.esDetalleValido())
+                addItemChapas() {
+                    if (!this.esDetalleChapasValido())
                         return;
-                    if (!this.estaEditandoDetalle) {
-                        this.itemDetalle.id = this.listaDetalle.length+1;
-                        this.listaDetalle.push(this.itemDetalle);
-                        this.itemDetalle = { ...this.itemDetalle };
-                        setTimeout(() => { this.inicializarTooltips(); }, 1000+(this.listaDetalle.length*100));
-                    } else {
+                    if (this.estaEditandoDetalle) {
                         const indiceItemEditado = this.listaDetalle.findIndex(d => d.id == this.itemDetalle.id);
                         if (indiceItemEditado >= 0)
                             this.listaDetalle[indiceItemEditado] = this.itemDetalle;
                         this.estaEditandoDetalle = false;
                         this.itemDetalle = { ...itemDetalleDefault };
+                    } else {
+                        this.itemDetalle.id = Math.max(...this.listaDetalle.map(d => d.id)) + 1;
+                        this.itemDetalle.tipo = "chapa";
+                        this.listaDetalle.push(this.itemDetalle);
+                        this.itemDetalle = { ...this.itemDetalle };
+                        setTimeout(() => { this.inicializarTooltips(); }, 1000+(this.listaDetalle.length*100));
                     }
-                    this.erroresDetalle = { ...erroresDetalleDefault };
                     this.calcularPrecio();
+                    this.calcularCantidadChapas();
                 },
-                esDetalleValido() {console.log(this.itemDetalle.espesor);
+                esDetalleChapasValido() {
                     const mapaValidador = new Map([
                         ["tipoOperacion", validarFormSelect],
                         ["chapa", validarFormSelect],
@@ -444,13 +447,14 @@
                         ["ancho", validarInputNumber],
                         ["cantidad", validarInputNumber]
                     ]);
+                    const clavesAValidar = [...mapaValidador.keys()];
                     Object.keys(this.itemDetalle)
                         .forEach(key => {
-                            if (key == "id") return;
-                            this.erroresDetalle[key] = mapaValidador.get(key)(this.itemDetalle[key]);
+                            if (!clavesAValidar.includes(key)) return;
+                            this.erroresDetalleChapa[key] = mapaValidador.get(key)(this.itemDetalle[key]);
                         }
                     );
-                    return !Object.keys(this.erroresDetalle).some(v => this.erroresDetalle[v]);
+                    return !Object.keys(this.erroresDetalleChapa).some(v => this.erroresDetalleChapa[v]);
                 },
                 editarDetalle(detalle) {
                     this.itemDetalle = { ...detalle };
@@ -464,13 +468,18 @@
                     });
                     this.listaDetalle.splice(this.listaDetalle.findIndex(d => d == detalle), 1);
                     this.calcularPrecio();
+                    this.calcularCantidadChapas();
                 },
-                mostrar(item) {
-                    return `${item.tipoOperacion} en chapa ${item.chapa} ${item.espesor} ${item.largo} x ${item.ancho}`;
+                mostrarItemDetalle(item) {
+                    if (item.tipo == "chapa")
+                        return `${item.tipoOperacion} en chapa ${item.chapa} ${item.espesor} ${item.largo} x ${item.ancho}`;
+                    return "";
                 },
                 borrarDetalle() {
                     this.listaDetalle = [];
+                    this.itemDetalle = { ...itemDetalleDefault };
                     this.importe = { ...importeDefault };
+                    this.cantidadesChapas = { ...cantidadesChapasDefault };
                 },
                 async searchInputListener(e) {
                     if (this.search.trim() == 0) {
@@ -486,9 +495,7 @@
                         try {
                             const response = await fetch(`/api/clientes?busqueda=${this.search}`);
                             const data = await response.json();
-
                             this.itemsClientes = data.clientes;
-
                         } catch (error) {
                             console.error("Error en la búsqueda:", error);
                         }
@@ -507,21 +514,24 @@
                 calcularPrecio() {
                     this.importe.monto = 0;
                     this.listaDetalle.forEach(d => {
-                        /*
-                            largo y ancho estan en mm y pesoXm2 esta en m
-                            ¿deberia pasar los mm a m?
-                        */
-                        const area = (d.largo / 1000) * (d.ancho / 1000); // los pase m, pero despues veo bien
-                        const peso = area * chapas[mapaChapas.get(d.chapa)][d.espesor].pesoXm2;
-                        const nose = peso * chapas[mapaChapas.get(d.chapa)][d.espesor].precioXkg;
+                        if (d.tipo == "chapa") {
+                            /*
+                                largo y ancho estan en mm y pesoXm2 esta en m
+                                ¿deberia pasar los mm a m?
+                            */
+                            const area = (d.largo / 1000) * (d.ancho / 1000); // los pase m, pero despues veo bien
+                            const peso = area * chapas[mapaChapas.get(d.chapa)][d.espesor].pesoXm2;
+                            const nose = peso * chapas[mapaChapas.get(d.chapa)][d.espesor].precioXkg;
 
-                        this.importe.monto += Math.ceil(nose);
+                            this.importe.monto += Math.ceil(nose);
+                        }
                     });
                     this.importe.iva = this.importe.monto * 0.21;
                     this.importe.total = this.importe.monto + this.importe.iva;
                     @* this.importe.total = this.importe.monto * 1.21; *@
                 },
                 calcularCantidadChapas() {
+                    this.cantidadesChapas = { ...cantidadesChapasDefault };
                     this.listaDetalle.forEach(d => {
                         const areaDeseada = (d.largo/1000 * d.ancho/1000) * d.cantidad;
                         const chapa = chapas[mapaChapas.get(d.chapa)][d.espesor];
@@ -559,13 +569,11 @@
                 this.calcularCantidadChapas();
             }
         }).mount("#app");
-
         function validarFormSelect(valor) {
             if (!valor || valor.trim().length == 0)
                 return "Requerido";
             return;
         }
-
         function validarInputNumber(valor) {
             if (typeof valor == "string")
                 return "Requerido";
