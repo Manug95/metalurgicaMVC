@@ -20,6 +20,11 @@ public class Cliente
 
     public bool Activo { get; set; } = true;
 
+    public override string ToString()
+    {
+        return $"{Apellido}, {Nombre}";
+    }
+
     public static Cliente Parse(ClienteVM dto)
     {
         return new()
