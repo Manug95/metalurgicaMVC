@@ -57,4 +57,4 @@ TestResult.xml
 nunit-*.xml
 
 appsettings.Development.json
-Demo/demoBackup.html
+docs/demoBackup.html
