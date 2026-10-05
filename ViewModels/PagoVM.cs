@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using metalurgicaMVC.Models;
 using metalurgicaMVC.Utils;
 using metalurgicaMVC.ViewModels.UsuarioViewModels;
 
@@ -32,4 +33,39 @@ public class PagoVM
     public UsuarioVM? Cobrador { get; set; }
 
     public UsuarioVM? Anulador { get; set; }
+
+    public TrabajoVM? Trabajo { get; set; }
+
+    public static PagoVM From(Pago p)
+    {
+        PagoVM vm = new()
+        {
+            Id = p.Id,
+            TrabajoId = p.TrabajoId,
+            Fecha = p.Fecha,
+            Monto = p.Monto,
+            FormaPago = p.FormaPago,
+            Anulado = p.Anulado,
+            FechaAnulacion = p.FechaAnulacion
+        };
+
+        if (p.Trabajo != null)
+            vm.Trabajo = TrabajoVM.From(p.Trabajo);
+        if (p.Cobrador != null)
+            vm.Cobrador = UsuarioVM.From(p.Cobrador);
+        if (p.Anulador != null)
+            vm.Anulador = UsuarioVM.From(p.Anulador);
+
+        return vm;
+    }
+
+    public static List<PagoVM> FromList(List<Pago> pagos)
+    {
+        List<PagoVM> viewModels = [];
+        foreach (var p in pagos)
+        {
+            viewModels.Add(From(p));
+        }
+        return viewModels;
+    }
 }

@@ -124,3 +124,19 @@ public class FechaMayorOIgualQueHoyAttribute : ValidationAttribute
         return ValidationResult.Success;
     }
 }
+
+public class FechaMenorOIgualQueHoyAttribute : ValidationAttribute
+{
+    protected override ValidationResult? IsValid(object? value, ValidationContext validationContext)
+    {
+        var valorActual = value as DateTime?;
+
+        if (!valorActual.HasValue)
+            return ValidationResult.Success;
+
+        if (valorActual.Value > DateTime.Today)
+            return new ValidationResult(ErrorMessage ?? $"La fecha no puede ser mayor que la fecha actual.");
+
+        return ValidationResult.Success;
+    }
+}

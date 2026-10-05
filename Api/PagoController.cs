@@ -7,10 +7,10 @@ using Microsoft.AspNetCore.Mvc;
 namespace metalurgicaMVC.Api;
 
 [ApiController]
-[Route("api/trabajos")]
-public class TrabajoController(ITrabajoRepository repo) : ControllerBase
+[Route("api/pagos")]
+public class PagoController(IPagoRepository repo): ControllerBase
 {
-    private readonly ITrabajoRepository _repo = repo;
+    private readonly IPagoRepository _repo = repo;
 
     [HttpGet("{id}")]
     public async Task<IActionResult> Get([FromRoute] long id)
@@ -20,12 +20,12 @@ public class TrabajoController(ITrabajoRepository repo) : ControllerBase
 
         try
         {
-            Trabajo? trabajo = await _repo.GetByIdAsync(id);
+            Pago? pago = await _repo.GetByIdAsync(id);
 
-            if (trabajo != null)
-                return Ok(new { data = TrabajoVM.From(trabajo) });
+            if (pago != null)
+                return Ok(new { data = PagoVM.From(pago) });
             else
-                return NotFound(new { mensaje = "El trabajo solicitado no existe" });
+                return NotFound(new { mensaje = "El pago solicitado no existe" });
         }
         catch (ClientException ex)
         {
@@ -38,17 +38,17 @@ public class TrabajoController(ITrabajoRepository repo) : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> Get([FromQuery] FiltrosTrabajo filters)
+    public async Task<IActionResult> Get([FromQuery] FiltrosPago filters)
     {
         try
         {
-            List<Trabajo> trabajos = await _repo.ListAsync(filters);
-            long cantidadTrabajos = await _repo.CountAsync(filters);
+            List<Pago> pagos = await _repo.ListAsync(filters);
+            long cantidadPagos = await _repo.CountAsync(filters);
 
-            decimal cp = Math.Ceiling((decimal)cantidadTrabajos / filters.Limit);
+            decimal cp = Math.Ceiling((decimal)cantidadPagos / filters.Limit);
 
             return Ok(new { 
-                trabajos = TrabajoVM.FromList(trabajos), 
+                pagos = PagoVM.FromList(pagos), 
                 cantidadPaginas = cp <= 0 ? 1 : cp 
             });
         }
@@ -64,19 +64,19 @@ public class TrabajoController(ITrabajoRepository repo) : ControllerBase
 
     [HttpPost]
 	[ValidateAntiForgeryToken]
-    public async Task<IActionResult> Post([FromBody] TrabajoVM vm)
+    public async Task<IActionResult> Post([FromBody] PagoVM vm)
     {
-        Trabajo trabajo = Trabajo.From(vm);
+        Pago pago = Pago.From(vm);
 
         try
         {
-            if ((await _repo.CreateAsync(trabajo)) > 0)
+            if ((await _repo.CreateAsync(pago)) > 0)
             {
-                vm.Id = trabajo.Id;
-                return Created($"api/trabajos/{trabajo.Id}", new { trabajo = vm });
+                vm.Id = pago.Id;
+                return Created($"api/pagos/{pago.Id}", new { pago = vm });
             }
             else
-                return UnprocessableEntity(new { mensaje = "No se pudo crear el trabajo" });
+                return UnprocessableEntity(new { mensaje = "No se pudo crear el pago" });
         }
         catch (ClientException ex)
         {
@@ -90,23 +90,23 @@ public class TrabajoController(ITrabajoRepository repo) : ControllerBase
 
     [HttpPut("{id}")]
 	[ValidateAntiForgeryToken]
-    public async Task<IActionResult> Put([FromRoute] long id, [FromBody] TrabajoVM vm)
+    public async Task<IActionResult> Put([FromRoute] long id, [FromBody] PagoVM vm)
     {
         if (id <= 0)
             return BadRequest(new { mensaje = "id incorrecta" });
             
         try
         {
-            Trabajo? trabajo = await _repo.GetByIdAsync(id);
-            if (trabajo == null)
-                return BadRequest(new { mensaje = "El trabajo no existe" });
+            Pago? pago = await _repo.GetByIdAsync(id);
+            if (pago == null)
+                return BadRequest(new { mensaje = "El pago no existe" });
 
-            trabajo.UpdateFrom(vm);
+            pago.UpdateFrom(vm);
 
-            if (await _repo.UpdateAsync(trabajo))
-                return Ok(new { trabajo = TrabajoVM.From(trabajo) });
+            if (await _repo.UpdateAsync(pago))
+                return Ok(new { pago = PagoVM.From(pago) });
             else
-                return BadRequest(new { mensaje = "No se pudo actualizar el trabajo" });
+                return BadRequest(new { mensaje = "No se pudo actualizar el pago" });
         }
         catch (ClientException ex)
         {
@@ -129,7 +129,7 @@ public class TrabajoController(ITrabajoRepository repo) : ControllerBase
             if (await _repo.DeleteAsync(id))
                 return Ok();
             else
-                return BadRequest(new { mensaje = "No se pudo borrar el trabajo" });
+                return BadRequest(new { mensaje = "No se pudo borrar el pago" });
         }
         catch (ClientException ex)
         {

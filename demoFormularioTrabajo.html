@@ -730,6 +730,7 @@
                     this.itemDetalle = { ...detalle };
                     this.estaEditandoDetalle = true;
                     if (detalle.tipo == "pintura") {
+                        this.erroresDetallePintura = { ...erroresDetallePinturaDefault };
                         bootstrap.Collapse.getInstance(document.getElementById("collapseChapas")).hide();
                         bootstrap.Collapse.getInstance(document.getElementById("collapseCanios")).hide();
                         bootstrap.Collapse.getInstance(document.getElementById("collapsePintura")).show();
@@ -737,10 +738,12 @@
                         //     console.log(accordion);
                         // });
                     } else if (detalle.tipo == "chapa") {
+                        this.erroresDetalleChapa = { ...erroresDetalleChapaDefault };
                         bootstrap.Collapse.getInstance(document.getElementById("collapseCanios")).hide();
                         bootstrap.Collapse.getInstance(document.getElementById("collapsePintura")).hide();
                         bootstrap.Collapse.getInstance(document.getElementById("collapseChapas")).show();
                     } else {
+                        this.erroresDetalleCanio = { ...erroresDetalleCanioDefault };
                         bootstrap.Collapse.getInstance(document.getElementById("collapseChapas")).hide();
                         bootstrap.Collapse.getInstance(document.getElementById("collapsePintura")).hide();
                         bootstrap.Collapse.getInstance(document.getElementById("collapseCanios")).show();
