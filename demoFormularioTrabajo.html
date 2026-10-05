@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            min-height: 100dvh;
+        }
+
+        input[type=number]::-webkit-outer-spin-button,
+        input[type=number]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            cursor: pointer;
+        }
+
+        .bg-orange {
+            background-color: orange;
+        }
+
+        .cursor-pointer {
+            cursor: pointer;
+        }
+
+        .icon-hover, .icon-enlace {
+            transition: transform 0.2s ease-in-out;
+            cursor: pointer; 
+        }
+
+        .icon-hover:hover, .icon-enlace:hover {
+            transform: scale(1.2);
+        }
+
+        .icon-hover:hover {
+            transform: scale(1.2);
+        }
+
+        .custom-tooltip-disabled {
+        --bs-tooltip-bg: rgb(214, 51, 51);
+        }
+
+        .fixed-img {
+            height: 200px;          /* altura fija */
+            width: 100%;            /* ocupa todo el ancho */
+            object-fit: cover;      /* recorta proporcionalmente */
+        }
+
+        .fixed-carousel-img {
+            height: 500px;       /* altura fija para todas las imágenes */
+            object-fit: cover;   /* recorta proporcionalmente */
+        }
+
+        .active-link {
+            background-color: #e2b6a5 !important;
+            color: black !important;
+            font-weight: bold;
+        }
+
+        .nav-font {
+            font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+        }
+
+        .nav-item:hover > .nav-link, .dropdown-menu .dropdown-item:hover {
+            background-color: #e6cbc0;
+        }
+
+        .active-link:hover {
+            background-color: #e2b6a5 !important;
+        }
+
+        [v-cloak] {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="app" class="container" v-cloak>
+        <div class="row border rounded-4 p-3 mt-2">
+            <div class="col-12 d-flex justify-content-between align-items-start">
+                <h3 class="display-4">Detalle</h3>
+                <button type="button" class="btn btn-danger mt-2 mt-md-0" @click="borrarDetalle">Borrar Detalle</button>
+            </div>
+            <div class="col mt-1">
+                <div class="accordion shadow-sm" id="accordionForms"> 
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseChapas" aria-expanded="true" aria-controls="collapseChapas">
+                                <strong>Chapas</strong>
+                            </button>
+                        </h2>
+                        <div id="collapseChapas" class="accordion-collapse collapse show" data-bs-parent="#accordionForms">
+                            <div class="accordion-body">
+                                <div class="row">
+                                    <div class="col-12 col-md-6 col-lg">
+                                        <label for="tipoOperacion" class="form-label fw-bold">Tipo Operación</label>
+                                        <select id="tipoOperacion" class="form-select" :class="{ 'is-invalid': erroresDetalleChapa.tipoOperacion }" v-model="itemDetalle.tipoOperacion">
+                                            <option value="" selected disabled>Seleccionar...</option>
+                                            <option value="Corte">Corte</option>
+                                            <option value="Plegado">Plegado</option>
+                                            <option value="Corte y Plegado">Corte y Plegado</option>
+                                            <option value="Corte Plasma">Corte Plasma</option>
+                                            <option value="Cilindrado">Cilindrado</option>
+                                        </select>
+                                        <div id="error_tipoOperacion" class="invalid-feedback" v-if="erroresDetalleChapa.tipoOperacion">{{ erroresDetalleChapa.tipoOperacion }}</div>
+                                    </div>
+                                    <div class="col-12 col-md-6 col-lg mt-3 mt-md-0">
+                                        <label for="chapa" class="form-label fw-bold">Chapa</label>
+                                        <select id="chapa" class="form-select" :class="{ 'is-invalid': erroresDetalleChapa.chapa }" v-model="itemDetalle.chapa" @change="resetSelectEspesor">
+                                            <option value="" selected disabled>Seleccionar...</option>
+                                            <option value="Acero al Carbono">Acero al Carbono</option>
+                                            <option value="Galvanizada">Galvanizada</option>
+                                            <option value="Prepintada">Prepintada</option>
+                                        </select>
+                                        <div id="error_chapa" class="invalid-feedback" v-if="erroresDetalleChapa.chapa">{{ erroresDetalleChapa.chapa }}</div>
+                                    </div>
+                                    <div class="col-12 col-md-6 col-lg mt-3 mt-lg-0">
+                                        <label for="espesor" class="form-label fw-bold">Espesor</label>
+                                        <select id="espesor" class="form-select" :class="{ 'is-invalid': erroresDetalleChapa.espesor }" v-model="itemDetalle.espesor">
+                                            <option value="" selected disabled>Seleccionar...</option>
+                                            <option value="1/2" v-if="itemDetalle.chapa=='Acero al Carbono'">1/2</option>
+                                            <option value="3/8" v-if="itemDetalle.chapa=='Acero al Carbono'">3/8</option>
+                                            <option value="5/16" v-if="itemDetalle.chapa=='Acero al Carbono'">5/16</option>
+                                            <option value="1/4" v-if="itemDetalle.chapa=='Acero al Carbono'">1/4</option>
+                                            <option value="3/16" v-if="itemDetalle.chapa=='Acero al Carbono'">3/16</option>
+                                            <option value="1/8" v-if="itemDetalle.chapa=='Acero al Carbono'">1/8</option>
+                                            <option value="12" v-if="itemDetalle.chapa=='Acero al Carbono'">12</option>
+                                            <option value="14" v-if="itemDetalle.chapa=='Acero al Carbono'||itemDetalle.chapa=='Galvanizada'">14</option>
+                                            <option value="16" v-if="itemDetalle.chapa=='Acero al Carbono'||itemDetalle.chapa=='Galvanizada'">16</option>
+                                            <option value="18" v-if="itemDetalle.chapa=='Acero al Carbono'||itemDetalle.chapa=='Galvanizada'">18</option>
+                                            <option value="20" v-if="itemDetalle.chapa=='Acero al Carbono'||itemDetalle.chapa=='Galvanizada'">20</option>
+                                            <option value="22" v-if="itemDetalle.chapa=='Acero al Carbono'||itemDetalle.chapa=='Galvanizada'">22</option>
+                                            <option value="24">24</option>
+                                            <option value="27" v-if="itemDetalle.chapa=='Galvanizada'">27</option>
+                                            <option value="30" v-if="itemDetalle.chapa=='Galvanizada'">30</option>
+                                        </select>
+                                        <div id="error_espesor" class="invalid-feedback" v-if="erroresDetalleChapa.espesor">{{ erroresDetalleChapa.espesor }}</div>
+                                    </div>
+                                    <div class="col-12 col-md-6 col-lg mt-3 mt-lg-0">
+                                        <label for="largo" class="form-label fw-bold">Largo (mm)</label>
+                                        <input type="number" id="largo" class="form-control" :class="{ 'is-invalid': erroresDetalleChapa.largo }" v-model="itemDetalle.largo">
+                                        <div id="error_largo" class="invalid-feedback" v-if="erroresDetalleChapa.largo">{{ erroresDetalleChapa.largo }}</div>
+                                    </div>
+                                    <div class="col-12 col-md-6 col-lg mt-3 mt-lg-0">
+                                        <label for="ancho" class="form-label fw-bold">Ancho (mm)</label>
+                                        <input type="number" id="ancho" class="form-control" :class="{ 'is-invalid': erroresDetalleChapa.ancho }" v-model="itemDetalle.ancho">
+                                        <div id="error_ancho" class="invalid-feedback" v-if="erroresDetalleChapa.ancho">{{ erroresDetalleChapa.ancho }}</div>
+                                    </div>
+                                    <div class="col-12 col-md-6 col-lg mt-3 mt-lg-0">
+                                        <label for="cantidad" class="form-label fw-bold">Cantidad</label>
+                                        <input type="number" id="cantidad" class="form-control" :class="{ 'is-invalid': erroresDetalleChapa.cantidad }" v-model="itemDetalle.cantidad">
+                                        <div id="error_cantidad" class="invalid-feedback" v-if="erroresDetalleChapa.cantidad">{{ erroresDetalleChapa.cantidad }}</div>
+                                    </div>
+                                    <div class="col-12 mt-4 d-flex justify-content-evenly">
+                                        <button type="button" class="btn btn-secondary" @click="limpiarInputsChapas">{{ getTextoBotonLimpiar }}</button>
+                                        <button type="button" class="btn btn-primary" @click="addItemChapas">{{ getTextoBotonAdd }}</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCanios" aria-expanded="true" aria-controls="collapseCanios">
+                                <strong>Caños Estructurales</strong>
+                            </button>
+                        </h2>
+                        <div id="collapseCanios" class="accordion-collapse collapse" data-bs-parent="#accordionForms">
+                            <div class="accordion-body">
+                                <div class="row">
+                                    <div class="col-12 col-md-6 col-lg">
+                                        <label for="tipoCanio" class="form-label fw-bold">Tipo Caño</label>
+                                        <select id="tipoCanio" class="form-select" :class="{ 'is-invalid': erroresDetalleCanio.tipoCanio }" v-model="itemDetalle.tipoCanio" @change="resetSelectCanio">
+                                            <option value="" selected disabled>Seleccionar...</option>
+                                            <option value="Cuadrado">Cuadrado</option>
+                                            <option value="Rectangular">Rectangular</option>
+                                        </select>
+                                        <div id="error_tipoCanio" class="invalid-feedback" v-if="erroresDetalleCanio.tipoCanio">{{ erroresDetalleCanio.tipoCanio }}</div>
+                                    </div>
+                                    <div class="col-12 col-md-6 col-lg mt-3 mt-md-0">
+                                        <label for="canio" class="form-label fw-bold">Caño</label>
+                                        <select id="canio" class="form-select" :class="{ 'is-invalid': erroresDetalleCanio.canio }" v-model="itemDetalle.canio">
+                                            <option value="" selected disabled>Seleccionar...</option>
+                                            <option :value="c.canio" v-for="c in canios.cuadrado" :key="c.id" v-if="itemDetalle.tipoCanio == 'Cuadrado'">
+                                                {{ c.detalle }}
+                                            </option>
+                                            <option :value="r.canio" v-for="r in canios.rectangular" :key="r.id" v-if="itemDetalle.tipoCanio == 'Rectangular'">
+                                                {{ r.detalle }}
+                                            </option>
+                                        </select>
+                                        <div id="error_canio" class="invalid-feedback" v-if="erroresDetalleCanio.canio">{{ erroresDetalleCanio.canio }}</div>
+                                    </div>
+                                    <div class="col-12 col-md-6 col-lg mt-3 mt-lg-0">
+                                        <label for="largoCanio" class="form-label fw-bold">Largo</label>
+                                        <input type="number" id="largoCanio" class="form-control" :class="{ 'is-invalid': erroresDetalleCanio.largoCanio }" v-model="itemDetalle.largoCanio">
+                                        <div id="error_largoCanio" class="invalid-feedback" v-if="erroresDetalleCanio.largoCanio">{{ erroresDetalleCanio.largoCanio }}</div>
+                                    </div>
+                                    <div class="col-12 col-md-6 col-lg mt-3 mt-lg-0">
+                                        <label for="cantidadCanios" class="form-label fw-bold">Cantidad</label>
+                                        <input type="number" id="cantidadCanios" class="form-control" :class="{ 'is-invalid': erroresDetalleCanio.cantidadCanios }" v-model="itemDetalle.cantidadCanios">
+                                        <div id="error_cantidadCanios" class="invalid-feedback" v-if="erroresDetalleCanio.cantidadCanios">{{ erroresDetalleCanio.cantidadCanios }}</div>
+                                    </div>
+                                    <div class="col-12 mt-4 d-flex justify-content-evenly">
+                                        <button type="button" class="btn btn-secondary" @click="limpiarInputsCanios">{{ getTextoBotonLimpiar }}</button>
+                                        <button type="button" class="btn btn-primary" @click="addItemCanio">{{ getTextoBotonAdd }}</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapsePintura" aria-expanded="true" aria-controls="collapsePintura">
+                                <strong>Pintura</strong>
+                            </button>
+                        </h2>
+                        <div id="collapsePintura" class="accordion-collapse collapse" data-bs-parent="#accordionForms">
+                            <div class="accordion-body">
+                                <div class="row">
+                                    <div class="col-12 col-md-6 col-lg">
+                                        <label for="tipoPintura" class="form-label fw-bold">Tipo Pintura</label>
+                                        <select id="tipoPintura" class="form-select" :class="{ 'is-invalid': erroresDetallePintura.tipoPintura }" v-model="itemDetalle.tipoPintura">
+                                            <option value="" selected disabled>Seleccionar...</option>
+                                            <option value="Pintura">Pintura</option>
+                                            <option value="Antioxidante">Antioxidante</option>
+                                        </select>
+                                        <div id="error_tipoPintura" class="invalid-feedback" v-if="erroresDetallePintura.tipoPintura">{{ erroresDetallePintura.tipoPintura }}</div>
+                                    </div>
+                                    <div class="col-12 col-md-6 col-lg mt-3 mt-lg-0">
+                                        <label for="color" class="form-label fw-bold">Color</label>
+                                        <input type="text" id="color" class="form-control" :class="{ 'is-invalid': erroresDetallePintura.color }" v-model="itemDetalle.color">
+                                        <div id="error_color" class="invalid-feedback" v-if="erroresDetallePintura.color">{{ erroresDetallePintura.color }}</div>
+                                    </div>
+                                    <div class="col-12 mt-4 d-flex justify-content-evenly">
+                                        <button type="button" class="btn btn-secondary" @click="limpiarInputsPintura">{{ getTextoBotonLimpiar }}</button>
+                                        <button type="button" class="btn btn-primary" @click="addItemPintura">{{ getTextoBotonAdd }}</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row mt-4">
+                    <div class="col">
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item d-flex justify-content-between align-items-center" v-for="(i, index) in listaDetalle" :key="i.id">
+                                <span>
+                                    {{ mostrarItemDetalle(i) }}
+                                    <span>
+                                        <i 
+                                            class="bi bi-pencil-square text-primary icon-hover fs-5 ms-2 ms-md-3" 
+                                            data-bs-toggle="tooltip" 
+                                            data-bs-title="Editar" 
+                                            :data-item="index"
+                                            @click="editarDetalle(i)"
+                                        ></i>
+                                        <i 
+                                            class="bi bi-trash text-danger icon-hover fs-5 ms-2 ms-md-3" 
+                                            data-bs-toggle="tooltip" 
+                                            data-bs-title="Eliminar" 
+                                            :data-item="index"
+                                            @click="eliminarDetalle(i, index)"
+                                        ></i>
+                                    </span>
+                                </span>
+                                <span class="badge text-bg-primary rounded-pill" v-if="i.cantidad">{{ i.cantidad }}</span>
+                                <span class="badge text-bg-primary rounded-pill" v-if="i.cantidadCanios">{{ i.cantidadCanios }}</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 border-top pt-2 px-0"> 
+                <ul class="list-group list-group-horizontal-lg">
+                    <li class="list-group-item fs-5">Cantidad de chapas estimada</li>
+                    <li class="list-group-item fs-5" v-for="(value, key) in cantidadesChapas">
+                        {{ getTipoChapa(key) }}: {{ value }}
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="row border rounded-4 p-3 mt-2 mb-2">
+            <div class="col-12 d-flex flex-row-reverse p-1">
+                <span class="fs-4">Importe: $ {{ formatearImporte }}</span>
+            </div>
+            <div class="col-12 d-flex flex-row-reverse p-1">
+                <span class="fs-4">IVA: $ {{ formatearIVA }}</span>
+            </div>
+            <div class="col-12 d-flex flex-row-reverse p-1">
+                <span class="fs-4">Importe Total: $ {{ formatearImporteTotal }}</span>
+            </div>
+        </div>
+
+        
+    </div>
+</body>
+
+<script>
+    document.addEventListener("DOMContentLoaded", _ => {
+        const { createApp } = Vue;
+        const itemDetalleDefault = { id: 0, tipo: "", tipoOperacion: "", chapa: "", espesor: "", largo: 0, ancho: 0, cantidad: 0, tipoCanio: "", canio: "", cantidadCanios: 0, largoCanio: 0, tipoPintura: "", color: "" };
+        // const itemDetalleDefault = { id: 4, tipo: "chapa", tipoOperacion: "Corte", chapa: "Acero al Carbono", espesor: "14", largo: 1200, ancho: 560, cantidad: 3 };
+        const erroresDetalleChapaDefault = { tipoOperacion: null, chapa: null, espesor: null, largo: null, ancho: null, cantidad: null };
+        const erroresDetalleCanioDefault = { tipoCanio: null, largoCanio: null, canio: null, cantidadCanios: null };
+        const erroresDetallePinturaDefault = { tipoPintura: null, color: null };
+        const trabajoDefault = { id: 0, fechaSolicitado: null, clienteId: 0, detalle: [] };
+        const importeDefault = { monto: 0, iva: 0, total: 0 };
+        const cantidadesChapasDefault = { galvanizada: 0, Acarbono: 0, prepintada: 0 };
+        const chapas = {
+            galvanizada: {
+                '14': {
+                    largo: 2.44,
+                    ancho: 1.22,
+                    peso: 48.5,
+                    pesoXm2: 16.08,
+                    precio: 1090,
+                    precioXkg: 4500
+                },
+                '16': {
+                    largo: 2.44,
+                    ancho: 1.22,
+                    peso: 38.5,
+                    pesoXm2: 12.73,
+                    precio: 1090,
+                    precioXkg: 4600
+                },
+                '18': {
+                    largo: 2.44,
+                    ancho: 1.22,
+                    peso: 30,
+                    pesoXm2: 10.1,
+                    precio: 1090,
+                    precioXkg: 4700
+                },
+                '20': {
+                    largo: 2.44,
+                    ancho: 1.22,
+                    peso: 21.5,
+                    pesoXm2: 7.35,
+                    precio: 1090,
+                    precioXkg: 4700
+                },
+                '22': {
+                    largo: 2.44,
+                    ancho: 1.22,
+                    peso: 17.5,
+                    pesoXm2: 5.8,
+                    precio: 1090,
+                    precioXkg: 4800
+                },
+                '24': {
+                    largo: 2.44,
+                    ancho: 1.22,
+                    peso: 12.5,
+                    pesoXm2: 4.2,
+                    precio: 1,
+                    precioXkg: 4900
+                },
+                '27': {
+                    largo: 2.44,
+                    ancho: 1.22,
+                    peso: 10.5,
+                    pesoXm2: 3.35,
+                    precio: 1,
+                    precioXkg: 4500
+                },
+                '30': {
+                    largo: 2.44,
+                    ancho: 1.22,
+                    peso: 7.5,
+                    pesoXm2: 2.5,
+                    precio: 1,
+                    precioXkg: 4500
+                }
+            },
+            Acarbono: {
+                '1/2': {
+                    largo: 3,
+                    ancho: 1.5,
+                    peso: 450,
+                    pesoXm2: 100.48,
+                    precio: 2203,
+                    precioXkg: 3800
+                },
+                '3/8': {
+                    largo: 3,
+                    ancho: 1.5,
+                    peso: 340,
+                    pesoXm2: 75.4,
+                    precio: 2203,
+                    precioXkg: 4000
+                },
+                '5/16': {
+                    largo: 3,
+                    ancho: 1.5,
+                    peso: 283,
+                    pesoXm2: 62.8,
+                    precio: 2203,
+                    precioXkg: 4000
+                },
+                '1/4': {
+                    largo: 3,
+                    ancho: 1.5,
+                    peso: 226,
+                    pesoXm2: 50.24,
+                    precio: 2203,
+                    precioXkg: 4400
+                },
+                '3/16': {
+                    largo: 3,
+                    ancho: 1.5,
+                    peso: 172,
+                    pesoXm2: 37.58,
+                    precio: 2203,
+                    precioXkg: 4700
+                },
+                '1/8': {
+                    largo: 3,
+                    ancho: 1.5,
+                    peso: 116,
+                    pesoXm2: 25.12,
+                    precio: 2203,
+                    precioXkg: 3900
+                },
+                '12': {
+                    largo: 2.44,
+                    ancho: 1.22,
+                    peso: 60.5,
+                    pesoXm2: 21.666,
+                    precio: 2203,
+                    precioXkg: 3700
+                },
+                '14': {
+                    largo: 2.44,
+                    ancho: 1.22,
+                    peso: 48.5,
+                    pesoXm2: 16.5,
+                    precio: 2203,
+                    precioXkg: 3900
+                },
+                '16': {
+                    largo: 2.44,
+                    ancho: 1.22,
+                    peso: 38.5,
+                    pesoXm2: 13,
+                    precio: 1090,
+                    precioXkg: 4100
+                },
+                '18': {
+                    largo: 2.44,
+                    ancho: 1.22,
+                    peso: 30,
+                    pesoXm2: 10,
+                    precio: 1090,
+                    precioXkg: 4500
+                },
+                '20': {
+                    largo: 2.44,
+                    ancho: 1.22,
+                    peso: 20.5,
+                    pesoXm2: 7.12,
+                    precio: 1090,
+                    precioXkg: 4800
+                },
+                '22': {
+                    largo: 2.44,
+                    ancho: 1.22,
+                    peso: 17.5,
+                    pesoXm2: 5.7,
+                    precio: 1090,
+                    precioXkg: 4800
+                },
+                '24': {
+                    largo: 2.44,
+                    ancho: 1.22,
+                    peso: 13.5,
+                    pesoXm2: 4.4,
+                    precio: 1090,
+                    precioXkg: 4800
+                }
+            },
+            prepintada: {
+                '24': {
+                    largo: 2.44,
+                    ancho: 1.22,
+                    peso: 12.5,
+                    pesoXm2: 4.2,
+                    precio: 2203,
+                    precioXkg: 7100
+                }
+            }
+        };
+        const caniosObj = {
+            rectangular: [
+                {
+                    id: 0,
+                    detalle: "40x80x1.6 (18kg) 6mts",
+                    canio: "40x80x1.6",
+                    perimetro: "40x80",
+                    peso: 18,
+                    largo: 6,
+                    precio: 1,
+                    espesor: 1.6
+                },
+                {
+                    id: 1,
+                    detalle: "40x80x3.2 (36kg) 6mts",
+                    canio: "40x80x3.2",
+                    perimetro: "40x80",
+                    peso: 36,
+                    largo: 6,
+                    precio: 1,
+                    espesor: 3.2
+                },
+                {
+                    id: 2,
+                    detalle: "10x30x1.6 (6kg) 6mts",
+                    canio: "10x30x1.6",
+                    perimetro: "10x30",
+                    peso: 6,
+                    largo: 6,
+                    precio: 1,
+                    espesor: 1.6
+                }
+            ],
+            cuadrado: [
+                {
+                    id: 3,
+                    detalle: "100x100x1.6 (31.5kg) 6mts",
+                    canio: "100x100x1.6",
+                    perimetro: "100x100",
+                    peso: 31.5,
+                    largo: 6,
+                    precio: 1,
+                    espesor: 1.6
+                },
+                {
+                    id: 4,
+                    detalle: "100x100x3.2 (63kg) 6mts",
+                    canio: "100x100x3.2",
+                    perimetro: "100x100",
+                    peso: 63,
+                    largo: 6,
+                    precio: 1,
+                    espesor: 3.2
+                }
+            ]
+        };
+        const mapaChapas = new Map([
+            ["Galvanizada", "galvanizada"],
+            ["Acero al Carbono", "Acarbono"],
+            ["Prepintada", "prepintada"]
+        ]);
+        const formateador = new Intl.NumberFormat('es-ES', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+
+        createApp({
+            data() {
+                return {
+                    listaDetalle: [
+                        // { id: 1, tipo: "chapa", tipoOperacion: "Corte", chapa: "Acero al Carbono", espesor: "14", largo: 1200, ancho: 560, cantidad: 3 },
+                        // { id: 2, tipo: "chapa", tipoOperacion: "Plegado", chapa: "Acero al Carbono", espesor: "14", largo: 1200, ancho: 560, cantidad: 3 },
+                        // { id: 3, tipo: "chapa", tipoOperacion: "Cilindrado", chapa: "Acero al Carbono", espesor: "16", largo: 850, ancho: 300, cantidad: 1 },
+                        // { id: 4, tipo: "pintura", tipoPintura: "Pintura", color: "negro" },
+                        // { id: 5, tipo: "caño", tipoCanio: "Rectangular", canio: "40x80x1.6", largoCanio: 3, cantidadCanios: 1 }
+                    ],
+                    itemDetalle: { ...itemDetalleDefault },
+                    canios: { ...caniosObj },
+                    erroresDetalleChapa: { ...erroresDetalleChapaDefault },
+                    erroresDetalleCanio: { ...erroresDetalleCanioDefault },
+                    erroresDetallePintura: { ...erroresDetallePinturaDefault },
+                    estaEditandoDetalle: false,
+                    trabajo: { ...trabajoDefault },
+                    tooltipTriggerList: [],
+                    tooltipList: [],
+                    accordionCollapseElementList: [],
+                    accordionCollapseList:[],
+                    importe: { ...importeDefault },
+                    cantidadesChapas: { ...cantidadesChapasDefault },
+                    moDia: 0,
+                    moDiaPintura: 0,
+                    materiales: 0,
+                    insumos: 0,
+                    costosFijos: 0,
+                    deprecacionMaquinas: 0,
+                    pocentajeGanancias: 25,
+                    porcentajeComisionista: 6
+                }
+            },
+            methods: {
+                limpiarInputsChapas() {
+                    if (this.estaEditandoDetalle)
+                        this.estaEditandoDetalle = false;
+                    this.itemDetalle = { ...itemDetalleDefault };
+                    this.erroresDetalleChapa = { ...erroresDetalleChapaDefault };
+                },
+                limpiarInputsCanios() {
+                    if (this.estaEditandoDetalle)
+                        this.estaEditandoDetalle = false;
+                    this.itemDetalle = { ...itemDetalleDefault };
+                    this.erroresDetalleCanio = { ...erroresDetalleCanioDefault };
+                },
+                limpiarInputsPintura() {
+                    if (this.estaEditandoDetalle)
+                        this.estaEditandoDetalle = false;
+                    this.itemDetalle = { ...itemDetalleDefault };
+                    this.erroresDetallePintura = { ...erroresDetallePinturaDefault };
+                },
+                addItemChapas() {
+                    if (!this.esDetalleChapasValido())
+                        return;
+                    if (this.estaEditandoDetalle) {
+                        const indiceItemEditado = this.listaDetalle.findIndex(d => d.id == this.itemDetalle.id);
+                        if (indiceItemEditado >= 0)
+                            this.listaDetalle[indiceItemEditado] = this.itemDetalle;
+                        this.estaEditandoDetalle = false;
+                        this.itemDetalle = { ...itemDetalleDefault };
+                    } else {
+                        this.itemDetalle.id = Math.max(...this.listaDetalle.map(d => d.id)) + 1;
+                        this.itemDetalle.tipo = "chapa";
+                        this.listaDetalle.push(this.itemDetalle);
+                        this.itemDetalle = { ...this.itemDetalle };
+                        setTimeout(() => { this.inicializarTooltips(); }, 1000+(this.listaDetalle.length*100));
+                    }
+                    this.calcularPrecio();
+                    this.calcularCantidadChapas();
+                },
+                addItemCanio() {
+                    if (!this.esDetalleCanioValido())
+                        return;
+                    if (this.estaEditandoDetalle) {
+                        const indiceItemEditado = this.listaDetalle.findIndex(d => d.id == this.itemDetalle.id);
+                        if (indiceItemEditado >= 0)
+                            this.listaDetalle[indiceItemEditado] = this.itemDetalle;
+                        this.estaEditandoDetalle = false;
+                        this.itemDetalle = { ...itemDetalleDefault };
+                    } else {
+                        this.itemDetalle.id = Math.max(...this.listaDetalle.map(d => d.id)) + 1;
+                        this.itemDetalle.tipo = "caño";
+                        this.listaDetalle.push(this.itemDetalle);
+                        this.itemDetalle = { ...this.itemDetalle };
+                        setTimeout(() => { this.inicializarTooltips(); }, 1000+(this.listaDetalle.length*100));
+                    }
+                    // this.calcularPrecio();
+                },
+                addItemPintura() {
+                    if (!this.esDetallePinturaValido())
+                        return;
+                    if (this.estaEditandoDetalle) {
+                        const indiceItemEditado = this.listaDetalle.findIndex(d => d.id == this.itemDetalle.id);
+                        if (indiceItemEditado >= 0)
+                            this.listaDetalle[indiceItemEditado] = this.itemDetalle;
+                        this.estaEditandoDetalle = false;
+                        this.itemDetalle = { ...itemDetalleDefault };
+                    } else {
+                        this.itemDetalle.id = Math.max(...this.listaDetalle.map(d => d.id)) + 1;
+                        this.itemDetalle.tipo = "pintura";
+                        this.listaDetalle.push(this.itemDetalle);
+                        this.itemDetalle = { ...this.itemDetalle };
+                        setTimeout(() => { this.inicializarTooltips(); }, 1000+(this.listaDetalle.length*100));
+                    }
+                    // this.calcularPrecio();
+                },
+                esDetalleChapasValido() {
+                    const mapaValidador = new Map([
+                        ["tipoOperacion", validarFormSelect],
+                        ["chapa", validarFormSelect],
+                        ["espesor", validarFormSelect],
+                        ["largo", validarInputNumber],
+                        ["ancho", validarInputNumber],
+                        ["cantidad", validarInputNumber]
+                    ]);
+                    const clavesAValidar = [...mapaValidador.keys()];
+                    Object.keys(this.itemDetalle)
+                        .forEach(key => {
+                            if (!clavesAValidar.includes(key)) return;
+                            this.erroresDetalleChapa[key] = mapaValidador.get(key)(this.itemDetalle[key]);
+                        }
+                    );
+                    return !Object.keys(this.erroresDetalleChapa).some(v => this.erroresDetalleChapa[v]);
+                },
+                esDetalleCanioValido() {
+                    const mapaValidador = new Map([
+                        ["tipoCanio", validarFormSelect],
+                        ["canio", validarFormSelect],
+                        ["largoCanio", validarInputNumber],
+                        ["cantidadCanios", validarInputNumber]
+                    ]);
+                    const clavesAValidar = [...mapaValidador.keys()];
+                    Object.keys(this.itemDetalle)
+                        .forEach(key => {
+                            if (!clavesAValidar.includes(key)) return;
+                            this.erroresDetalleCanio[key] = mapaValidador.get(key)(this.itemDetalle[key]);
+                        }
+                    );
+                    return !Object.keys(this.erroresDetalleCanio).some(v => this.erroresDetalleCanio[v]);
+                },
+                esDetallePinturaValido() {
+                    const mapaValidador = new Map([
+                        ["tipoPintura", validarFormSelect]
+                    ]);
+                    const clavesAValidar = [...mapaValidador.keys()];
+                    Object.keys(this.itemDetalle)
+                        .forEach(key => {
+                            if (!clavesAValidar.includes(key)) return;
+                            this.erroresDetallePintura[key] = mapaValidador.get(key)(this.itemDetalle[key]);
+                        }
+                    );
+                    return !Object.keys(this.erroresDetallePintura).some(v => this.erroresDetallePintura[v]);
+                },
+                editarDetalle(detalle) {
+                    this.itemDetalle = { ...detalle };
+                    this.estaEditandoDetalle = true;
+                    if (detalle.tipo == "pintura") {
+                        bootstrap.Collapse.getInstance(document.getElementById("collapseChapas")).hide();
+                        bootstrap.Collapse.getInstance(document.getElementById("collapseCanios")).hide();
+                        bootstrap.Collapse.getInstance(document.getElementById("collapsePintura")).show();
+                        // this.accordionCollapseList.forEach(accordion => {
+                        //     console.log(accordion);
+                        // });
+                    } else if (detalle.tipo == "chapa") {
+                        bootstrap.Collapse.getInstance(document.getElementById("collapseCanios")).hide();
+                        bootstrap.Collapse.getInstance(document.getElementById("collapsePintura")).hide();
+                        bootstrap.Collapse.getInstance(document.getElementById("collapseChapas")).show();
+                    } else {
+                        bootstrap.Collapse.getInstance(document.getElementById("collapseChapas")).hide();
+                        bootstrap.Collapse.getInstance(document.getElementById("collapsePintura")).hide();
+                        bootstrap.Collapse.getInstance(document.getElementById("collapseCanios")).show();
+                    }
+                },
+                eliminarDetalle(detalle, index) {
+                    this.tooltipList = this.tooltipList.filter(tooltip => {
+                        if (tooltip._element.dataset["item"] == index)
+                            tooltip.dispose(); // esto hace que tooltip._element sea null
+                        return tooltip._element; // si tooltip._element es null, ese tooltip se borro y no lo quiero en la lista
+                    });
+                    this.listaDetalle.splice(this.listaDetalle.findIndex(d => d == detalle), 1);
+                    this.calcularPrecio();
+                    this.calcularCantidadChapas();
+                },
+                mostrarItemDetalle(item) {
+                    if (item.tipo == "chapa")
+                        return `${item.tipoOperacion} en chapa ${item.chapa} ${item.espesor} ${item.largo} x ${item.ancho}`;
+                    if (item.tipo == "pintura")
+                        return `Pintado con ${item.tipoPintura}` + (item.color ? ` color ${item.color}` : "");
+                    if (item.tipo == "caño")
+                        return `Caño estructural ${item.canio} x ${item.largoCanio} mts`;
+                    return "";
+                },
+                borrarDetalle() {
+                    this.listaDetalle = [];
+                    this.itemDetalle = { ...itemDetalleDefault };
+                    this.importe = { ...importeDefault };
+                    this.cantidadesChapas = { ...cantidadesChapasDefault };
+                },
+                inicializarTooltips() {
+                    this.tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+                    this.tooltipList = [...this.tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
+                },
+                inicializarAccordion() {
+                    this.accordionCollapseElementList = document.querySelectorAll('#accordionForms .collapse')
+                    this.accordionCollapseList = [...this.accordionCollapseElementList].map(accordionCollapseEl => 
+                        new bootstrap.Collapse(accordionCollapseEl, { toggle: false }))
+                },
+                calcularPrecio() {
+                    this.importe.monto = 0;
+                    this.listaDetalle.forEach(d => {
+                        if (d.tipo == "chapa") {
+                            /*
+                                largo y ancho estan en mm y pesoXm2 esta en m
+                                ¿deberia pasar los mm a m?
+                            */
+                            const area = (d.largo / 1000) * (d.ancho / 1000); // los pase m, pero despues veo bien
+                            const peso = area * chapas[mapaChapas.get(d.chapa)][d.espesor].pesoXm2;
+                            const nose = peso * chapas[mapaChapas.get(d.chapa)][d.espesor].precioXkg;
+
+                            this.importe.monto += Math.ceil(nose);
+                        }
+                    });
+                    this.importe.iva = this.importe.monto * 0.21;
+                    this.importe.total = this.importe.monto + this.importe.iva;
+                    // this.importe.total = this.importe.monto * 1.21;
+                },
+                calcularCantidadChapas() {
+                    this.cantidadesChapas = { ...cantidadesChapasDefault };
+                    this.listaDetalle.forEach(d => {
+                        if (d.tipo == "chapa") {
+                            const areaDeseada = (d.largo/1000 * d.ancho/1000) * d.cantidad;
+                            const chapa = chapas[mapaChapas.get(d.chapa)][d.espesor];
+                            const areaChapa = chapa.largo * chapa.ancho;
+                            this.cantidadesChapas[mapaChapas.get(d.chapa)] += Math.ceil(areaDeseada / areaChapa);
+                        }
+                    });
+                },
+                resetSelectEspesor() {
+                    this.itemDetalle.espesor = "";
+                },
+                resetSelectCanio() {
+                    this.itemDetalle.canio = "";
+                },
+                getTipoChapa(clave) {
+                    return mapaChapas.entries().find(entry => entry[1] == clave)[0];
+                }
+            },
+            computed: {
+                getTextoBotonAdd() {
+                    return this.estaEditandoDetalle ? "Confirmar Edición" : "Agregar"
+                },
+                getTextoBotonLimpiar() {
+                    return this.estaEditandoDetalle ? "Cancelar Edición" : "Limpiar Campos";
+                },
+                formatearImporte() {
+                    return formateador.format(this.importe.monto);
+                },
+                formatearIVA() {
+                    return formateador.format(this.importe.iva);
+                },
+                formatearImporteTotal() {
+                    return formateador.format(this.importe.total);
+                }
+            },
+            mounted() {
+                this.inicializarTooltips();
+                this.calcularPrecio();
+                this.calcularCantidadChapas();
+                this.inicializarAccordion();
+            }
+        }).mount("#app");
+        function validarFormSelect(valor) {
+            if (!valor || valor.trim().length == 0)
+                return "Requerido";
+            return;
+        }
+        function validarInputNumber(valor) {
+            if (typeof valor == "string")
+                return "Requerido";
+            if (valor <= 0)
+                return "Debe ser mayor a 0";
+        }
+    })
+</script>
+</html>
