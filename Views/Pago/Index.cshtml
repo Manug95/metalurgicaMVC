@@ -1,0 +1,496 @@
+@using System.Text.Json
+@using metalurgicaMVC.ViewModels
+@model IEnumerable<PagoVM>
+@{
+    ViewData["Title"] = "Pagos";
+    int cantidadPaginas = ViewBag.cantPag;
+    int pagina = ViewBag.pagina;
+    int paginaAnterior = pagina - 1;
+    int paginaSiguiente = pagina + 1;
+    int limit = ViewBag.cantidadPaginado;
+    long trabajoId = ViewBag.trabajoId;
+    string fecha = ViewBag.fecha;
+    string desde = ViewBag.desde;
+    string hasta = ViewBag.hasta;
+    string cliente = ViewBag.cliente;
+    string mensajeEliminar = "¿Anular el Pago?";
+    var serializationOptions = new JsonSerializerOptions {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+    };
+    bool hayMensajeError = !string.IsNullOrWhiteSpace(ViewBag.MensajeError);
+}
+
+<div id="app-pagos" class="container-fluid bg-light-subtle" v-cloak>
+    <h1 class="text-center display-4">Pagos</h1>
+
+    <div class="row">
+        <div class="col d-flex justify-content-end align-items-center mt-3 me-0 me-md-5">
+            <button class="btn btn-outline-dark" @@click="recargar">
+                <i class="bi bi-arrow-clockwise"></i>
+                Recargar Todos
+            </button>
+        </div>
+    </div>
+
+    <form id="form_buscador" class="row g-2 needs-validation" @@submit.prevent="onSubmit">
+       <div class="col-12 col-md-6 col-lg-3">
+            <label for="buscador" class="form-label fw-bold">Por Cliente</label>
+            <input 
+                type="text" 
+                id="buscador" 
+                v-model="busqueda.cliente" 
+                class="form-control" 
+                :class="{ 'is-invalid': erroresBusqueda.cliente }" 
+                placeholder="nombre o apellido del empleado" 
+                value="@cliente"
+            >
+            <div id="error_busqueda_cliente" class="invalid-feedback" v-if="erroresBusqueda.cliente">{{ erroresBusqueda.cliente }}</div>
+        </div>
+        <div class="col-12 col-md-6 col-lg-2">
+            <label for="fecha" class="form-label fw-bold">Fecha</label>
+            <input type="date" id="fecha" class="form-control" :class="{ 'is-invalid': erroresBusqueda.fecha }" v-model="busqueda.fecha" @@change="limpiarBusquedaDesdeYHasta">
+            <div id="fecha" class="invalid-feedback" v-if="erroresBusqueda.fecha">{{ erroresBusqueda.fecha }}</div>
+        </div>
+        <div class="col-12 col-md-6 col-lg-2">
+            <label for="desde" class="form-label fw-bold">Desde</label>
+            <input type="date" id="desde" class="form-control" :class="{ 'is-invalid': erroresBusqueda.desde }" v-model="busqueda.desde" @@change="limpiarBusquedaFecha">
+            <div id="error_busqueda_desde" class="invalid-feedback" v-if="erroresBusqueda.desde">{{ erroresBusqueda.desde }}</div>
+        </div>
+        <div class="col-12 col-md-6 col-lg-2">
+            <label for="hasta" class="form-label fw-bold">Hasta</label>
+            <input type="date" id="hasta" class="form-control" :class="{ 'is-invalid': erroresBusqueda.hasta }" v-model="busqueda.hasta" @@change="limpiarBusquedaFecha">
+            <div id="error_busqueda_hasta" class="invalid-feedback" v-if="erroresBusqueda.hasta">{{ erroresBusqueda.hasta }}</div>
+        </div>
+        <div class="col-12 col-lg-3 d-flex justify-content-evenly align-items-end">
+            <button type="submit" class="btn btn-primary" :disabled="estaCargando">
+                <i class="bi bi-search"></i>
+                Buscar
+            </button>
+            <button type="button" class="btn btn-secondary" @@click="limpiar">
+                <i class="bi bi-eraser"></i>
+                Limpiar
+            </button>
+        </div>
+    </form>
+    <div class="row">
+        <div class="col my-2">
+            <div class="table-responsive my-2 fixed-height-table-container">
+                <table class="table table-hover text-nowrap">
+                    <thead class="table-light border border-start-0 border-top-0 border-end-0 border-2 border-black">
+                        <tr>
+                            <th>
+                                @Html.DisplayNameFor(model => model.Id).ToUpper()
+                            </th>
+                            <th>
+                                @Html.DisplayNameFor(model => model.Fecha).ToUpper()
+                            </th>
+                            <th>
+                                @Html.DisplayNameFor(model => model.FormaPago).ToUpper()
+                            </th>
+                            <th>
+                                @Html.DisplayNameFor(model => model.Anulado).ToUpper()
+                            </th>
+                            <th>
+                                @Html.DisplayNameFor(model => model.FechaAnulacion).ToUpper()
+                            </th>
+                            <th>ACCIONES</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cuerpo">
+                        <tr :id="p.id" v-for="p in pagos" :key="p.id">
+                            <td class="align-middle py-0 ps-2"> {{ p.id }} </td>
+                            <td class="align-middle py-0 ps-2"> {{ toLocalDate(p.fecha) }} </td>
+                            <td class="align-middle py-0 ps-2"> {{ p.formaPago }} </td>
+                            <td class="align-middle py-0 ps-2"> {{ isAnulado(p) }} </td>
+                            <td class="align-middle py-0 ps-2"> {{ toLocalDate(p.fechaAnulacion) }} </td>
+                            <td>
+                                <div class="d-flex justify-content-evenly align-items-center">
+                                    <i 
+                                        :data-pago-id="p.id" 
+                                        class="bi bi-pencil-square fs-3 text-primary icon-hover" 
+                                        @@click="abrirFormModal(p)" 
+                                        data-bs-toggle="tooltip" data-bs-title="Editar"
+                                    ></i>
+                                    <i 
+                                        :data-pago-id="p.id" 
+                                        class="bi bi-trash fs-3 text-danger icon-hover" 
+                                        @@click="abrirModalEliminar(p.id)" 
+                                        data-bs-toggle="tooltip" data-bs-title="Eliminar"
+                                    ></i>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="row border-top position-relative">
+        <nav id="nav" class="col pt-3">
+            <ul id="paginador" class="pagination justify-content-center">
+                <li id="flecha-pag-izq" class="page-item" :class="{ disabled: esPrimeraPagina }" data-bs-toggle="tooltip" data-bs-title="Anterior">
+                    <span @@click="pedirPagos(paginaAnterior)" class="page-link"><span>&laquo;</span></span>
+                </li>
+                <li class="page-item" v-for="p in cantidadPaginas">
+                    <a  @@click="pedirPagos(p)" class="page-link" :class="{ active: p == paginaActual, disabled: cantidadPaginas == 1 }">{{ p }}</a>
+                </li>
+                <li id="flecha-pag-der" class="page-item" :class="{ disabled: esUltimaPagina }" data-bs-toggle="tooltip" data-bs-title="Siguiente">
+                    <span @@click="pedirPagos(paginaSiguiente)" class="page-link"><span>&raquo;</span></span>
+                </li>
+            </ul>
+        </nav>
+        <div id="btn_add" class="position-absolute top-0 end-0 me-1 mt-3 mt-sm-2 mt-lg-1">
+            <i 
+                class="bi bi-plus-square fs-1 text-primary icon-hover d-inline-block" 
+                data-bs-toggle="tooltip" data-bs-title="Registrar Nuevo" 
+                @@click="abrirFormModal"
+            ></i>
+        </div>
+    </div>
+
+    <partial name="_ModalEliminar" model="mensajeEliminar"/>
+    <partial name="_FormModal" model="new PagoVM()"/>
+    <partial name="_ModalMensaje"/>
+</div>
+
+@section Scripts {
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", _ => {
+            const { createApp } = Vue;
+            let modalEliminar;
+            let formModal;
+            const pagoDefault = { id: 0, fecha: "", monto: 0, formaPago: "" };
+            const busquedaDefault = { cliente: "", fecha: "", desde: "", hasta: "" };
+            const erroresPagoDefault = { fecha: null, monto: null, formaPago: null };
+            const erroresBusquedaDefault = { cliente: null, fecha: null, desde: null, hasta: null };
+            createApp({
+                data() {
+                    return {
+                        pagos: @Html.Raw(JsonSerializer.Serialize(Model, serializationOptions)),
+                        urlBase: "/api/pagos",
+                        limit: @limit,
+                        paginaActual: @pagina,
+                        busqueda: { cliente: "@cliente", fecha: "@fecha", desde: "@desde", hasta: "@hasta" },
+                        erroresBusqueda: { ...erroresBusquedaDefault },
+                        cantidadPaginas: @cantidadPaginas,
+                        paginaSiguiente: @paginaSiguiente,
+                        paginaAnterior: @paginaAnterior,
+                        esPrimeraPagina: @(paginaAnterior == 0 ? "true" : "false"),
+                        esUltimaPagina: @(paginaSiguiente > cantidadPaginas ? "true" : "false"),
+                        estaCargando: false,
+                        hayPagos: @(Model.Count() > 0 ? "true" : "false"),
+                        pagoIdEliminar: 0,
+                        pago: { ...pagoDefault },
+                        erroresPago: { ...erroresPagoDefault },
+                        estaEditando: false,
+                        mensaje: "",
+                        esMensajeError: false,
+                        tooltipTriggerList: [],
+                        tooltipList: [],
+                        trabajoId: @trabajoId
+                    }
+                },
+                methods: {
+                    async pedirPagos(page) {
+                        if (page <= 0 || page > this.cantidadPaginas)
+                            return;
+                        let url = `${this.urlBase}?Limit=${this.limit}&Pagina=${page}`;
+                        if (this.busqueda.cliente.length > 0)
+                            url += `&Cliente=${this.busqueda.cliente}`;
+                        if (this.busqueda.fecha)
+                            url += `&Fecha=${this.busqueda.fecha}`;
+                        if (this.busqueda.desde && this.busqueda.hasta)
+                            url += `&Desde=${this.busqueda.desed}&Hasta=${this.busqueda.hasta}`;
+                        this.estaCargando = true;
+                        const data = await this.hacerPeticion(url);
+                        this.estaCargando = false;
+                        if (data) {
+                            this.actualizarDOM(data, page);
+                        }
+                    },
+                    esBusquedaValida() {
+                        this.erroresBusqueda = { ...erroresBusquedaDefault };
+                        if (this.busqueda.desde) {
+                            if (!this.busqueda.hasta) {
+                                this.erroresBusqueda.hasta = "Falta el valor";
+                            } else {
+                                const desde = new Date(this.busqueda.desde);
+                                const hasta = new Date(this.busqueda.hasta);
+                                if (hasta.getMilliseconds() < desde.getMilliseconds()) {
+                                    this.erroresBusqueda.hasta = "No puede ser mayor a 'Desde'";
+                                }
+                            }
+                            return false;
+                        }
+                        if (this.busqueda.hasta) {
+                            if (!this.busqueda.desde) {
+                                this.erroresBusqueda.desde = "Falta el valor";
+                            } else {
+                                const desde = new Date(this.busqueda.desde);
+                                const hasta = new Date(this.busqueda.hasta);
+                                if (desde.getMilliseconds() > hasta.getMilliseconds()) {
+                                    this.erroresBusqueda.hasta = "No puede ser menor a 'Hasta'";
+                                }
+                            }
+                            return false;
+                        }
+                        if (this.busqueda.cliente.length > 30) {
+                            this.erroresBusqueda.cliente = "30 caracteres máximo";
+                            return false;
+                        }
+                        return true;
+                    },
+                    async hacerPeticion(url) {
+                        try{
+                            const response = await fetch(url);
+                            if (response.ok) {
+                                return await response.json();
+                            } else {
+                                const { mensaje, errors } = await response.json();
+                                if (mensaje) {
+                                    this.mostrarMensaje(mensaje, false);
+                                }
+                                if (errors) {
+                                    mensaje = "";
+                                    Object.keys(errors).forEach((e, i) => {
+                                        mensaje += `${e}: ${errors[e].join(", ")}`;
+                                        if (i < errors.length-1)
+                                            mensaje += " - ";
+                                    });
+                                }
+                                return null;
+                            }
+                        }
+                        catch {
+                            this.mostrarMensaje("Error al traer los empleados", false);
+                        }
+                    },
+                    actualizarDOM(data, page) {
+                        this.pagos = data.pagos;
+                        this.hayPagos = this.pagos.length > 0;
+                        this.cantidadPaginas = data.cantidadPaginas;
+                        this.paginaActual = page;
+                        this.paginaAnterior = page - 1;
+                        this.paginaSiguiente = page + 1;
+                        this.esPrimeraPagina = this.paginaAnterior == 0;
+                        this.esUltimaPagina = this.paginaSiguiente > this.cantidadPaginas;
+                        setTimeout(() => { this.inicializarTooltips(); }, 2000);
+                    },
+                    mostrarMensaje(mensaje, ok = true) {
+                        this.mensaje = mensaje;
+                        this.esMensajeError = !ok;
+                        const myModal = new bootstrap.Modal(document.getElementById('modal-mensaje'), {});
+                        myModal.show();
+                    },
+                    async onSubmit() {
+                        if (!this.esBusquedaValida()) 
+                            return;
+                        this.errorBusqueda = { ...erroresBusquedaDefault };
+                        let url = `${this.urlBase}?Limit=${this.limit}&Pagina=1`;
+                        if (this.busqueda.cliente.length > 0)
+                            url += `&Cliente=${this.busqueda.cliente}`;
+                        if (this.busqueda.fecha)
+                            url += `&Fecha=${this.busqueda.fecha}`;
+                        if (this.busqueda.desde && this.busqueda.hasta)
+                            url += `&Desde=${this.busqueda.desed}&Hasta=${this.busqueda.hasta}`;
+                        this.estaCargando = true;
+                        const data = await this.hacerPeticion(url);
+                        this.estaCargando = false;
+                        if (data) {
+                            this.actualizarDOM(data, 1);
+                        }
+                    },
+                    limpiar() {
+                        this.busqueda = { ...busquedaDefault };
+                        this.errorBusqueda = { ...erroresBusquedaDefault };
+                    },
+                    recargar() {
+                        this.limpiar();
+                        this.pedirPagos(1);
+                    },
+                    abrirModalEliminar(id) {
+                        this.pagoIdEliminar = id;
+                        if (modalEliminar  == undefined)
+                            modalEliminar = new bootstrap.Modal(document.getElementById('modal-eliminar'), {});
+                        modalEliminar.show();
+                    },
+                    async eliminar() {
+                        if (this.pagoIdEliminar > 0) {
+                            this.estaCargando = true;
+                            try {
+                                const response = await fetch(`${this.urlBase}/${this.pagoIdEliminar}`, { method: "DELETE" });
+                                if (response.ok) {
+                                    let url = `${this.urlBase}?Limit=${this.limit}&Pagina=${this.paginaActual}`;
+                                    if (this.esBusquedaValida()) {
+                                        if (this.busqueda.cliente.length > 0)
+                                            url += `&Cliente=${this.busqueda.cliente}`;
+                                        if (this.busqueda.fecha)
+                                            url += `&Fecha=${this.busqueda.fecha}`;
+                                        if (this.busqueda.desde && this.busqueda.hasta)
+                                            url += `&Desde=${this.busqueda.desed}&Hasta=${this.busqueda.hasta}`;
+                                    }
+                                    this.erroresBusqueda = { ...erroresBusquedaDefault };
+                                    const data = await this.hacerPeticion(url);
+                                    if (data) {
+                                        this.actualizarDOM(data, this.paginaActual);
+                                    }
+                                    this.mostrarMensaje("Pago Anulado");
+                                } else {
+                                    const { mensaje } = await response.json();
+                                    this.mostrarMensaje(mensaje, false);
+                                }
+                            }
+                            catch {
+                                this.mostrarMensaje("Error al anular el pago", false);
+                            }
+                            this.estaCargando = false;
+
+                            if (modalEliminar != undefined)
+                                modalEliminar.hide();
+                        }
+                    },
+                    abrirFormModal(pago) {
+                        if (pago instanceof Event) {
+                            this.pago = { ...pagoDefault };
+                        }
+                        else {
+                            this.pago = { ...pago };
+                            this.pago.fecha = this.empleado.fecha.split("T")[0];
+                            this.estaEditando = true;
+                        }
+                        this.erroresPago = { ...erroresPagoDefault };
+                        if (formModal == undefined)
+                            formModal = new bootstrap.Modal(document.getElementById('modal_formulario_pago'), {});
+                        formModal.show();
+                    },
+                    cancelarEditar() {
+                        this.estaEditando = false;
+                    },
+                    async onSubmitEmpleado() {
+                        if (this.esFormularioValido()) {
+                            this.estaCargando = true;
+                            let url = this.urlBase;
+                            const opcionesFetch = { 
+                                method: "POST",
+                                headers: { 
+                                    'Content-Type': 'application/json',
+                                    'RequestVerificationToken': document.getElementsByName("__RequestVerificationToken")?.item(0)?.value
+                                },
+                                body: JSON.stringify(this.pago)
+                            };
+                            if (this.estaEditando) {
+                                url += `/${this.pago.id}`;
+                                opcionesFetch.method = "PUT";
+                            }
+                            try{
+                                const response = await fetch(url, opcionesFetch);
+                                if (response.ok) {
+                                    const data = await response.json();
+                                    if (this.estaEditando) {
+                                        const indicePagoActualizado = this.pagos.findIndex(e => e.id == data?.pago.id);
+                                        if (indicePagoActualizado >= 0) {
+                                            this.pagos[indicePagoActualizado] = data?.pago;
+                                        }
+                                    } else {
+                                        @* if (this.pagos.length < this.limit) 
+                                            this.pagos.push(data?.pago);
+                                        else if (this.esUltimaPagina) {
+                                            this.cantidadPaginas++;
+                                            this.esUltimaPagina = false;
+                                        } *@
+                                        url = `${this.urlBase}?Limit=${this.limit}&Pagina=${this.paginaActual}`;
+                                        if (this.esBusquedaValida()) {
+                                            if (this.busqueda.cliente.length > 0)
+                                                url += `&Cliente=${this.busqueda.cliente}`;
+                                            if (this.busqueda.fecha)
+                                                url += `&Fecha=${this.busqueda.fecha}`;
+                                            if (this.busqueda.desde && this.busqueda.hasta)
+                                                url += `&Desde=${this.busqueda.desed}&Hasta=${this.busqueda.hasta}`;
+                                        }
+                                        const data = await this.hacerPeticion(url);
+                                        if (data) {
+                                            this.actualizarDOM(data, this.paginaActual);
+                                        }
+                                    }
+                                    if (formModal != undefined)
+                                        formModal.hide();
+                                    this.mostrarMensaje(`Pago ${this.estaEditando ? "Actualizado" : "Registrado" }`);
+                                } else {
+                                    const { mensaje, errors } = await response.json();
+                                    if (errors) {
+                                        Object.keys(errors).forEach(e => {
+                                            if (e == "FormaPago")
+                                                this.erroresEmpleado[e[0].toLowerCase()+e.substring(1)] = errors[e].join(", ");
+                                            else 
+                                                this.erroresEmpleado[e.toLowerCase()] = errors[e].join(", ");
+                                        });
+                                    } else {
+                                        this.mostrarMensaje(mensaje ?? "La petición no es correcta", false);
+                                    }
+                                }
+                            } catch {
+                                this.mostrarMensaje(`Se produjo un error al ${this.estaEditando ? "Actualizar" : "Registrar" }`, false);
+                            }
+                            this.estaCargando = false;
+                        }
+                        this.estaEditando = false;
+                    },
+                    esFormularioValido() {
+                        const mapaValidador = new Map([
+                            ["fecha", validarFecha],
+                            ["monto", validarMonto],
+                            ["formaPago", validarSelect]
+                        ]);
+                        const clavesAValidar = [...mapaValidador.keys()];
+                        Object.keys(this.pago)
+                            .forEach(key => {
+                                if (!clavesAValidar.includes(key)) return;
+                                this.erroresPago[key] = mapaValidador.get(key)(this.pago[key]);
+                            }
+                        );
+                        return !Object.keys(this.erroresPago).some(v => this.erroresPago[v]);
+                    },
+                    limpiarFormulario() {
+                        this.pago = { ...pagoDefault };
+                        this.erroresPago = { ...erroresPagoDefault };
+                    },
+                    limpiarBusquedaFecha() {
+                        this.busqueda.fecha = "";
+                    },
+                    limpiarBusquedaDesdeYHasta() {
+                        this.busqueda.desde = "";
+                        this.busqueda.hasta = "";
+                    },
+                    isAnulado(p) {
+                        return p.anulado ? "✔" : "❌";
+                    },
+                    toLocalDate(f) {
+                        const fecha = new Date(f);
+                        return fecha?.toLocaleDateString() ?? " - ";
+                    },
+                    inicializarTooltips() {
+                        this.tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+                        this.tooltipList = [...this.tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
+                    }
+                }
+            }).mount("#app-pagos");
+            function validarSelect(valor) {
+                if (!valor || valor.trim().length == 0)
+                    return "Requerido";
+                return;
+            }
+            function validarMonto(valor) {
+                if (typeof valor == "string")
+                    return "Requerido";
+                if (valor <= 0)
+                    return "Debe ser mayor a 0";
+            }
+            function validarFecha(valor) {
+                if (!valor || valor.trim().length === 0) 
+                    return "La fecha es requerida";
+                return;
+            }
+        });
+    </script>
+}

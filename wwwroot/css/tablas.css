@@ -3,28 +3,18 @@
     /* height: 650px; */
     height: 65vh;
     overflow-y: auto;
+    overflow-x: auto;
 }
 
-.fixed-height-table-container-alquilar {
-    /* height: 380px; */
-    max-height: 500px;
-    overflow-y: auto;
-}
-
-.fixed-height-table-container-informes {
-    height: 575px;
-    max-height: 600px;
-    overflow-y: auto;
+/* Opcional: fuerza un ancho mínimo para garantizar el scroll horizontal */
+.fixed-height-table-container table {
+  min-width: 1000px; /* Ajusta según el número de columnas */
 }
 
 table {
     width: 100%;
     border-collapse: collapse;
     table-layout: fixed;
-}
-
-thead {
-    border-bottom: 3px solid black !important;
 }
 
 thead th {
@@ -47,3 +37,17 @@ thead th {
 .icon-hover:hover, .icon-enlace:hover {
     transform: scale(1.2);
 }
+
+#btn_add {
+    width: fit-content;
+    height: fit-content;
+    cursor: pointer;
+}
+
+nav ul li {
+    cursor: pointer;
+}
+
+/* td div i {
+    cursor: pointer;
+} */

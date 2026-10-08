@@ -19,7 +19,10 @@ var configuration = builder.Configuration;
 
 builder.Services.AddDbContext<DBContext>(
     dbContextOptions => dbContextOptions
-        .UseMySql(configuration["ConnectionStrings:MySql"], new MySqlServerVersion(new Version(80, 0, 43)))
+        .UseMySql(
+            configuration["ConnectionStrings:MySql"], 
+            ServerVersion.AutoDetect(configuration["ConnectionStrings:MySql"])
+        )
 );
 
 var app = builder.Build();

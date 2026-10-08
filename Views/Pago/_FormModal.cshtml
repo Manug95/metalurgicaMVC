@@ -1,0 +1,114 @@
+@using metalurgicaMVC.ViewModels
+@model PagoVM
+
+<div id="modal_formulario_pago" class="modal fade" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-describedby="titulo-modal">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-light-subtle">
+            <div class="modal-header">
+                <div id="titulo-modal" class="modal-title fs-5">Formulario</div>
+                <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close" @@click="cancelarEditar"></button>
+            </div>
+            <div class="modal-body justify-content-center align-items-center">
+                <div class="container-md">
+                    <div class="row mt-2 mb-3">
+                        <form 
+                            id="form-pago" 
+                            @@submit.prevent="onSubmitPago" 
+                            class="p-3 w-100 mx-auto border rounded-4 needs-validation bg-light" 
+                            asp-antiforgery="true"
+                        >
+
+                            <div class="row mb-md-4">
+                                <div class="col-12 mt-5 mt-md-3 mb-md-0">
+                                    <label asp-for="Fecha" class="form-label fw-bold">
+                                        @Html.DisplayNameFor(model => model.Fecha)
+                                        <span class="text-danger">*</span>
+                                    </label>
+                                    <input 
+                                        type="date" 
+                                        asp-for="Fecha" 
+                                        v-model="pago.fecha" 
+                                        class="form-control" 
+                                        :class="{ 'is-invalid': erroresPago.fecha }"
+                                        id="fecha" 
+                                        aria-describedby="error_fecha"
+                                    >
+                                    <div id="error_fecha" class="invalid-feedback" v-if="erroresPago.fecha">{{ erroresPago.fecha }}</div>
+                                </div>
+                            </div>
+
+                            <div class="row mb-md-4">
+                                <div class="col-12 mt-5 mt-md-3 mb-md-0">
+                                    <label asp-for="Monto" class="form-label fw-bold">
+                                        @Html.DisplayNameFor(model => model.Monto)
+                                        <span class="text-danger">*</span>
+                                    </label>
+                                    <input 
+                                        type="text" 
+                                        asp-for="Monto" 
+                                        v-model="pago.monto" 
+                                        class="form-control" 
+                                        :class="{ 'is-invalid': erroresPago.monto }"
+                                        id="monto" 
+                                        aria-describedby="error_monto"
+                                    >
+                                    <div id="error_monto" class="invalid-feedback" v-if="erroresPago.monto">{{ erroresPago.monto }}</div>
+                                </div>
+                            </div>
+
+                            <div class="row mb-md-4">
+                                <div class="col-12 mt-5 mt-md-3 mb-md-0">
+                                    <label asp-for="Fecha" class="form-label fw-bold">
+                                        @Html.DisplayNameFor(model => model.Fecha)
+                                        <span class="text-danger">*</span>
+                                    </label>
+                                    <input 
+                                        type="date" 
+                                        asp-for="Fecha" 
+                                        v-model="pago.fecha" 
+                                        class="form-control" 
+                                        :class="{ 'is-invalid': erroresPago.fecha }"
+                                        id="fecha" 
+                                        aria-describedby="error_fecha"
+                                    >
+                                    <div id="error_fecha" class="invalid-feedback" v-if="erroresPago.fecha">{{ erroresPago.fecha }}</div>
+                                </div>
+                            </div>
+
+                            <div class="row mb-2 pt-5 pt-md-4 justify-content-around align-items-end">
+                                <div class="col-12 col-md-6 mt-5 mt-md-3 mb-md-0">
+                                    <label asp-for="FormaPago" class="form-label fw-bold">
+                                        @Html.DisplayNameFor(model => model.FormaPago)
+                                        <span class="text-danger">*</span>
+                                    </label>
+                                    <select 
+                                        asp-for="FormaPago" 
+                                        v-model="pago.formaPago" 
+                                        class="form-select" 
+                                        :class="{ 'is-invalid': erroresPago.formaPago }"
+                                        id="formaPago" 
+                                        aria-describedby="error_formaPago"
+                                    >
+                                        <option value="" disabled>Seleccionar...</option>
+                                        <option value="EFECTIVO">EFECTIVO</option>
+                                        <option value="TRANSFERENCIA">TRANSFERENCIA</option>
+                                        <option value="CHEQUE">CHEQUE</option>
+                                        <option value="CHEQUE ELECTRONICO">CHEQUE ELECTRÓNICO</option>
+                                        <option value="QR">QR</option>
+                                    </select>
+                                    <div id="error_formaPago" class="invalid-feedback" v-if="erroresPago.formaPago">{{ erroresPago.formaPago }}</div>
+                                </div>
+                            </div>
+
+                            <input id="pagoId" type="hidden" asp-for="Id" v-model="pago.id" aria-hidden="true"/>
+                        </form>
+
+                    </div>
+                </div>
+            </div>
+            <div class="d-flex justify-content-start align-items-center border-top p-3">
+                <span>Los campos con <span class="text-danger">*</span> son obligatorios.</span>
+            </div>
+        </div>
+    </div>
+</div>
