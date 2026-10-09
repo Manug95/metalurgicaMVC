@@ -41,7 +41,7 @@
                     placeholder="nombre o apellido del empleado" 
                     value="@busqueda"
                 >
-                <span class="input-group-text" id="limpiar" style="cursor: pointer;" @@click="limpiar">
+                <span class="input-group-text" id="limpiar" style="cursor: pointer;" @@click="limpiarBusqueda">
                     <i class="bi bi-x-lg" data-bs-toggle="tooltip" data-bs-title="Limpiar Búsqueda"></i>
                 </span>
                 <div id="error_form_buscador" class="invalid-feedback" v-if="errorBusqueda">{{ errorBusqueda }}</div>
@@ -139,6 +139,7 @@
         document.addEventListener("DOMContentLoaded", _ => {
             const { createApp } = Vue;
             let modalEliminar;
+            let modalMonseaje;
             createApp({
                 data() {
                     return {
@@ -230,12 +231,12 @@
                             this.actualizarDOM(data, 1);
                         }
                     },
-                    limpiar() {
+                    limpiarBusqueda() {
                         this.busqueda = "";
                         this.errorBusqueda = null;
                     },
                     recargar() {
-                        this.limpiar();
+                        this.limpiarBusqueda();
                         this.pedirTrabajos(1);
                     },
                     abrirModalEliminar(id) {
@@ -275,8 +276,9 @@
                     mostrarMensaje(mensaje, ok = true) {
                         this.mensaje = mensaje;
                         this.esMensajeError = !ok;
-                        const myModal = new bootstrap.Modal(document.getElementById('modal-mensaje'), {});
-                        myModal.show();
+                        if (!modalMonseaje)
+                            modalMonseaje = new bootstrap.Modal(document.getElementById('modal-mensaje'), {});
+                        modalMonseaje.show();
                     },
                     getNombreCliente(e) {
                         return `${e.apellido}, ${e.nombre}`;

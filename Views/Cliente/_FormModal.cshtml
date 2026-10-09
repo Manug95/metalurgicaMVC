@@ -10,7 +10,7 @@
             </div>
             <div class="modal-body justify-content-center align-items-center">
                 <div class="container-md">
-                    <div class="row mt-2 mb-3">
+                    <div class="row">
                         <form 
                             id="form-cliente" 
                             @@submit.prevent="onSubmitCliente" 
@@ -20,9 +20,47 @@
 
                             <div class="row mb-md-4">
                                 <div class="col-12 col-md-6 mt-5 mt-md-3 mb-md-0">
+                                    <label asp-for="Tipo" class="form-label fw-bold">
+                                        @Html.DisplayNameFor(model => model.Tipo)
+                                        <span class="text-danger">*</span>
+                                    </label>
+                                    <select 
+                                        asp-for="Tipo" 
+                                        v-model="cliente.tipo" 
+                                        class="form-select" 
+                                        :class="{ 'is-invalid': erroresCliente.tipo }"
+                                        id="tipo" 
+                                        @@change="onChangeTipoCliente"
+                                        aria-describedby="error_tipo"
+                                    >
+                                        <option value="" selected disabled>Seleccionar...</option>
+                                        <option value="PERSONA">PERSONA</option>
+                                        <option value="EMPRESA">EMPRESA</option>
+                                    </select>
+                                    <div id="error_tipo" class="invalid-feedback" v-if="erroresCliente.tipo">{{ erroresCliente.tipo }}</div>
+                                </div>
+                                <div class="col-12 col-md-6 mt-5 mt-md-3 mb-md-0">
+                                    <label asp-for="Cuit" class="form-label fw-bold">
+                                        @Html.DisplayNameFor(model => model.Cuit)
+                                    </label>
+                                    <input 
+                                        type="text" 
+                                        asp-for="Cuit" 
+                                        v-model="cliente.cuit" 
+                                        class="form-control" 
+                                        :class="{ 'is-invalid': erroresCliente.cuit }"
+                                        id="cuit" 
+                                        aria-describedby="error_cuit"
+                                    >
+                                    <div id="error_cuit" class="invalid-feedback" v-if="erroresCliente.cuit">{{ erroresCliente.cuit }}</div>
+                                </div>
+                            </div>
+
+                            <div class="row mb-md-4">
+                                <div class="col-12 col-md-6 mt-5 mt-md-3 mb-md-0">
                                     <label asp-for="Nombre" class="form-label fw-bold">
                                         @Html.DisplayNameFor(model => model.Nombre)
-                                        <span class="text-danger">*</span>
+                                        <span class="text-info-emphasis">*</span>
                                     </label>
                                     <input 
                                         type="text" 
@@ -38,7 +76,7 @@
                                 <div class="col-12 col-md-6 mt-5 mt-md-3 mb-md-0">
                                     <label asp-for="Apellido" class="form-label fw-bold">
                                         @Html.DisplayNameFor(model => model.Apellido)
-                                        <span class="text-danger">*</span>
+                                        <span class="text-info-emphasis">*</span>
                                     </label>
                                     <input 
                                         type="text" 
@@ -46,6 +84,7 @@
                                         v-model="cliente.apellido" 
                                         class="form-control" 
                                         :class="{ 'is-invalid': erroresCliente.apellido }"
+                                        :disabled="cliente.tipo == 'EMPRESA'"
                                         id="apellido" 
                                         aria-describedby="error_apellido"
                                     >
@@ -86,24 +125,6 @@
                                 </div>
                             </div>
 
-                            <div class="row mb-md-4">
-                                <div class="col-12 col-md-6 mt-5 mt-md-3 mb-md-0">
-                                    <label asp-for="Cuit" class="form-label fw-bold">
-                                        @Html.DisplayNameFor(model => model.Cuit)
-                                    </label>
-                                    <input 
-                                        type="text" 
-                                        asp-for="Cuit" 
-                                        v-model="cliente.cuit" 
-                                        class="form-control" 
-                                        :class="{ 'is-invalid': erroresCliente.cuit }"
-                                        id="cuit" 
-                                        aria-describedby="error_cuit"
-                                    >
-                                    <div id="error_cuit" class="invalid-feedback" v-if="erroresCliente.cuit">{{ erroresCliente.cuit }}</div>
-                                </div>
-                            </div>
-
                             <input id="clienteId" type="hidden" asp-for="Id" v-model="cliente.id" aria-hidden="true"/>
 
                             <div class="row mb-2 pt-5 pt-md-4 justify-content-around align-items-end">
@@ -128,8 +149,10 @@
                     </div>
                 </div>
             </div>
-            <div class="d-flex justify-content-start align-items-center border-top p-3">
-                <span>Los campos con <span class="text-danger">*</span> son obligatorios.</span>
+            <div class="d-flex flex-column justify-content-center align-items-start border-top p-3">
+                <span>Los campos con <span class="text-danger fw-bold">*</span> son obligatorios.</span>
+                <span><span class="text-info-emphasis fw-bold">*</span>Si el tipo de cliente es 'PERSONA' son requeridos el nombre o el apellido o ambos.</span>
+                <span><span class="text-info-emphasis fw-bold">*</span>Si el tipo de cliente es 'EMPRESA' solo el nombre es requerido.</span>
             </div>
         </div>
     </div>

@@ -18,6 +18,9 @@ public class ClienteController(IClienteRepository repo) : ControllerBase
         if (id <= 0)
             return BadRequest();
 
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
         try
         {
             Cliente? cliente = await _repo.GetByIdAsync(id);
@@ -40,6 +43,9 @@ public class ClienteController(IClienteRepository repo) : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetCliente([FromQuery] FiltrosCliente filters)
     {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
         try
         {
             List<Cliente> clientes = await _repo.ListAsync(filters);
@@ -66,6 +72,9 @@ public class ClienteController(IClienteRepository repo) : ControllerBase
 	[ValidateAntiForgeryToken]
     public async Task<IActionResult> PostCliente([FromBody] ClienteVM vm)
     {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
         Cliente cliente = Cliente.Parse(vm);
 
         try
@@ -94,6 +103,9 @@ public class ClienteController(IClienteRepository repo) : ControllerBase
     {
         if (id <= 0)
             return BadRequest();
+
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
             
         vm.Id = id;
 

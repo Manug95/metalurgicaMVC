@@ -18,23 +18,6 @@ public class Util
         return errorMsg;
     }
 
-    public static Dictionary<string, string> ModelStateJsonError(ModelStateDictionary modelState)
-    {
-        Dictionary<string, string> errores = new();
-        foreach (var estado in modelState)
-        {
-            var campo = estado.Key;
-            string mensajes = string.Empty;
-            foreach (var error in estado.Value.Errors)
-            {
-                mensajes += $"- {error.ErrorMessage}";
-            }
-
-            errores.TryAdd(campo, mensajes);
-        }
-        return errores;
-    }
-
     public static void LoguearExcepcion(Exception ex)
     {
         Console.WriteLine($"Tipo de Excepción:\t{ex.GetType()}");

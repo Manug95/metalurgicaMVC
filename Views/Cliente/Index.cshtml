@@ -41,7 +41,7 @@
                     placeholder="nombre o apellido del cliente" 
                     value="@busqueda"
                 >
-                <span class="input-group-text" id="limpiar" style="cursor: pointer;" @@click="limpiar">
+                <span class="input-group-text" id="limpiar" style="cursor: pointer;" @@click="limpiarBusqueda">
                     <i class="bi bi-x-lg" data-bs-toggle="tooltip" data-bs-title="Limpiar Búsqueda"></i>
                 </span>
                 <div id="error_form_buscador" class="invalid-feedback" v-if="errorBusqueda">{{ errorBusqueda }}</div>
@@ -143,8 +143,9 @@
             const { createApp } = Vue;
             let modalEliminar;
             let formModal;
-            const clientePorDefecto = { id: 0, nombre: null, apellido: null, telefono: null, direccion: null, cuit: null }
-            const erroresClienteDefault = { id: 0, nombre: null, apellido: null, telefono: null, direccion: null, cuit: null };
+            let modalMonseaje;
+            const clientePorDefecto = { id: 0, tipo: "", nombre: "", apellido: "", telefono: "", direccion: "", cuit: "" }
+            const erroresClienteDefault = { tipo: null, nombre: null, apellido: null, telefono: null, direccion: null, cuit: null };
             createApp({
                 data() {
                     return {
@@ -239,12 +240,12 @@
                         this.esUltimaPagina = this.paginaSiguiente > this.cantidadPaginas;
                         setTimeout(() => { this.inicializarTooltips(); }, 2000);
                     },
-                    limpiar() {
+                    limpiarBusqueda() {
                         this.busqueda = "";
                         this.errorBusqueda = null;
                     },
                     recargar() {
-                        this.limpiar();
+                        this.limpiarBusqueda();
                         this.pedirClientes(1);
                     },
                     abrirModalEliminar(id) {
@@ -323,8 +324,8 @@
                                             this.clientes[indiceClienteActualizado] = data?.cliente;
                                         }
                                     } else {
-                                        @* if (this.usuarios.length < this.limit) 
-                                            this.usuarios.push(data?.usuario);
+                                        @* if (this.clientes.length < this.limit) 
+                                            this.clientes.push(data?.usuario);
                                         else if (this.esUltimaPagina) {
                                             this.cantidadPaginas++;
                                             this.esUltimaPagina = false;
@@ -337,9 +338,8 @@
                                             this.actualizarDOM(data, this.paginaActual);
                                         }
                                     }
-                                    if (formModal != undefined){
+                                    if (formModal != undefined)
                                         formModal.hide();
-                                    }
                                     this.mostrarMensaje(`Cliente ${this.estaEditando ? "Actualizado" : "Registrado" }`);
                                 } else {
                                     const { mensaje, errors } = await response.json();
@@ -360,15 +360,17 @@
                     },
                     esFormularioValido() {
                         const mapaValidador = new Map([
-                            ["nombre", validarNombreApellido],
-                            ["apellido", validarNombreApellido],
-                            ["cuit", validarCUIT],
-                            ["telefono", validarTelefono],
-                            ["direccion", validarDireccion]
+                            ["tipo", this.validarSelectTipo],
+                            ["nombre", this.validarNombre],
+                            ["apellido", this.validarApellido],
+                            ["cuit", this.validarCUIT],
+                            ["telefono", this.validarTelefono],
+                            ["direccion", this.validarDireccion]
                         ]);
+                        const clavesAValidar = [...mapaValidador.keys()];
                         Object.keys(this.cliente)
                             .forEach(key => {
-                                if (key == "id") return;
+                                if (!clavesAValidar.includes(key)) return;
                                 this.erroresCliente[key] = mapaValidador.get(key)(this.cliente[key]);
                             }
                         );
@@ -381,12 +383,84 @@
                     mostrarMensaje(mensaje, ok = true) {
                         this.mensaje = mensaje;
                         this.esMensajeError = !ok;
-                        const myModal = new bootstrap.Modal(document.getElementById('modal-mensaje'), {});
-                        myModal.show();
+                        if (!modalMonseaje)
+                            modalMonseaje = new bootstrap.Modal(document.getElementById('modal-mensaje'), {});
+                        modalMonseaje.show();
                     },
                     inicializarTooltips() {
                         this.tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
                         this.tooltipList = [...this.tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
+                    },
+                    onChangeTipoCliente() {
+                        this.erroresCliente.tipo = null;
+                        this.erroresCliente.nombre = null;
+                        this.erroresCliente.apellido = null;
+                        if (this.cliente.tipo == "EMPRESA") {
+                            this.cliente.apellido = "";
+                        }
+                    },
+                    validarCUIT() {
+                        const cuit = this.cliente.cuit;
+                        if (!cuit || cuit.trim().length == 0) 
+                            return;
+                        if (cuit.length > 13) 
+                            return "El CUIT es muy largo";
+                        const regExp = /^\d{2}\-\d{7,8}\-\d{1}$/;
+                        if (!regExp.test(cuit)) 
+                            return "El formato inválido";
+                        return;
+                    },
+                    validarNombre() {
+                        const nombre = this.cliente.nombre;
+                        const tipo = this.cliente.tipo;
+                        if (tipo == "PERSONA") { // tiene que estar nombre o apellido o ambos
+                            if (nombre.trim() == "" && this.cliente.apellido.trim() == "") 
+                                return "El nombre y apellido no pueden estar ambos vacíos";
+                        } else if (tipo == "EMPRESA") { // tiene que estar el nombre y el apellido no
+                            if (nombre.trim() == "") return "El nombre de la empresa es requerido";
+                        } else {
+                            return "Falta seleccionar el tipo de cliente";
+                        }
+                        if (nombre.length > 30) return "El máximo de caracteres de de 30";
+                        return;
+                    },
+                    validarApellido() {
+                        const tipo = this.cliente.tipo;
+                        if (tipo == "PERSONA") { // tiene que estar nombre o apellido o ambos
+                            const apellido = this.cliente.apellido;
+                            if (this.cliente.nombre.trim() == "" && apellido.trim() == "") 
+                                return "El nombre y apellido no pueden estar ambos vacíos";
+                            if (apellido.length > 30) 
+                                return "El máximo de caracteres de de 30";
+                        } else if (tipo == "") {
+                            return "Falta seleccionar el tipo de cliente";
+                        }
+                        return;
+                    },
+                    validarTelefono() {
+                        const telefono = this.cliente.telefono;
+                        if (!telefono) return;
+                        if (telefono.trim().length == 0) return;
+                        if (telefono.length > 20) return "El máximo de caracteres de de 20.";
+                        // const regExp = /^(\+54\s)?0?(\d{2,4})\s(15\s)?(\d{4}-?\d{4})|(\d{3}-?\d{4})|(\d{2}-?\d{4})$/;
+                        const regExp = /^\+?[0-9\s\-]{6,20}$/;
+                        if (!regExp.test(telefono)) return "El teléfono tiene caractares inválidos";
+                        return;
+                    },
+                    validarDireccion() {
+                        const dir = this.cliente.direccion;
+                        if (!dir || dir.trim().length === 0) 
+                            return;
+                        if (dir.length > 100) {
+                            return "La dirección no puede superar los 100 caracteres";
+                        }
+                        return;
+                    },
+                    validarSelectTipo(valor) {
+                        const tipo = this.cliente.tipo;
+                        if (!tipo || tipo.trim().length == 0)
+                            return "Falta el valor";
+                        return;
                     }
                 },
                 mounted() {
@@ -397,48 +471,5 @@
                 }
             }).mount('#app-clientes');
         });
-
-        function validarCUIT(cadena) {
-            if (!cadena || cadena.trim().length == 0) 
-                return;
-
-            if (cadena.length > 13) 
-                return "El CUIT es muy largo";
-            
-            const regExp = /^\d{2}\-\d{7,8}\-\d{1}$/;
-            if (!regExp.test(cadena)) 
-                return "El formato CUIT es inválido";
-
-            return;
-        }
-
-        function validarNombreApellido(cadena) {
-            if (cadena === undefined || cadena === null) return "El campo es requerido";
-            if (typeof cadena !== "string") return "El campo de ser de texto";
-            if (cadena.trim() === "") return "El campo es requerido";
-            if (cadena.length > 100) return "El máximo de caracteres de de 100";
-            return;
-        }
-
-        function validarTelefono(cadena) {
-            if (!cadena) return;
-            if (cadena.trim().length == 0) return;
-            if (cadena.length > 20) return "El máximo de caracteres de de 20.";
-
-            // const regExp = /^(\+54\s)?0?(\d{2,4})\s(15\s)?(\d{4}-?\d{4})|(\d{3}-?\d{4})|(\d{2}-?\d{4})$/;
-            const regExp = /^\+?[0-9\s\-]{6,20}$/;
-            if (!regExp.test(cadena)) return "El teléfono tiene caractares inválidos";
-            return;
-        }
-
-        function validarDireccion(cadena) {
-            if (!cadena || cadena.trim().length === 0) 
-                return;
-
-            if (cadena.length > 100) {
-                return "La dirección no puede superar los 100 caracteres";
-            }
-            return;
-        }
     </script>
 }

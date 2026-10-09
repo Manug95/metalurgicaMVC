@@ -41,7 +41,7 @@
                     placeholder="escriba un nombre de usuario" 
                     value="@busqueda"
                 >
-                <span class="input-group-text" id="limpiar" style="cursor: pointer;" @@click="limpiar">
+                <span class="input-group-text" id="limpiar" style="cursor: pointer;" @@click="limpiarBusqueda">
                     <i class="bi bi-x-lg" data-bs-toggle="tooltip" data-bs-title="Limpiar Búsqueda"></i>
                 </span>
                 <div id="error_form_buscador" class="invalid-feedback" v-if="errorBusqueda">{{ errorBusqueda }}</div>
@@ -145,6 +145,7 @@
             const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
             let modalEliminar;
             let formModal;
+            let modalMonseaje;
             const usuarioDefault = { id: 0, username: null, password: null, rol: "", avatar: null };
             const erroresUsuarioDefault = { username: null, password: null, rol: null };
             createApp({
@@ -250,12 +251,12 @@
                         this.esUltimaPagina = this.paginaSiguiente > this.cantidadPaginas;
                         setTimeout(() => { this.inicializarTooltips(); }, 2000);
                     },
-                    limpiar() {
+                    limpiarBusqueda() {
                         this.busqueda = "";
                         this.errorBusqueda = null;
                     },
                     recargar() {
-                        this.limpiar();
+                        this.limpiarBusqueda();
                         this.pedirUsuarios(1);
                     },
                     abrirModalEliminar(id) {
@@ -357,8 +358,9 @@
                     mostrarMensaje(mensaje, ok = true) {
                         this.mensaje = mensaje;
                         this.esMensajeError = !ok;
-                        const myModal = new bootstrap.Modal(document.getElementById('modal-mensaje'), {});
-                        myModal.show();
+                        if (!modalMonseaje)
+                            modalMonseaje = new bootstrap.Modal(document.getElementById('modal-mensaje'), {});
+                        modalMonseaje.show();
                     },
                     mostrarOcultarPasssword() {
                         this.mostrarPassword = !this.mostrarPassword;
