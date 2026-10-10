@@ -25,6 +25,14 @@ public class UsuarioVM
     [Display(Name = "Foto Perfil")]
     public string? Avatar { get; set; }
 
+    [Required(ErrorMessage = "Falta el nombre")]
+    [MaxLength(30, ErrorMessage = "Supera el máximo de 30 caracteres")]
+    public string? Nombre { get; set; }
+
+    [Required(ErrorMessage = "Falta el apellido")]
+    [MaxLength(30, ErrorMessage = "Supera el máximo de 30 caracteres")]
+    public string? Apellido { get; set; }
+
     public bool Activo { get; set; }
 
     public static UsuarioVM From(Usuario u)
@@ -35,7 +43,9 @@ public class UsuarioVM
             Username = u.Username,
             Rol = u.Rol,
             Avatar = u.Avatar,
-            Activo = u.Activo
+            Activo = u.Activo,
+            Nombre = u.Nombre,
+            Apellido = u.Apellido
         };
     }
 

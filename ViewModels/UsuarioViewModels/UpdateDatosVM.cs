@@ -11,4 +11,12 @@ public class UpdateDatosVM
     [Required(ErrorMessage = "El usuario necesita un rol")]
     [Display(Name = "ROL")]
     public string? Rol { get; set; }
+
+    [Required(ErrorMessage = "Falta el nombre")]
+    [MaxLength(30, ErrorMessage = "Supera el máximo de 30 caracteres")]
+    public string? Nombre { get; set; }
+
+    [Required(ErrorMessage = "Falta el apellido")]
+    [MaxLength(30, ErrorMessage = "Supera el máximo de 30 caracteres")]
+    public string? Apellido { get; set; }
 }

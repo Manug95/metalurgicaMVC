@@ -42,7 +42,10 @@ public class UsuarioController(IUsuarioRepository repo, IConfiguration config) :
     [HttpGet]
     public async Task<IActionResult> GetUsuario([FromQuery] FiltrosUsuario filters)
     {
-         try
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+            
+        try
         {
             List<Usuario> usuarios = await _repo.ListAsync(filters);
             int cantidadUsuarios = await _repo.CountAsync(filters);
@@ -68,6 +71,9 @@ public class UsuarioController(IUsuarioRepository repo, IConfiguration config) :
 	[ValidateAntiForgeryToken]
     public async Task<IActionResult> PostUsuario([FromBody] UsuarioVM vm)
     {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
         Usuario usuario = Usuario.From(vm);
 
         try
@@ -98,6 +104,9 @@ public class UsuarioController(IUsuarioRepository repo, IConfiguration config) :
     {
         if (id <= 0)
             return BadRequest();
+
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
             
         try
         {
@@ -149,6 +158,9 @@ public class UsuarioController(IUsuarioRepository repo, IConfiguration config) :
     {
         if (id <= 0)
             return BadRequest();
+
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
             
         try
         {
@@ -189,6 +201,9 @@ public class UsuarioController(IUsuarioRepository repo, IConfiguration config) :
     {
         if (id <= 0)
             return BadRequest();
+
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
             
         try
         {
@@ -197,6 +212,8 @@ public class UsuarioController(IUsuarioRepository repo, IConfiguration config) :
                 return NotFound(new { mensaje = "El usuario no existe" });
 
             usuario.Username = vm.Username;
+            usuario.Nombre = vm.Nombre;
+            usuario.Apellido = vm.Apellido;
             usuario.Rol = vm.Rol;
 
             if (await _repo.UpdateAsync(usuario))
@@ -220,15 +237,18 @@ public class UsuarioController(IUsuarioRepository repo, IConfiguration config) :
     {
         if (id <= 0)
             return BadRequest();
+
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        if (vm.AvatarFile == null)
+            return BadRequest(new { mensaje = "No se envió ningún archivo" });
             
         try
         {
             Usuario? usuario = await _repo.GetByIdAsync(id);
             if (usuario == null)
                 return NotFound(new { mensaje = "El usuario no existe" });
-
-            if (vm.AvatarFile == null)
-                return BadRequest(new { mensaje = "No se envió ningún archivo" });
 
             if (usuario.Avatar != null)
                 fileService.DeleteAvatar(usuario.Avatar);

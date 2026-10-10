@@ -159,6 +159,8 @@
                         esPrimeraPagina: @(paginaAnterior == 0 ? "true" : "false"),
                         esUltimaPagina: @(paginaSiguiente > cantidadPaginas ? "true" : "false"),
                         estaCargando: false,
+                        estaEliminando: false,
+                        estaGuardando: false,
                         hayEmpleados: @(Model.Count() > 0 ? "true" : "false"),
                         empleadoIdEliminar: 0,
                         empleado: { ...empleadoPorDefecto },
@@ -260,7 +262,7 @@
                     },
                     async eliminar() {
                         if (this.empleadoIdEliminar > 0) {
-                            this.estaCargando = true;
+                            this.estaEliminando = true;
                             try {
                                 const response = await fetch(`${this.urlBase}/${this.empleadoIdEliminar}`, { method: "DELETE" });
                                 if (response.ok) {
@@ -280,7 +282,7 @@
                             catch {
                                 this.mostrarMensaje("Error al eliminar el empleado", false);
                             }
-                            this.estaCargando = false;
+                            this.estaEliminando = false;
                             if (modalEliminar != undefined)
                                 modalEliminar.hide();
                         }
@@ -304,7 +306,7 @@
                     },
                     async onSubmitEmpleado() {
                         if (this.esFormularioValido()) {
-                            this.estaCargando = true;
+                            this.estaGuardando = true;
                             let url = this.urlBase;
                             const opcionesFetch = { 
                                 method: "POST",
@@ -362,7 +364,7 @@
                             } catch {
                                 this.mostrarMensaje(`Se produjo un error al ${this.estaEditando ? "Actualizar" : "Registrar" }`, false);
                             }
-                            this.estaCargando = false;
+                            this.estaGuardando = false;
                         }
                         this.estaEditando = false;
                     },

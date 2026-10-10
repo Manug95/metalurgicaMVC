@@ -161,6 +161,8 @@
                         esPrimeraPagina: @(paginaAnterior == 0 ? "true" : "false"),
                         esUltimaPagina: @(paginaSiguiente > cantidadPaginas ? "true" : "false"),
                         estaCargando: false,
+                        estaEliminando: false,
+                        estaGuardando: false,
                         hayClientes: @(Model.Count() > 0 ? "true" : "false"),
                         clienteIdEliminar: 0,
                         cliente: { ...clientePorDefecto },
@@ -256,7 +258,7 @@
                     },
                     async eliminar() {
                         if (this.clienteIdEliminar > 0) {
-                            this.estaCargando = true;
+                            this.estaEliminando = true;
                             try {
                                 const response = await fetch(`${this.urlBase}/${this.clienteIdEliminar}`, { method: "DELETE" });
                                 if (response.ok) {
@@ -276,7 +278,7 @@
                             catch {
                                 this.mostrarMensaje("Error al eliminar el cliente", false);
                             }
-                            this.estaCargando = false;
+                            this.estaEliminando = false;
 
                             if (modalEliminar != undefined)
                                 modalEliminar.hide();
@@ -299,7 +301,7 @@
                         this.estaEditando = false;
                     },
                     async onSubmitCliente() {
-                        this.estaCargando = true;
+                        this.estaGuardando = true;
                         if (this.esFormularioValido()) {
                             let url = this.urlBase;
                             const opcionesFetch = { 
@@ -356,7 +358,7 @@
                             }
                         }
                         this.estaEditando = false;
-                        this.estaCargando = false;
+                        this.estaGuardando = false;
                     },
                     esFormularioValido() {
                         const mapaValidador = new Map([

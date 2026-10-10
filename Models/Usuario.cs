@@ -18,6 +18,10 @@ public class Usuario
 
     public string? Avatar { get; set; }
 
+    public string? Nombre { get; set; }
+
+    public string? Apellido { get; set; }
+
     public bool Activo { get; set; } = true;
 
     public static Usuario From(UsuarioVM vm)
@@ -28,7 +32,9 @@ public class Usuario
             Username = vm.Username,
             Password = vm.Password,
             Rol = vm.Rol,
-            Avatar = vm.Avatar
+            Avatar = vm.Avatar,
+            Nombre = vm.Nombre,
+            Apellido = vm.Apellido
         };
     }
 
@@ -50,6 +56,8 @@ public class Usuario
         Rol = u.Rol;
         Avatar = u.Avatar;
         Activo = u.Activo;
+        Nombre = u.Nombre;
+        Apellido = u.Apellido;
     }
 
     public void CopyFrom(UsuarioVM vm)
@@ -58,5 +66,7 @@ public class Usuario
         Username = vm.Username;
         Rol = vm.Rol;
         Avatar = vm.Avatar;
+        Nombre = vm.Nombre;
+        Apellido = vm.Apellido;
     }
 }

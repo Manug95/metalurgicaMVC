@@ -11,7 +11,7 @@
     string? userAvatar = Model.UpdateAvatarVM!.Avatar?.Replace("\\", "/");
 }
 
-<div id="app-edit-usuario" class="container-md mt-2" v-cloak>
+<div id="app-edit-usuario" class="container mt-2" v-cloak>
     <h1 class="text-center display-4">Modificar Datos</h1>
     <div class="row mt-2 mb-3">
         <form 
@@ -20,9 +20,9 @@
             @@submit.prevent="onSubmitUpdateDatosUsuario" 
             asp-antiforgery="true"
         >
-            <span class="display-6">Editar Datos de Usuario</span>
-            <div class="row mt-3 mb-md-4 pb-3 bg-light-subtle">
-                <div class="col-12 col-md-6 mt-5 mt-md-1 mb-md-0">
+            <span class="display-6">Actualizar Datos de Usuario</span>
+            <div class="row mt-2 mb-md-4 g-3">
+                <div class="col-12 col-md-6">
                     <label asp-for="UpdateDatosVM.Username" class="form-label fw-bold">@Html.DisplayNameFor(model => model.UpdateDatosVM!.Username)</label>
                     <input 
                         type="text" 
@@ -42,7 +42,7 @@
                         {{ erroresEditUsuario.username }}
                     </span>
                 </div>
-                <div class="col-12 col-md-6 mt-5 mt-md-1 mb-md-0">
+                <div class="col-12 col-md-6">
                     <label asp-for="UpdateDatosVM.Rol" class="form-label fw-bold">@Html.DisplayNameFor(model => model.UpdateDatosVM!.Rol)</label>
                     <select 
                         asp-for="UpdateDatosVM.Rol" 
@@ -65,8 +65,50 @@
                     </span>
                 </div>
             </div>
+            <div class="row mt-2 mb-md-4 g-3">
+                <div class="col-12 col-md-6">
+                    <label asp-for="UpdateDatosVM.Nombre" class="form-label fw-bold">@Html.DisplayNameFor(model => model.UpdateDatosVM!.Nombre)</label>
+                    <input 
+                        type="text" 
+                        asp-for="UpdateDatosVM.Nombre" 
+                        v-model="editUsuario.nombre" 
+                        class="form-control" 
+                        :class="{ 'is-invalid': erroresEditUsuario.nombre }" 
+                        id="nombre" 
+                        aria-describedby="error_nombre"
+                    >
+                    <span 
+                        asp-validation-for="UpdateDatosVM.Nombre" 
+                        id="error_nombre" 
+                        class="ps-1 invalid-feedback" 
+                        @* v-if="erroresEditUsuario.nombre" *@
+                    >
+                        {{ erroresEditUsuario.nombre }}
+                    </span>
+                </div>
+                <div class="col-12 col-md-6">
+                    <label asp-for="UpdateDatosVM.Apellido" class="form-label fw-bold">@Html.DisplayNameFor(model => model.UpdateDatosVM!.Apellido)</label>
+                    <input 
+                        type="text"
+                        asp-for="UpdateDatosVM.Apellido" 
+                        id="apellido" 
+                        v-model="editUsuario.apellido" 
+                        class="form-control" 
+                        :class="{ 'is-invalid': erroresEditUsuario.apellido }" 
+                        aria-describedby="error_apellido"
+                    >
+                    <span 
+                        asp-validation-for="UpdateDatosVM.Apellido" 
+                        id="error_apellido" 
+                        class="ps-1 invalid-feedback" 
+                        @* v-if="erroresEditUsuario.apellido" *@
+                    >
+                        {{ erroresEditUsuario.apellido }}
+                    </span>
+                </div>
+            </div>
 
-            <div class="row mb-2 mt-5 mt-md-4 justify-content-center">
+            <div class="row mb-2 mt-4 justify-content-center">
                 <div class="col d-flex justify-content-center">
                     <button type="submit" class="btn btn-primary d-block mx-auto" :class="{ disabled: estaCargando }" :disabled="estaCargando">
                         <i class="bi bi-floppy"></i> Guardar
@@ -83,9 +125,9 @@
             @@submit.prevent="onSubmitUpdatePassword" 
             asp-antiforgery="true"
         >
-            <span class="display-6">Cambiar Contraseña</span>
-            <div class="row mt-3 mb-md-4 bg-light-subtle pb-3">
-                <div class="col-12 col-md-6 mt-5 mt-md-1 mb-md-0">
+            <span class="display-6">Actualizar Contraseña</span>
+            <div class="row mt-2 mb-md-4 g-3">
+                <div class="col-12 col-md-6">
                     <label asp-for="UpdatePasswordVM.PasswordNuevo" class="form-label fw-bold">
                         @Html.DisplayNameFor(model => model.UpdatePasswordVM!.PasswordNuevo)
                     </label>
@@ -117,7 +159,7 @@
                         </span>
                     </div>
                 </div>
-                <div class="col-12 col-md-6 mt-5 mt-md-1 mb-md-0">
+                <div class="col-12 col-md-6">
                     <label asp-for="UpdatePasswordVM.PasswordActual" class="form-label fw-bold">
                         @Html.DisplayNameFor(model => model.UpdatePasswordVM!.PasswordActual)
                     </label>
@@ -150,7 +192,7 @@
                     </div>
                 </div>
             </div>
-            <div class="row mb-2 mt-3 mt-md-4 justify-content-center">
+            <div class="row mb-2 mt-4 mt-md-4 justify-content-center">
                 <div class="col d-flex justify-content-center">
                     <button type="submit" class="btn btn-primary d-block mx-auto" :class="{ disabled: estaCargando }" :disabled="estaCargando">
                         <i class="bi bi-floppy"></i> Guardar
@@ -163,13 +205,13 @@
     <div class="row mt-2 mb-3">
         <div class="row bg-light w-75 mx-auto border rounded-4 shadow-sm px-0">
             <div 
-                class="col-12 mt-5 mt-md-1 mb-md-0 px-1 pt-2"
+                class="col-12 mt-2 mb-md-0 px-1 pt-2"
                 :class="{ 'col-md-8': editAvatar.avatar }"
             >
-                <span class="display-6 ps-3">Editar Foto de Perfil</span>
+                <span class="display-6 ps-3">Actualizar Foto de Perfil</span>
                 <form 
                     id="form-avatar-usuario" 
-                    class="mt-2 mb-3 bg-light-subtle"
+                    class="mt-2 mb-3"
                     @@submit.prevent="onSubmitUpdateAvatar" 
                     asp-antiforgery="true"
                 >
@@ -226,13 +268,12 @@
     <script>
         document.addEventListener("DOMContentLoaded", _ => {
             const { createApp } = Vue;
-            const editUsuarioDefault = { username: null, rol: null };
-            const erroresEditUsuarioDefault = { username: null, rol: null };
+            const editUsuarioDefault = { username: "", rol: "", nombre: "", apellido: "" };
+            const erroresEditUsuarioDefault = { username: null, rol: null, nombre: null, apellido: null };
             const editPasswordDefault = { passwordActual: null, passwordNuevo: null };
             const erroresEditPasswordDefault = { passwordActual: null, passwordNuevo: null };
             const editAvatarDefault = { avatarFile: null, avatar: "@userAvatar" };
             const erroresEditAvatarDefault = { avatarFile: null };
-
             createApp({
                 data() {
                     return {
@@ -262,7 +303,9 @@
                         passwordNuevoTooltip: "Mostrar Contraseña",
                         mostrarPasswordActual: false,
                         passwordActualInputType: "password",
-                        passwordActualTooltip: "Mostrar Contraseña"
+                        passwordActualTooltip: "Mostrar Contraseña",
+                        tooltipTriggerList: [],
+                        tooltipList: []
                     }
                 },
                 methods: {
@@ -302,7 +345,9 @@
                     esFormularioEditValido() {
                         const mapaValidador = new Map([
                             ["username", validarUsername],
-                            ["rol", validarRol]
+                            ["rol", validarRol],
+                            ["nombre", validarNombreApellido],
+                            ["apellido", validarNombreApellido]
                         ]);
                         Object.keys(this.editUsuario)
                             .forEach(key => {
@@ -431,6 +476,10 @@
                         }
                         this.estaCargando = false;
                     },
+                    inicializarTooltips() {
+                        this.tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+                        this.tooltipList = [...this.tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
+                    },
                     mostrarOcultarPasssword(clavePasswrod) {
                         const clave = `mostrarP${clavePasswrod.slice(1)}`;
                         this[clave] = !this[clave];
@@ -444,60 +493,61 @@
                     mostrarPasswordFn(clavePasswrod) {
                         this[`${clavePasswrod}InputType`] = "text";
                         this[`${clavePasswrod}Tooltip`] = "Ocultar Contraseña";
-                        tooltipList[tooltipList
-                            .findIndex(t => t._element.id == `i-password-${clavePasswrod == "passwordActual" ? "actual" : "nuevo"}`)]
+                        const iconoId = `i-password-${clavePasswrod == "passwordActual" ? "actual" : "nuevo"}`;
+                        @* bootstrap.Tooltip.getInstance(document.getElementById(iconoId)) *@
+                        bootstrap.Tooltip.getInstance(`#${iconoId}`)
                             .setContent({ '.tooltip-inner': this[`${clavePasswrod}Tooltip`] });
+                        @* this.tooltipList[this.tooltipList.findIndex(t => t._element.id == iconoId)]
+                            .setContent({ '.tooltip-inner': this[`${clavePasswrod}Tooltip`] }); *@
                     },
                     ocultarPassswordFn(clavePasswrod) {
                         this.mostrarPassword = false;
                         this[`${clavePasswrod}InputType`] = "password";
                         this[`${clavePasswrod}Tooltip`] = "Mostrar Contraseña";
-                        tooltipList[tooltipList
-                            .findIndex(t => t._element.id == `i-password-${clavePasswrod == "passwordActual" ? "actual" : "nuevo"}`)]
+                        const iconoId = `i-password-${clavePasswrod == "passwordActual" ? "actual" : "nuevo"}`;
+                        @* bootstrap.Tooltip.getInstance(document.getElementById(iconoId)) *@
+                        bootstrap.Tooltip.getInstance(`#${iconoId}`)
                             .setContent({ '.tooltip-inner': this[`${clavePasswrod}Tooltip`] });
+                        @* this.tooltipList[this.tooltipList.findIndex(t => t._element.id == iconoId)]
+                            .setContent({ '.tooltip-inner': this[`${clavePasswrod}Tooltip`] }); *@
                     }
                 },
                 mounted() {
                     if (@(hayMensajeError.ToString().ToLower())) {
                         this.mostrarMensaje("@ViewBag.MensajeError", false);
                     }
+                    this.inicializarTooltips();
                 }
             }).mount('#app-edit-usuario');
-
-            const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
-            const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
         });
-
         function validarUsername(valor) {
-            if (!valor)
-                return "El nombre de usuario no puede estar vacío";
-            if (valor.trim().length == 0)
-                return "El nombre de usuario no puede estar vacío";
+            if (!valor || valor.trim().length == 0)
+                return "Es obligatorio";
             if (valor.length > 20)
-                return "El máximo de carateres permitidos es 20";
+                return "Supera el máximo de 20 caracteres";
             return;
         }
-
+        function validarNombreApellido(valor) {
+            if (!valor || valor.trim().length == 0)
+                return "Es obligatorio";
+            if (valor.length > 30)
+                return "Supera el máximo de 30 caracteres";
+            return;
+        }
         function validarRol(valor) {
             if (!valor)
-                return "El rol es obligatorio";
+                return "Es obligatorio";
             return;
         }
-
         function validarPasswordNuevo(valor) {
-            if (!valor)
-                return "No ingresó la contraseña nueva";
-            if (valor.trim().length == 0)
+            if (!valor || valor.trim().length == 0)
                 return "No ingresó la contraseña nueva";
             if (valor.length < 8)
                 return "La contraseña debe tener al menos 8 caracteres";
             return;
         }
-
         function validarPasswordActual(valor) {
-            if (!valor)
-                return "No ingresó la contraseña actual";
-            if (valor.trim().length == 0)
+            if (!valor  || valor.trim().length == 0)
                 return "No ingresó la contraseña actual";
             return;
         }

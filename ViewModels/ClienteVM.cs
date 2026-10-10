@@ -40,7 +40,8 @@ public class ClienteVM : IValidatableObject
             Apellido = cliente.Apellido,
             Telefono = cliente.Telefono,
             Cuit = cliente.Cuit,
-            Direccion = cliente.Direccion
+            Direccion = cliente.Direccion,
+            Tipo = cliente.Tipo
         };
         return dto;
     }

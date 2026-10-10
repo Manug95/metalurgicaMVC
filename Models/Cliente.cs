@@ -27,29 +27,31 @@ public class Cliente
         return $"{Apellido}, {Nombre}";
     }
 
-    public static Cliente Parse(ClienteVM dto)
+    public static Cliente Parse(ClienteVM vm)
     {
         return new()
         {
-            Id = dto.Id,
-            Nombre = dto.Nombre,
-            Apellido = dto.Apellido,
-            Telefono = dto.Telefono,
-            Cuit = dto.Cuit,
-            Direccion = dto.Direccion
+            Id = vm.Id,
+            Nombre = vm.Nombre,
+            Apellido = vm.Apellido,
+            Telefono = vm.Telefono,
+            Cuit = vm.Cuit,
+            Direccion = vm.Direccion,
+            Tipo = vm.Tipo
         };
     }
 
-    public void CopyValuesFrom(ClienteVM dto)
+    public void CopyValuesFrom(ClienteVM vm)
     {
-        Nombre = dto.Nombre;
-        Apellido = dto.Apellido;
-        Telefono = dto.Telefono;
-        Cuit = dto.Cuit;
-        Direccion = dto.Direccion;
+        Nombre = vm.Nombre;
+        Apellido = vm.Apellido;
+        Telefono = vm.Telefono;
+        Cuit = vm.Cuit;
+        Direccion = vm.Direccion;
+        Tipo = vm.Tipo;
 
-        if (dto.Id > 0)
-            Id = dto.Id;
+        if (vm.Id > 0)
+            Id = vm.Id;
     }
 
     public void CopyValuesFrom(Cliente c)
@@ -59,6 +61,7 @@ public class Cliente
         Telefono = c.Telefono;
         Cuit = c.Cuit;
         Direccion = c.Direccion;
+        Tipo = c.Tipo;
 
         if (c.Id > 0)
             Id = c.Id;

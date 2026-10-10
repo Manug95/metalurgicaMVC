@@ -56,11 +56,14 @@
     <div class="row">
         <div class="col my-2">
             <div class="table-responsive my-2 fixed-height-table-container">
-                <table class="table table-hover text-nowrap">
-                    <thead class="table-light border border-start-0 border-top-0 border-end-0 border-2 border-black">
+                <table class="table table-hover">
+                    <thead class="table-light border border-start-0 border-top-0 border-end-0 border-2 border-black text-center">
                         <tr>
                             <th>
                                 @Html.DisplayNameFor(model => model.Avatar).ToUpper()
+                            </th>
+                            <th>
+                                @Html.DisplayNameFor(model => model.Nombre).ToUpper()
                             </th>
                             <th>
                                 @Html.DisplayNameFor(model => model.Username).ToUpper()
@@ -75,10 +78,11 @@
                         </tr>
                     </thead>
                     <tbody id="cuerpo">
-                        <tr :id="u.id" v-for="u in usuarios" :key="u.id">
+                        <tr :id="u.id" v-for="u in usuarios" :key="u.id" class="text-center">
                             <td class="align-middle py-0 ps-2">
-                                <img :src="u.avatar" alt="foto perfil usuario" width="32" class="rounded-circle">
+                                <img :src="getAvatarURL(u)" alt="foto perfil usuario" width="32" class="rounded-circle mx-auto d-block">
                             </td>
+                            <td class="align-middle py-0 ps-2"> {{ fullName(u) }} </td>
                             <td class="align-middle py-0 ps-2"> {{ u.username }} </td>
                             <td class="align-middle py-0 ps-2"> {{ u.rol }} </td>
                             <td class="align-middle py-0 ps-2"> {{ isActive(u) }} </td>
@@ -141,13 +145,11 @@
 
         document.addEventListener("DOMContentLoaded", _ => {
             const { createApp } = Vue;
-            const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
-            const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
             let modalEliminar;
             let formModal;
             let modalMonseaje;
-            const usuarioDefault = { id: 0, username: null, password: null, rol: "", avatar: null };
-            const erroresUsuarioDefault = { username: null, password: null, rol: null };
+            const usuarioDefault = { id: 0, username: "", password: "", rol: "", avatar: "", nombre: "", apellido: "" };
+            const erroresUsuarioDefault = { username: null, password: null, rol: null, nombre: null, apellido: null };
             createApp({
                 data() {
                     return {
@@ -170,6 +172,8 @@
                         esPrimeraPagina: @(paginaAnterior == 0 ? "true" : "false"),
                         esUltimaPagina: @(paginaSiguiente > cantidadPaginas ? "true" : "false"),
                         estaCargando: false,
+                        estaGuardando: false,
+                        estaEliminando: false,
                         hayUsuarios: @(Model.Count() > 0 ? "true" : "false"),
                         usuarioIdEliminar: 0,
                         usuario: { ...usuarioDefault },
@@ -273,9 +277,9 @@
                                     let url = `${this.urlBase}?Limit=${this.limit}&Pagina=${this.paginaActual}`;
                                     if (this.busqueda.length > 0)
                                         url += `&Username=${this.busqueda}`;
-                                    this.estaCargando = true;
+                                    this.estaEliminando = true;
                                     const data = await this.hacerPeticion(url);
-                                    this.estaCargando = false;
+                                    this.estaEliminando = false;
                                     if (data) {
                                         this.actualizarDOM(data, this.paginaActual);
                                     }
@@ -302,49 +306,51 @@
                         formModal.show();
                     },
                     async onSubmitUsuario() {
-                        this.estaCargando = true;
-                        if (this.esFormularioValido()) {
-                            this.opcionesFetch.body = JSON.stringify(this.usuario);
-                            this.opcionesFetch.headers['RequestVerificationToken'] = document.getElementsByName("__RequestVerificationToken")?.item(0)?.value;
-                            try{
-                                const response = await fetch(this.urlBase, this.opcionesFetch);
-                                if (response.ok) {
-                                    const data = await response.json();
-                                    if (this.usuarios.length < this.limit) 
-                                        this.usuarios.push(data?.usuario);
-                                    else if (this.esUltimaPagina) {
-                                        this.cantidadPaginas++;
-                                        this.esUltimaPagina = false;
-                                    }
-                                    if (formModal)
-                                        formModal.hide();
-                                    this.mostrarMensaje("Usuario Registrado");
-                                } else {
-                                    const { mensaje, errors } = await response.json();
-                                    if (errors) {
-                                        Object.keys(errors).forEach(e => {
-                                            this.erroresUsuario[e.toLowerCase()] = errors[e].join(", ");
-                                        });
-                                    } else {
-                                        this.mostrarMensaje(mensaje ?? "La petición no es correcta", false);
-                                    }
+                        if (!this.esFormularioValido())
+                            return;
+                        this.estaGuardando = true;
+                        this.opcionesFetch.body = JSON.stringify(this.usuario);
+                        this.opcionesFetch.headers['RequestVerificationToken'] = document.getElementsByName("__RequestVerificationToken")?.item(0)?.value;
+                        try{
+                            const response = await fetch(this.urlBase, this.opcionesFetch);
+                            if (response.ok) {
+                                const data = await response.json();
+                                if (this.usuarios.length < this.limit) 
+                                    this.usuarios.push(data?.usuario);
+                                else if (this.esUltimaPagina) {
+                                    this.cantidadPaginas++;
+                                    this.esUltimaPagina = false;
                                 }
-                            } catch {
-                                this.mostrarMensaje("Se produjo un error al hacer la petición", false);
+                                if (formModal)
+                                    formModal.hide();
+                                this.mostrarMensaje("Usuario Registrado");
+                            } else {
+                                const { mensaje, errors } = await response.json();
+                                if (errors) {
+                                    Object.keys(errors).forEach(e => {
+                                        this.erroresUsuario[e.toLowerCase()] = errors[e].join(", ");
+                                    });
+                                } else {
+                                    this.mostrarMensaje(mensaje ?? "La petición no es correcta", false);
+                                }
                             }
+                        } catch {
+                            this.mostrarMensaje("Se produjo un error al hacer la petición", false);
                         }
-                        this.estaCargando = false;
+                        this.estaGuardando = false;
                     },
                     esFormularioValido() {
                         const mapaValidador = new Map([
+                            ["nombre", validarNombreApellido],
+                            ["apellido", validarNombreApellido],
                             ["username", validarUsername],
                             ["password", validarPassword],
                             ["rol", validarRol]
                         ]);
+                        const clavesAValidar = [...mapaValidador.keys()];
                         Object.keys(this.usuario)
                             .forEach(key => {
-                                if (key == "id" || key == "avatar")
-                                    return;
+                                if (!clavesAValidar.includes(key)) return;
                                 this.erroresUsuario[key] = mapaValidador.get(key)(this.usuario[key]);
                             }
                         );
@@ -374,16 +380,25 @@
                     mostrarPasswordFn() {
                         this.passwordInputType = "text";
                         this.passwordTooltip = "Ocultar Contraseña";
-                        tooltipList[tooltipList.findIndex(t => t._element.id == "i-password")].setContent({ '.tooltip-inner': this.passwordTooltip });
+                        this.tooltipList[this.tooltipList.findIndex(t => t._element.id == "i-password")].setContent({ '.tooltip-inner': this.passwordTooltip });
                     },
                     ocultarPassswordFn() {
                         this.mostrarPassword = false;
                         this.passwordInputType = "password";
                         this.passwordTooltip = "Mostrar Contraseña";
-                        tooltipList[tooltipList.findIndex(t => t._element.id == "i-password")].setContent({ '.tooltip-inner': this.passwordTooltip });
+                        this.tooltipList[this.tooltipList.findIndex(t => t._element.id == "i-password")].setContent({ '.tooltip-inner': this.passwordTooltip });
                     },
                     isActive(u) {
                         return u.activo ? "✔" : "❌";
+                    },
+                    fullName(u) {
+                        return `${u.apellido}, ${u.nombre}`;
+                    },
+                    getAvatarURL(u) {
+                        if (u.avatar && u.avatar.length > 0)
+                            return u.avatar;
+                        else
+                            return `https://ui-avatars.com/api/?name=${u.nombre}+${u.apellido}&background=random&rounded=true)`;
                     },
                     inicializarTooltips() {
                         this.tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
@@ -399,13 +414,23 @@
             }).mount('#app-usuarios');
         });
 
-        function validarUsername(cadena) {
-            if (!cadena)
+        function validarUsername(valor) {
+            if (!valor)
                 return "El nombre de usuario es obligatorio";
-            if (cadena.trim().length == 0)
+            if (valor.trim().length == 0)
                 return "El nombre de usuario es obligatorio";
-            if (cadena.length > 20)
-                return "El máximo de carateres permitidos es 20";
+            if (valor.length > 20)
+                return "Supera el máximo de 20 caracteres";
+            return;
+        }
+
+        function validarNombreApellido(valor) {
+            if (!valor)
+                return "Es obligatorio";
+            if (valor.trim().length == 0)
+                return "Es obligatorio";
+            if (valor.length > 30)
+                return "Supera el máximo de 30 caracteres";
             return;
         }
 
