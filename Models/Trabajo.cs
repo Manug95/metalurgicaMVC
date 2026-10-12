@@ -48,6 +48,8 @@ public class Trabajo
 
     public bool Anulado { get; set; } = false;
 
+    public List<Foto>? Fotos { get; set; }
+
     public static Trabajo From(TrabajoVM vm)
     {
         Trabajo trabajo = new()
@@ -64,6 +66,9 @@ public class Trabajo
             Estado = vm.Estado
         };
 
+        if (vm.Fotos != null)
+            trabajo.Fotos = Foto.FromList(vm.Fotos);
+
         // if (dto.Cliente != null)
         //     trabajo.Cliente = Cliente.Parse(dto.Cliente);
 
@@ -78,38 +83,6 @@ public class Trabajo
             trabajos.Add(From(dto));
         }
         return trabajos;
-    }
-
-    public void CopyFrom(Trabajo t)
-    {
-        ClienteId = t.ClienteId;
-        FechaIniciado = t.FechaIniciado;
-        FechaSolicitado = t.FechaSolicitado;
-        FechaFinalizado = t.FechaFinalizado;
-        Importe = t.Importe;
-        Detalle = t.Detalle;
-        Observacion = t.Observacion;
-        DiasTrabajados = t.DiasTrabajados;
-        Estado = t.Estado;
-
-        // if (dto.Cliente != null)
-        //     Cliente = Cliente.Parse(dto.Cliente);
-    }
-
-    public void CopyFrom(TrabajoVM vm)
-    {
-        ClienteId = vm.ClienteId;
-        FechaIniciado = vm.FechaIniciado;
-        FechaSolicitado = vm.FechaSolicitado;
-        FechaFinalizado = vm.FechaFinalizado;
-        Importe = vm.Importe;
-        Detalle = vm.Detalle;
-        Observacion = vm.Observacion;
-        DiasTrabajados = vm.DiasTrabajados;
-        Estado = vm.Estado;
-
-        // if (dto.Cliente != null)
-        //     Cliente = Cliente.Parse(dto.Cliente);
     }
 
     public void UpdateFrom(TrabajoVM vm)

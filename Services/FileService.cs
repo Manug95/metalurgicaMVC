@@ -9,6 +9,8 @@ public class FileService : IFileService
     private readonly string PATH_UPLOADS;
     private readonly string PATH_ABSOLUTO_AVATARES;
     private readonly string PATH_RELATIVO_AVATARES;
+    private readonly string PATH_ABSOLUTO_FOTOS;
+    private readonly string PATH_RELATIVO_FOTOS;
 
     public FileService(IWebHostEnvironment env)
     {
@@ -16,6 +18,8 @@ public class FileService : IFileService
         PATH_UPLOADS = Path.Combine(PATH_ROOT, "Uploads");
         PATH_ABSOLUTO_AVATARES = Path.Combine(PATH_UPLOADS, "Avatares");
         PATH_RELATIVO_AVATARES = Path.Combine("/Uploads", "Avatares");
+        PATH_ABSOLUTO_FOTOS = Path.Combine(PATH_UPLOADS, "Fotos");
+        PATH_RELATIVO_FOTOS = Path.Combine("/Uploads", "Fotos");
     }
 
     public async Task<string> SaveAvatar(IFormFile formFile, string name)
@@ -23,7 +27,7 @@ public class FileService : IFileService
         try
         {
             if (!Directory.Exists(PATH_UPLOADS))
-            Directory.CreateDirectory(PATH_UPLOADS);
+                Directory.CreateDirectory(PATH_UPLOADS);
 
             if (!Directory.Exists(PATH_ABSOLUTO_AVATARES))
                 Directory.CreateDirectory(PATH_ABSOLUTO_AVATARES);
@@ -38,6 +42,37 @@ public class FileService : IFileService
         catch (ArgumentNullException)
         {
             throw new ClientException("Falta la ruta de la imagen");
+        }
+        catch (ArgumentException)
+        {
+            throw new ClientException("Los datos son incorrectos");
+        }
+    }
+
+    public async Task<string> SaveFoto(IFormFile formFile, string name, long trabajoId)
+    {
+        try
+        {
+            if (!Directory.Exists(PATH_UPLOADS))
+                Directory.CreateDirectory(PATH_UPLOADS);
+
+            if (!Directory.Exists(PATH_ABSOLUTO_FOTOS))
+                Directory.CreateDirectory(PATH_ABSOLUTO_FOTOS);
+
+            string pathFotosDeTrabajo = Path.Combine(PATH_ABSOLUTO_FOTOS, trabajoId.ToString());
+            if (!Directory.Exists(pathFotosDeTrabajo))
+                Directory.CreateDirectory(pathFotosDeTrabajo);
+
+            string fileName = name + Path.GetExtension(formFile.FileName);
+            string pathCompletoArchivo = Path.Combine(pathFotosDeTrabajo, fileName);
+
+            WriteFile(formFile, pathCompletoArchivo);
+
+            return Path.Combine(PATH_RELATIVO_FOTOS, trabajoId.ToString(), fileName);
+        }
+        catch (ArgumentNullException)
+        {
+            throw new ClientException("Falta la ruta de la foto");
         }
         catch (ArgumentException)
         {

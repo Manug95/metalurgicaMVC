@@ -12,8 +12,7 @@ public class DBContext : DbContext
     public DbSet<Empleado> Empleados { get; set; }
     public DbSet<Trabajo> Trabajos { get; set; }
     public DbSet<Pago> Pagos { get; set; }
-    // public DbSet<Foto> Fotos { get; set; }
-    // public DbSet<Gasto> Gastos { get; set; }
+    public DbSet<Foto> Fotos { get; set; }
 
     // protected override void OnModelCreating(ModelBuilder modelBuilder)
     // {

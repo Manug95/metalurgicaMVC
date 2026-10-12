@@ -65,9 +65,11 @@ public class TrabajoVM
     [Display(Name = "Cliente")]
     public Cliente? Cliente { get; set; }
 
+    public List<FotoVM>? Fotos { get; set; }
+
     public static TrabajoVM From(Trabajo trabajo)
     {
-        TrabajoVM dto = new()
+        TrabajoVM vm = new()
         {
             Id = trabajo.Id,
             ClienteId = trabajo.ClienteId,
@@ -81,16 +83,19 @@ public class TrabajoVM
             Estado = trabajo.Estado
         };
 
-        return dto;
+        if (trabajo.Fotos != null)
+            vm.Fotos = FotoVM.FromList(trabajo.Fotos);
+
+        return vm;
     }
 
     public static List<TrabajoVM> FromList(List<Trabajo> trabajos)
     {
-        List<TrabajoVM> dtos = [];
+        List<TrabajoVM> viewModels = [];
         foreach (Trabajo t in trabajos)
         {
-            dtos.Add(From(t));
+            viewModels.Add(From(t));
         }
-        return dtos;
+        return viewModels;
     }
 }

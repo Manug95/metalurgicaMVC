@@ -57,4 +57,16 @@ public class TrabajoController(ITrabajoRepository repo) : Controller
     {
         return View("Create");
     }
+
+    [HttpGet]
+    public async Task<IActionResult> FotosForm([FromRoute] int id, [FromServices] IFotoRepository repoFotos)
+    {
+        List<Foto> fotos = await repoFotos.ListAsync(new FiltrosFoto { TrabajoId = id });
+        ViewBag.MensajeError = TempData["MensajeError"] as string;
+        return View(new FotoVM()
+        {
+            TrabajoId = id,
+            Fotos = fotos
+        });
+    }
 }

@@ -13,6 +13,7 @@ builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
 builder.Services.AddScoped<IEmpleadoRepository, EmpleadoRepository>();
 builder.Services.AddScoped<ITrabajoRepository, TrabajoRepository>();
 builder.Services.AddScoped<IPagoRepository, PagoRepository>();
+builder.Services.AddScoped<IFotoRepository, FotoRepository>();
 builder.Services.AddScoped<IFileService, FileService>();
 
 var configuration = builder.Configuration;

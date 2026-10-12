@@ -1,0 +1,201 @@
+@using System.Text.Json
+@using metalurgicaMVC.ViewModels
+@model FotoVM;
+@{
+    ViewData["Title"] = "Subir Fotos";
+    bool hayMensajeError = !string.IsNullOrWhiteSpace(ViewBag.MensajeError);
+    var serializationOptions = new JsonSerializerOptions {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+    };
+}
+
+<div class="container-fluid mt-4" id="app-fotos">
+    
+    <form class="row p-3 w-75 mx-auto border rounded-4 shadow-sm mt-3 mb-3 bg-light-subtle" @@submit.prevent="subirFotos">
+        <h2 class="mb-4">@Html.DisplayNameFor(model => model.FotosFiles)</h2>
+        <div class="mb-3">
+            <label asp-for="FotosFiles" class="form-label">Selecciona las fotos</label>
+            <input type="file" id="Fotos" asp-for="FotosFiles" multiple accept="image/*" class="form-control" @@change="seleccionarImagenes"/>
+        </div>
+        <input type="hidden" asp-for="TrabajoId">
+        <button id="btn-subir-fotos" type="submit" class="btn btn-primary mt-3" :disabled="subiendo">
+            {{ subiendo ? 'Subiendo...' : 'Subir imágenes' }}
+        </button>
+
+        <div id="preview" class="row g-3">
+            <div class="col-md-3 col-sm-4 mb-3" v-for="(foto, index) in fotosSeleccionadas">
+                <div class="card shadow-sm">
+                    <img :src="foto.url" class="card-img-top img-fluid" :alt="foto.archivo.name">
+                    <div class="card-body p-2 d-flex justify-content-between align-items-center">
+                        <small class="text-muted">{{ imagen.archivo.name }}</small>
+                        <button type="button" class="btn btn-sm btn-outline-danger remove-btn" @@click="eliminarImagenSeleccionada(index)">
+                            <i class="bi bi-x-circle"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+
+    <div class="row p-2 w-75 mx-auto border rounded-4 shadow-sm mt-3 mb-3 bg-light-subtle" v-if="fotos.length>0">
+        <h2 class="mb-4">Fotos del Trabajo</h2>
+        <div class="col-sm-6 col-md-4 mb-4" v-for="(f, index) in fotos">
+            <div class="card shadow-sm">
+                <div class="img-container">
+                    <img :src="f.ruta" class="card-img-top fixed-img" alt="foto del trabajo">
+                </div>
+                <div class="card-body">
+                    <button type="submit" class="btn btn-danger btn-sm" @@click="eliminarFoto(index)">
+                        <i class="bi bi-trash"></i> Eliminar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <partial name="_ModalMensaje"/>
+</div>
+
+
+@section Scripts {
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", _ => {
+            const { createApp } = Vue;
+            let modalMensaje;
+            createApp({
+                data() {
+                    return {
+                        fotos: @Html.Raw(JsonSerializer.Serialize(Model, serializationOptions)),
+                        trabajoId: @Model.TrabajoId,
+                        subiendo: false,
+                        eliminando: false,
+                        hayTrabajos: @(Model.Fotos.Count() > 0 ? "true" : "false"),
+                        fotoIdEliminar: 0,
+                        mensaje: "",
+                        esMensajeError: false,
+                        fotosSeleccionadas: [],
+                        errorFotosSeleccionadas: null,
+                        archivos: null
+                    }
+                },
+                methods: {
+                    seleccionarImagenes(event) {
+                        const archivos = Array.from(event.target.files ?? []);
+                        for (const archivo of archivos) {
+                            if (!archivo.type.startsWith('image/')) {
+                                continue;
+                            }
+                            const url = URL.createObjectURL(archivo);
+                            this.fotosSeleccionadas.push({
+                                archivo,
+                                url
+                            });
+                        }
+                        // Permite volver a seleccionar el mismo archivo.
+                        event.target.value = '';
+                    },
+                    eliminarImagenSeleccionada(index) {
+                        const imagen = this.fotosSeleccionadas[index];
+                        URL.revokeObjectURL(imagen.url);
+                        this.fotosSeleccionadas.splice(index, 1);
+                    },
+                    limpiarFotos() {
+                        this.fotosSeleccionadas.forEach(imagen => {
+                            URL.revokeObjectURL(imagen.url);
+                        });
+                        this.fotosSeleccionadas = [];
+                    },
+                    async subirFotos() {
+                        if (!this.sonFotosValidas() || this.subiendo) {
+                            return;
+                        }
+                        const formData = new FormData();
+                        this.fotosSeleccionadas.forEach(foto => {
+                            formData.append('fotos', foto.archivo);
+                        });
+                        this.subiendo = true;
+                        try {
+                            const respuesta = await fetch('/api/fotos', {
+                                method: 'POST',
+                                body: formData
+                            });
+                            if (respuesta.ok) {
+                                const fotosSubidas = await respuesta.json();
+                                this.fotos.push(...fotosSubidas);
+                                this.mostrarMensaje("Fotos Guardadas");
+                            } else {
+                                const { mensaje } = await respuesta.json();
+                                this.mostrarMensaje(mensaje ?? "No se pudieron guardar las fotos", false);
+                            }
+                            // Si ya no necesitás las vistas previas:
+                            this.limpiarFotos();
+                        } catch (error) {
+                            console.error(error);
+                            this.mostrarMensaje("Ocurrió un error al subir las imágenes", false);
+                        } finally {
+                            this.subiendo = false;
+                        }
+                    },
+                    sonFotosValidas() {
+                        const extensionesVálidas = ["jpg", "jpeg", "png", "gif", "webp"];
+                        if (this.fotosSeleccionadas.length === 0) {
+                            this.errorFotosSeleccionadas = "No se cargo ninguna foto";
+                            return false;
+                        }
+                        forEach (foto of this.fotosSeleccionadas) {
+                            if (!extensionesVálidas.includes(foto.name.split(".")[1])) {
+                                this.errorFotosSeleccionadas = "Hay un archivo con una extensión no permitida";
+                                return false;
+                            }
+                            if (foto.size > 5*1024*1024) {
+                                this.erroresEditAvatar.avatarFile = "Las fotos no pueden pesar más de 5 MB";
+                                return false;
+                            }
+                        }
+                        return true;
+                    },
+                    eliminarFoto(index) {
+                        if (this.fotos.length === 0 || this.eliminando) {
+                            return;
+                        }
+                        this.eliminando = true;
+                        try {
+                            const respuesta = await fetch(`/api/fotos/${this.fotos[index].id}`, {
+                                method: 'DELETE'
+                            });
+                            if (respuesta.ok) {
+                                this.fotos.splice(index, 1);
+                                this.mostrarMensaje("Foto eliminada");
+                            } else {
+                                const { mensaje } = await respuesta.json();
+                                this.mostrarMensaje(mensaje ?? "No se pudo eliminar la foto", false);
+                            }
+                        } catch (error) {
+                            console.error(error);
+                            this.mostrarMensaje("Ocurrió un error", false);
+                        } finally {
+                            this.eliminando = false;
+                        }
+                    },
+                    mostrarMensaje(mensaje, ok = true) {
+                        this.mensaje = mensaje;
+                        this.esMensajeError = !ok;
+                        if (!modalMonseaje)
+                            modalMonseaje = new bootstrap.Modal(document.getElementById('modal-mensaje'), {});
+                        modalMonseaje.show();
+                    }
+                },
+                beforeUnmount() {
+                    this.fotosSeleccionadas.forEach(imagen => {
+                        URL.revokeObjectURL(imagen.url);
+                    });
+                },
+                mounted() {
+                    if (@(hayMensajeError.ToString().ToLower())) {
+                        this.mostrarMensaje("@ViewBag.MensajeError", false);
+                    }
+                }
+            }).mount("#app-fotos");
+        });
+    </script>
+}
