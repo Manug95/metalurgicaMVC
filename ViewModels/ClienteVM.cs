@@ -31,7 +31,7 @@ public class ClienteVM : IValidatableObject
     [Display(Name = "Dirección")]
     public string? Direccion { get; set; }
 
-    public static ClienteVM Parse(Cliente cliente)
+    public static ClienteVM From(Cliente cliente)
     {
         ClienteVM dto = new()
         {
@@ -46,14 +46,14 @@ public class ClienteVM : IValidatableObject
         return dto;
     }
 
-    public static List<ClienteVM> ParseList(List<Cliente> clientes)
+    public static List<ClienteVM> FromList(List<Cliente> clientes)
     {
-        List<ClienteVM> dtos = [];
+        List<ClienteVM> viewModels = [];
         foreach (Cliente c in clientes)
         {
-            dtos.Add(Parse(c));
+            viewModels.Add(From(c));
         }
-        return dtos;
+        return viewModels;
     }
 
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)

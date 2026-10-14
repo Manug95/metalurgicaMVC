@@ -67,6 +67,7 @@ public class TrabajoController(ITrabajoRepository repo) : ControllerBase
     public async Task<IActionResult> Post([FromBody] TrabajoVM vm)
     {
         Trabajo trabajo = Trabajo.From(vm);
+        trabajo.RegistradorId = 1;
 
         try
         {

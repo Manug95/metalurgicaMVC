@@ -99,7 +99,16 @@ public class TrabajoRepository(DBContext dbContext) : BaseRepository(dbContext),
     {
         try
         {
-            return await _context.Trabajos.FindAsync(id);
+            return await _context.Trabajos
+                .Include(t => t.Detalles)
+                    .ThenInclude(d => d.Meterial)
+                .Include(t => t.Detalles)
+                    .ThenInclude(d => d.TipoOperacion)
+                .Include(t => t.Cliente)
+                .Include(t => t.Registrador)
+                .Include(t => t.Anulador)
+                .Include(t => t.Fotos)
+                .FirstOrDefaultAsync(t => t.Id == id);
         }
         catch (Exception ex)
         {
@@ -117,15 +126,11 @@ public class TrabajoRepository(DBContext dbContext) : BaseRepository(dbContext),
     {
         try
         {
-            IQueryable<Trabajo> trabajos = _context.Trabajos.Where(t => !t.Anulado);
+            IQueryable<Trabajo> trabajos = _context.Trabajos;
 
-            // if (!string.IsNullOrWhiteSpace(filters.Busqueda))
-            // {
-            //     empleados = empleados
-            //         .Where(c => EF.Functions.Like(c.Nombre, $"{filters.Busqueda}%") || EF.Functions.Like(c.Apellido, $"{filters.Busqueda}%"));
-            // }
+            trabajos = trabajos.Include(t => t.Cliente);
 
-            // empleados = empleados.Where(c => c.FechaFin == null);
+            trabajos = trabajos.Where(t => !t.Anulado);
 
             if (filters.Limit > 0 && filters.Offset() >= 0)
                 trabajos = trabajos.Skip(filters.Offset()).Take(filters.Limit);

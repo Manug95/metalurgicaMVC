@@ -48,14 +48,22 @@ public class TrabajoController(ITrabajoRepository repo) : Controller
         return View(new List<TrabajoVM>());
     }
     
-    public IActionResult Create()
+    public async Task<IActionResult> Create([FromServices] IMaterialRepository materialRepository, [FromServices] ITipoOperacionRepository tipoOperacionRepository)
     {
-        return View();
+        var materiales = await materialRepository.ListAsync(new FiltrosMaterial(){ Limit = 0 });
+        var tiposOperacion = await tipoOperacionRepository.ListAsync(new FiltrosTipoOperacion(){ Limit = 0 });
+        var trabajo = new Trabajo();
+
+        return View(new FormTrabajoVM(trabajo, materiales, tiposOperacion));
     }
     
-    public IActionResult Edit([FromRoute] long id)
+    public async Task<IActionResult> Edit([FromRoute] long id, [FromServices] IMaterialRepository materialRepository, [FromServices] ITipoOperacionRepository tipoOperacionRepository)
     {
-        return View("Create");
+        var materiales = await materialRepository.ListAsync(new FiltrosMaterial(){ Limit = 0 });
+        var tiposOperacion = await tipoOperacionRepository.ListAsync(new FiltrosTipoOperacion(){ Limit = 0 });
+        var trabajo = await _repo.GetByIdAsync(id);
+
+        return View("Create", new FormTrabajoVM(trabajo ?? new Trabajo(), materiales, tiposOperacion));
     }
 
     [HttpGet]

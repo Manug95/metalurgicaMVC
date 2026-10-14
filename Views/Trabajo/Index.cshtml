@@ -9,7 +9,7 @@
     int paginaSiguiente = pagina + 1;
     int limit = ViewBag.cantidadPaginado;
     string busqueda = ViewBag.busqueda ?? string.Empty;
-    string mensajeEliminar = "el Trabajo";
+    string mensajeEliminar = "¿Eliminar el Trabajo?";
     var serializationOptions = new JsonSerializerOptions {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase
     };
@@ -68,9 +68,6 @@
                             <th>
                                 @Html.DisplayNameFor(model => model.FechaSolicitado).ToUpper()
                             </th>
-                            <th colspan="2">
-                                @Html.DisplayNameFor(model => model.Detalle).ToUpper()
-                            </th>
                             <th>
                                 @Html.DisplayNameFor(model => model.Importe).ToUpper()
                             </th>
@@ -85,8 +82,7 @@
                             <td class="align-middle py-0 ps-2"> {{ t.id }} </td>
                             <td class="align-middle py-0 ps-2"> {{ getNombreCliente(t) }} </td>
                             <td class="align-middle py-0 ps-2"> {{ toLocalDate(t.fechaSolicitado) }} </td>
-                            <td class="align-middle py-0 ps-2" colspan="2"> {{ t.descripcion }} </td>
-                            <td class="align-middle py-0 ps-2"> {{ t.importe }} </td>
+                            <td class="align-middle py-0 ps-2"> {{ formatImporte(t.importe) }} </td>
                             <td class="align-middle py-0 ps-2"> {{ t.estado }} </td>
                             <td>
                                 <div class="d-flex justify-content-evenly align-items-center">
@@ -280,8 +276,11 @@
                             modalMonseaje = new bootstrap.Modal(document.getElementById('modal-mensaje'), {});
                         modalMonseaje.show();
                     },
-                    getNombreCliente(e) {
-                        return `${e.apellido}, ${e.nombre}`;
+                    getNombreCliente(t) {
+                        return `${t.cliente.apellido}, ${t.cliente.nombre}`;
+                    },
+                    formatImporte(i) {
+                        return `$ ${i}`;
                     },
                     toLocalDate(fechaUTC) {
                         const fecha = new Date(fechaUTC);

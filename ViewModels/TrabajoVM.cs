@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using metalurgicaMVC.Models;
 using metalurgicaMVC.Utils;
+using metalurgicaMVC.ViewModels.UsuarioViewModels;
 
 namespace metalurgicaMVC.ViewModels;
 
@@ -14,7 +15,6 @@ public class TrabajoVM
     [Display(Name = "Fecha Solicitado")]
     public DateTime? FechaSolicitado { get; set; }
 
-    // [Required(ErrorMessage = "La fecha de iniciado es requerida")]
     [DataType(DataType.Date, ErrorMessage = "No es una fecha válida")]
     [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}", ApplyFormatInEditMode = true)]
     [FechaMayorQue(nameof(FechaSolicitado), true, ErrorMessage = "La fecha iniciado debe ser mayor que la fecha solicitado.")]
@@ -44,28 +44,30 @@ public class TrabajoVM
     public string? Descripcion { get; set; }
 
     [DataType(DataType.Text)]
-    [MaxLength(512, ErrorMessage = "El detalle supera el máximo de 512 caracteres")]
-    public string? Detalle { get; set; }
-
-    [DataType(DataType.Text)]
     [MaxLength(512, ErrorMessage = "La observación supera el máximo de 512 caracteres")]
     public string? Observacion { get; set; }
 
     [Required(ErrorMessage = "El estado es requerido")]
-    [EnumDataType(typeof(EstadoTrabajo), ErrorMessage = "Estado inválido")]
-    public EstadoTrabajo? Estado { get; set; }
+    [AllowedValues(["PRESUPUESTO", "ACEPTADO", "RECHAZADO"])]
+    public string? Estado { get; set; }
 
-    [Range(1, int.MaxValue, ErrorMessage = "La cantidad de días debe ser positiva")]
-    public int DiasTrabajados { get; set; }
-
-    // [Required]
+    [Required]
     [Range(1, int.MaxValue, ErrorMessage = "ID cliente incorrecto")]
     public int ClienteId { get; set; }
 
     [Display(Name = "Cliente")]
-    public Cliente? Cliente { get; set; }
+    public ClienteVM? Cliente { get; set; }
+
+    public int? AnuladorId { get; set; }
+
+    public UsuarioVM? Anulador { get; set; }
+
+    public int RegistradorId { get; set; }
+
+    public UsuarioVM? Registrador { get; set; }
 
     public List<FotoVM>? Fotos { get; set; }
+    public List<DetalleVM>? Detalles { get; set; }
 
     public static TrabajoVM From(Trabajo trabajo)
     {
@@ -77,14 +79,20 @@ public class TrabajoVM
             FechaSolicitado = trabajo.FechaSolicitado,
             FechaFinalizado = trabajo.FechaFinalizado,
             Importe = trabajo.Importe,
-            Detalle = trabajo.Detalle,
             Observacion = trabajo.Observacion,
-            DiasTrabajados = trabajo.DiasTrabajados,
             Estado = trabajo.Estado
         };
 
         if (trabajo.Fotos != null)
             vm.Fotos = FotoVM.FromList(trabajo.Fotos);
+        if (trabajo.Detalles != null)
+            vm.Detalles = DetalleVM.FromList(trabajo.Detalles);
+        if (trabajo.Anulador != null)
+            vm.Anulador = UsuarioVM.From(trabajo.Anulador);
+        if (trabajo.Registrador != null)
+            vm.Registrador = UsuarioVM.From(trabajo.Registrador);
+        if (trabajo.Cliente != null)
+            vm.Cliente = ClienteVM.From(trabajo.Cliente);
 
         return vm;
     }

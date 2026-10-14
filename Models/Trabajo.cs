@@ -4,13 +4,6 @@ using metalurgicaMVC.ViewModels;
 
 namespace metalurgicaMVC.Models;
 
-public enum EstadoTrabajo
-{
-    PRESUPUESTO,
-    ACEPTADO,
-    RECHAZADO
-}
-
 public class Trabajo
 {
     [Key]
@@ -28,19 +21,10 @@ public class Trabajo
 
     public string? Descripcion { get; set; }
 
-    public string? Detalle { get; set; }
-
     public string? Observacion { get; set; }
 
-    public EstadoTrabajo? Estado { get; set; }
+    public string? Estado { get; set; }
 
-    [NotMapped]
-    public int DiasTrabajados { get; set; }
-
-    [NotMapped]
-    public int Horas { get; set; }
-
-    [Required]
     public int ClienteId { get; set; }
 
     [ForeignKey("ClienteId")]
@@ -48,7 +32,19 @@ public class Trabajo
 
     public bool Anulado { get; set; } = false;
 
+    public int? AnuladorId { get; set; }
+
+    [ForeignKey("AnuladorId")]
+    public Usuario? Anulador { get; set; }
+
+    public int RegistradorId { get; set; }
+
+    [ForeignKey("RegistradorId")]
+    public Usuario? Registrador { get; set; }
+
     public List<Foto>? Fotos { get; set; }
+
+    public List<Detalle> Detalles { get; set; } = [];
 
     public static Trabajo From(TrabajoVM vm)
     {
@@ -60,17 +56,21 @@ public class Trabajo
             FechaSolicitado = vm.FechaSolicitado,
             FechaFinalizado = vm.FechaFinalizado,
             Importe = vm.Importe,
-            Detalle = vm.Detalle,
             Observacion = vm.Observacion,
-            DiasTrabajados = vm.DiasTrabajados,
             Estado = vm.Estado
         };
 
         if (vm.Fotos != null)
             trabajo.Fotos = Foto.FromList(vm.Fotos);
+        if (vm.Detalles != null)
+            trabajo.Detalles = Detalle.FromList(vm.Detalles);
+        if (vm.Anulador != null)
+            trabajo.Anulador = Usuario.From(vm.Anulador);
+        if (vm.Registrador != null)
+            trabajo.Registrador = Usuario.From(vm.Registrador);
 
-        // if (dto.Cliente != null)
-        //     trabajo.Cliente = Cliente.Parse(dto.Cliente);
+        if (vm.Cliente != null)
+            trabajo.Cliente = Cliente.From(vm.Cliente);
 
         return trabajo;
     }
@@ -99,11 +99,7 @@ public class Trabajo
             Importe = vm.Importe;
         if (vm.Estado != Estado)
             Estado = vm.Estado;
-        if (vm.Detalle != Detalle)
-            Detalle = vm.Detalle;
         if (vm.Observacion != Observacion)
             Observacion = vm.Observacion;
-        if (vm.DiasTrabajados != DiasTrabajados)
-            DiasTrabajados = vm.DiasTrabajados;
     }
 }

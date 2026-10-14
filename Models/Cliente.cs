@@ -27,7 +27,7 @@ public class Cliente
         return $"{Apellido}, {Nombre}";
     }
 
-    public static Cliente Parse(ClienteVM vm)
+    public static Cliente From(ClienteVM vm)
     {
         return new()
         {
@@ -39,6 +39,16 @@ public class Cliente
             Direccion = vm.Direccion,
             Tipo = vm.Tipo
         };
+    }
+
+    public static List<Cliente> FromList(List<ClienteVM> viewModels)
+    {
+        List<Cliente> clientes = [];
+        foreach (var vm in viewModels)
+        {
+            clientes.Add(From(vm));
+        }
+        return clientes;
     }
 
     public void CopyValuesFrom(ClienteVM vm)

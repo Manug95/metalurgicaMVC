@@ -35,7 +35,7 @@ public class ClienteController(IClienteRepository repo) : Controller
             ViewBag.linkActivo = "clientes";
             ViewBag.MensajeError = TempData["MensajeError"] as string;
 
-            return View(ClienteVM.ParseList(clientes));
+            return View(ClienteVM.FromList(clientes));
         }
         catch (ClientException ex)
         {

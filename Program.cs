@@ -14,6 +14,9 @@ builder.Services.AddScoped<IEmpleadoRepository, EmpleadoRepository>();
 builder.Services.AddScoped<ITrabajoRepository, TrabajoRepository>();
 builder.Services.AddScoped<IPagoRepository, PagoRepository>();
 builder.Services.AddScoped<IFotoRepository, FotoRepository>();
+builder.Services.AddScoped<IMaterialRepository, MaterialRepository>();
+builder.Services.AddScoped<ITipoOperacionRepository, TipoOperacionRepository>();
+builder.Services.AddScoped<IDetalleRepository, DetalleRepository>();
 builder.Services.AddScoped<IFileService, FileService>();
 
 var configuration = builder.Configuration;

@@ -25,5 +25,8 @@ public class Util
         Console.WriteLine($"Fuente:\t{ex.Source}");
         Console.WriteLine($"Metodo:\t{ex.TargetSite}");
         Console.WriteLine($"HelpLink:\t{ex.HelpLink}");
+
+        if (ex.InnerException != null)
+            Console.WriteLine($"InnerException:\t{ex.InnerException.Message}");
     }
 }

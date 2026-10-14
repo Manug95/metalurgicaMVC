@@ -26,7 +26,7 @@ public class ClienteController(IClienteRepository repo) : ControllerBase
             Cliente? cliente = await _repo.GetByIdAsync(id);
 
             if (cliente != null)
-                return Ok(new { data = ClienteVM.Parse(cliente) });
+                return Ok(new { data = ClienteVM.From(cliente) });
             else
                 return NotFound(new { mensaje = "El cliente solicitado no existe" });
         }
@@ -54,7 +54,7 @@ public class ClienteController(IClienteRepository repo) : ControllerBase
             decimal cp = Math.Ceiling((decimal)cantidadClientes / filters.Limit);
 
             return Ok(new { 
-                clientes = ClienteVM.ParseList(clientes), 
+                clientes = ClienteVM.FromList(clientes), 
                 cantidadPaginas = cp <= 0 ? 1 : cp 
             });
         }
@@ -75,7 +75,7 @@ public class ClienteController(IClienteRepository repo) : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        Cliente cliente = Cliente.Parse(vm);
+        Cliente cliente = Cliente.From(vm);
 
         try
         {
@@ -111,7 +111,7 @@ public class ClienteController(IClienteRepository repo) : ControllerBase
 
         try
         {
-            if (await _repo.UpdateAsync(Cliente.Parse(vm)))
+            if (await _repo.UpdateAsync(Cliente.From(vm)))
                 return Ok(new { cliente = vm });
             else
                 return BadRequest(new { mensaje = "No se pudo actualizar el cliente" });
