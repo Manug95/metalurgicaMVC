@@ -43,9 +43,9 @@ public class TrabajoVM
     [Display(Name = "Descripción")]
     public string? Descripcion { get; set; }
 
-    [DataType(DataType.Text)]
-    [MaxLength(512, ErrorMessage = "La observación supera el máximo de 512 caracteres")]
-    public string? Observacion { get; set; }
+    // [DataType(DataType.Text)]
+    // [MaxLength(512, ErrorMessage = "La observación supera el máximo de 512 caracteres")]
+    // public string? Observacion { get; set; }
 
     [Required(ErrorMessage = "El estado es requerido")]
     [AllowedValues(["PRESUPUESTO", "ACEPTADO", "RECHAZADO"])]
@@ -79,7 +79,7 @@ public class TrabajoVM
             FechaSolicitado = trabajo.FechaSolicitado,
             FechaFinalizado = trabajo.FechaFinalizado,
             Importe = trabajo.Importe,
-            Observacion = trabajo.Observacion,
+            // Observacion = trabajo.Observacion,
             Estado = trabajo.Estado
         };
 

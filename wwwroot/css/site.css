@@ -29,3 +29,142 @@ body {
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
   text-align: start;
 }
+
+/* ---> styles.css <--- */
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    min-height: 100dvh;
+}
+
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+}
+
+.bg-orange {
+    background-color: orange;
+}
+
+.cursor-pointer {
+    cursor: pointer;
+}
+
+.icon-hover {
+    transition: transform 0.2s ease-in-out;
+    cursor: pointer; 
+}
+
+.icon-hover:hover {
+    transform: scale(1.2);
+}
+
+.custom-tooltip-disabled {
+  --bs-tooltip-bg: rgb(214, 51, 51);
+}
+
+.fixed-img {
+    height: 200px;          /* altura fija */
+    width: 100%;            /* ocupa todo el ancho */
+    object-fit: cover;      /* recorta proporcionalmente */
+}
+
+.fixed-carousel-img {
+    height: 500px;       /* altura fija para todas las imágenes */
+    object-fit: cover;   /* recorta proporcionalmente */
+}
+
+.active-link {
+    background-color: #e2b6a5 !important;
+    color: black !important;
+    font-weight: bold;
+}
+
+.nav-font {
+    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+}
+
+.nav-item:hover > .nav-link, .dropdown-menu .dropdown-item:hover {
+    background-color: #e6cbc0;
+}
+
+.active-link:hover {
+    background-color: #e2b6a5 !important;
+}
+
+[v-cloak] {
+    display: none;
+}
+
+#lista-detalles {
+    font-size: 1.1rem;
+}
+
+/* ---> tablas.css <--- */
+.fixed-height-table-container {
+    /* height: 650px; */
+    height: 65vh;
+    overflow-y: auto;
+    overflow-x: auto;
+}
+
+/* Opcional: fuerza un ancho mínimo para garantizar el scroll horizontal */
+.fixed-height-table-container table {
+  min-width: 1000px; /* Ajusta según el número de columnas */
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+thead th {
+    position: sticky;
+    top: 0;
+}
+
+#cuerpo tr td {
+    height: 55px !important;
+    min-height: 55px !important;
+    max-height: 55px !important;
+    font-family: 'Inter', Arial, sans-serif;
+}
+
+.icon-hover, .icon-enlace {
+    transition: transform 0.2s ease-in-out;
+    cursor: pointer; 
+}
+
+.icon-hover:hover, .icon-enlace:hover {
+    transform: scale(1.2);
+}
+
+#btn_add {
+    width: fit-content;
+    height: fit-content;
+    cursor: pointer;
+}
+
+nav ul li {
+    cursor: pointer;
+}
+
+.fixed-height-table-buscar-materiales-container {
+    height: 500px;
+    overflow-y: auto;
+    overflow-x: auto;
+}
+
+.fixed-height-table-buscar-materiales-container table {
+  min-width: 600px
+}

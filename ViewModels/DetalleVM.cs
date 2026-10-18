@@ -22,22 +22,22 @@ public class DetalleVM
     public int MaterialId { get; set; }
     public MaterialVM? Meterial { get; set; }
 
-    [Range(0.001, double.MaxValue, ErrorMessage = "El largo debe ser una cantidad positiva")]
+    [Range(0.001, 999999.99, ErrorMessage = "El largo debe ser una cantidad positiva")]
     public decimal? Largo { get; set; }
 
-    [Range(0.001, double.MaxValue, ErrorMessage = "El ancho debe ser una cantidad positiva")]
+    [Range(0.001, 999999.99, ErrorMessage = "El ancho debe ser una cantidad positiva")]
     public decimal? Ancho { get; set; }
 
     [Range(1, int.MaxValue, ErrorMessage = "La cantidad debe ser positiva")]
     public int Cantidad { get; set; }
 
-    [Range(0.001, double.MaxValue, ErrorMessage = "Los kg plegados deben ser una cantidad positiva")]
+    [Range(0.01, 9999.99, ErrorMessage = "Los kg plegados deben ser una cantidad positiva")]
     public decimal? KgPlegados { get; set; }
 
-    [Range(0.001, double.MaxValue, ErrorMessage = "El precio del material debe ser una cantidad positiva")]
+    [Range(0.001, 99999999.99, ErrorMessage = "El precio del material debe ser una cantidad positiva")]
     public decimal? PrecioMaterial { get; set; }
 
-    [Range(0.001, double.MaxValue, ErrorMessage = "El costo fijo del tipo de eoperacion debe ser una cantidad positiva")]
+    [Range(0.001, 99999999.99, ErrorMessage = "El costo fijo del tipo de eoperacion debe ser una cantidad positiva")]
     public decimal? PrecioTipoOperacion { get; set; }
     
     public static DetalleVM From(Detalle vm)

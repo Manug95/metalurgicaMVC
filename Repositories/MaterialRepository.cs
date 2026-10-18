@@ -13,7 +13,12 @@ public class MaterialRepository(DBContext dBContext) : BaseRepository(dBContext)
     {
         try
         {
-            return await _context.Materiales.CountAsync();
+            IQueryable<Material> materiales = _context.Materiales;
+
+            if (!string.IsNullOrWhiteSpace(filters.Tipo))
+                materiales = materiales.Where(m => m.Tipo == filters.Tipo);
+            
+            return await materiales.CountAsync();
         }
         catch (OperationCanceledException ex)
         {
@@ -84,6 +89,9 @@ public class MaterialRepository(DBContext dBContext) : BaseRepository(dBContext)
         try
         {
             IQueryable<Material> materiales = _context.Materiales;
+
+            if (!string.IsNullOrWhiteSpace(filters.Tipo))
+                materiales = materiales.Where(m => m.Tipo == filters.Tipo);
 
             if (filters.Limit > 0 && filters.Offset() >= 0)
                 materiales = materiales.Skip(filters.Offset()).Take(filters.Limit);

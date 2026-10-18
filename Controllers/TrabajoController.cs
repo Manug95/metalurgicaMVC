@@ -50,20 +50,37 @@ public class TrabajoController(ITrabajoRepository repo) : Controller
     
     public async Task<IActionResult> Create([FromServices] IMaterialRepository materialRepository, [FromServices] ITipoOperacionRepository tipoOperacionRepository)
     {
-        var materiales = await materialRepository.ListAsync(new FiltrosMaterial(){ Limit = 0 });
+        var filtersMaterial = new FiltrosMaterial();
+        var materiales = await materialRepository.ListAsync(filtersMaterial);
+        var cantidadMateriales = await materialRepository.CountAsync(filtersMaterial);
+        decimal cantidadPaginasMateriales = Math.Ceiling((decimal)cantidadMateriales / filtersMaterial.Limit);
         var tiposOperacion = await tipoOperacionRepository.ListAsync(new FiltrosTipoOperacion(){ Limit = 0 });
-        var trabajo = new Trabajo();
+        var trabajo = new TrabajoVM(){ Estado = "" };
 
-        return View(new FormTrabajoVM(trabajo, materiales, tiposOperacion));
+        return View(
+            new FormTrabajoVM(trabajo, materiales, tiposOperacion) 
+            { 
+                CantidadPaginasMateriales = (int)(cantidadPaginasMateriales <= 0 ? 1 : cantidadPaginasMateriales) 
+            }
+        );
     }
     
     public async Task<IActionResult> Edit([FromRoute] long id, [FromServices] IMaterialRepository materialRepository, [FromServices] ITipoOperacionRepository tipoOperacionRepository)
     {
-        var materiales = await materialRepository.ListAsync(new FiltrosMaterial(){ Limit = 0 });
+        var filtersMaterial = new FiltrosMaterial();
+        var materiales = await materialRepository.ListAsync(filtersMaterial);
+        var cantidadMateriales = await materialRepository.CountAsync(filtersMaterial);
+        decimal cantidadPaginasMateriales = Math.Ceiling((decimal)cantidadMateriales / filtersMaterial.Limit);
         var tiposOperacion = await tipoOperacionRepository.ListAsync(new FiltrosTipoOperacion(){ Limit = 0 });
         var trabajo = await _repo.GetByIdAsync(id);
 
-        return View("Create", new FormTrabajoVM(trabajo ?? new Trabajo(), materiales, tiposOperacion));
+        return View("Create2", 
+            new FormTrabajoVM(trabajo != null ? TrabajoVM.From(trabajo) : new TrabajoVM(), materiales, tiposOperacion) 
+            { 
+                CantidadPaginasMateriales = (int)(cantidadPaginasMateriales <= 0 ? 1 : cantidadPaginasMateriales) 
+            }
+        );
+        // return View("Create", new FormTrabajoVM(trabajo ?? new Trabajo(), materiales, tiposOperacion));
     }
 
     [HttpGet]

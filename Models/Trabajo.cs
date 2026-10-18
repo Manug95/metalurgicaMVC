@@ -21,7 +21,7 @@ public class Trabajo
 
     public string? Descripcion { get; set; }
 
-    public string? Observacion { get; set; }
+    // public string? Observacion { get; set; }
 
     public string? Estado { get; set; }
 
@@ -56,7 +56,7 @@ public class Trabajo
             FechaSolicitado = vm.FechaSolicitado,
             FechaFinalizado = vm.FechaFinalizado,
             Importe = vm.Importe,
-            Observacion = vm.Observacion,
+            // Observacion = vm.Observacion,
             Estado = vm.Estado
         };
 
@@ -99,7 +99,7 @@ public class Trabajo
             Importe = vm.Importe;
         if (vm.Estado != Estado)
             Estado = vm.Estado;
-        if (vm.Observacion != Observacion)
-            Observacion = vm.Observacion;
+        // if (vm.Observacion != Observacion)
+        //     Observacion = vm.Observacion;
     }
 }

@@ -11,9 +11,7 @@ public class DBContext : DbContext
 
     public DbSet<Usuario> Usuarios { get; set; }
     public DbSet<Cliente> Clientes { get; set; }
-    public DbSet<Empleado> Empleados { get; set; }
     public DbSet<Trabajo> Trabajos { get; set; }
-    public DbSet<Pago> Pagos { get; set; }
     public DbSet<Foto> Fotos { get; set; }
     public DbSet<Material> Materiales { get; set; }
     public DbSet<TipoOperacion> TipoOperaciones { get; set; }

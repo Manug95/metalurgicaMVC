@@ -7,191 +7,158 @@
     var serializationOptions = new JsonSerializerOptions {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase
     };
+    bool hayMensajeError = !string.IsNullOrWhiteSpace(ViewBag.MensajeError);
 }
 
 <div id="app" class="container" v-cloak>
-    <div class="row border rounded-4 p-3 mt-2">
-        <div class="col-12 col-md-6 col-lg mt-2 mt-lg-0 position-relative">
-            <label for="" class="form-label fw-bold">Cliente</label>
-            <!-- Input Group con ícono y campo de búsqueda -->
-            <div class="input-group mb-3">
-                <!-- Ícono de Lupa (Bootstrap Icons) -->
-                <span class="input-group-text bg-transparent border-end-0">
-                    <i class="bi bi-search text-muted"></i>
-                </span>
-                
-                <!-- Campo de entrada -->
-                <input 
-                    type="search" 
-                    id="searchInput" 
-                    class="form-control border-start-0 ps-0" 
-                    placeholder="Buscar..." 
-                    aria-label="Buscar"
-                    v-model="search"
-                    @@input="searchInputListener"
-                    @@focus="mostrarItemsClientes(true)"
-                    @@focusOut="mostrarItemsClientes(false)"
-                >
-
-                <!-- Botón opcional para limpiar la búsqueda -->
-                <button 
-                    type="button" id="clearBtn" 
-                    class="btn btn-outline-secondary d-none" 
-                    :class="{ 'd-none': search.trim().length > 0 }"
-                    @@click="limpiarSearch"
-                    style="cursor: pointer;"
-                >
-                    <i class="bi bi-x-lg"></i>
-                </button>
-            </div>
-
-            <!-- Contenedor o lista donde se muestran/filtran los resultados -->
-            <div id="resultsList" class="list-group position-absolute z-3 overflow-y-auto w-100" v-show="itemsClientes.length > 0 && searchFocused" style="height: 8em;">
-                <button 
-                    type="button" 
-                    class="list-group-item list-group-item-action search-item" 
-                    :class="{ active: index == 0, selected: index == 0 }"
-                    :autofocus="index == 0"
-                    v-for="(c, index) in itemsClientes" :key="c.id"
-                    @@click="seleccionarCliente(c)"
-                >
-                    {{ c.apellido + ", " + c.nombre }}
-                </button>
+    <div class="row border rounded-4 mt-2 p-3">
+        <div class="col-12 mb-1">
+            <div class="row">
+                <div class="col-12 col-md-6 col-lg mb-2 mb-md-0">
+                    <label for="" class="form-label fw-bold">Fecha Solicitado</label>
+                    <input type="date" class="form-control" v-model="trabajo.fechaSolicitado" :class="{ 'is-invalid': erroresTrabajo.fechaSolicitado }">
+                    <div class="invalid-feedback" v-if="erroresTrabajo.fechaSolicitado">{{ erroresTrabajo.fechaSolicitado }}</div>
+                </div>
+                <div class="col-12 col-md-6 col-lg mb-2 mb-md-3">
+                    <label for="estadoTrabajo" class="form-label fw-bold">Estado</label>
+                    <select id="estadoTrabajo" class="form-select" v-model="trabajo.estado" :class="{ 'is-invalid': erroresTrabajo.estado }">
+                        <option value="" selected>Seleccionar...</option>
+                        <option value="PRESUPUESTO">PRESUPUESTO</option>
+                        <option value="ACEPTADO">ACEPTADO</option>
+                        <option value="RECHAZADO" v-if="trabajo.id>0">RECHAZADO</option>
+                    </select>
+                    <div class="invalid-feedback" v-if="erroresTrabajo.estado">{{ erroresTrabajo.estado }}</div>
+                </div>
             </div>
         </div>
-        <div class="col-12 col-md-6 col-lg mt-3 mt-lg-0">
-            <label for="" class="form-label fw-bold">Fecha Solicitado</label>
-            <input type="date" class="form-control" v-model="trabajo.fechaSolicitado">
+        <div class="col-12 mb-1 mb-md-3">
+            <div class="row">
+                <div class="col position-relative">
+                    <label for="searchInput" class="form-label fw-bold">Cliente</label>
+                    <div class="input-group has-validation mb-3">
+                        <span class="input-group-text bg-transparent border-end-0">
+                            <i class="bi bi-search text-muted"></i>
+                        </span>
+                        <input 
+                            type="search" 
+                            id="searchInput" 
+                            class="form-control border-start-0 ps-0" 
+                            :class="{ 'is-invalid': erroresTrabajo.cliente }"
+                            placeholder="Buscar..." 
+                            aria-label="Buscar"
+                            v-model="search"
+                            @@input="searchInputListener"
+                            @@focus="mostrarItemsClientes(true, $event)"
+                            @@focusOut="mostrarItemsClientes(false, $event)"
+                        >
+                        <div class="invalid-feedback" v-if="erroresTrabajo.cliente">{{ erroresTrabajo.cliente }}</div>
+                        <button 
+                            type="button" id="clearBtn" 
+                            class="btn btn-outline-secondary d-none" 
+                            :class="{ 'd-none': search.trim().length > 0 }"
+                            @@click="limpiarSearch"
+                            style="cursor: pointer;"
+                        >
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+                    </div>
+
+                    <div id="resultsList" class="list-group position-absolute z-3 overflow-y-auto w-100" v-show="itemsClientes.length > 0 && (searchFocused || itemClienteFocused)" style="height: 8em;">
+                        <button 
+                            type="button" 
+                            class="list-group-item list-group-item-action search-item" 
+                            @* :class="{ active: index == 0 }" *@
+                            @* :autofocus="index == 0" *@
+                            v-for="(c, index) in itemsClientes" :key="c.id"
+                            @@click="seleccionarCliente(c)"
+                        >
+                            {{ c.apellido + ", " + c.nombre }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 mb-1 mb-md-3">
+            <div class="row">
+                <div class="col">
+                    <label for="descripcion" class="form-label fw-bold">Descripción</label>
+                    <textarea 
+                        id="descripcion" 
+                        rows="3" 
+                        maxlength="255" 
+                        placeholder="(opcional) agregar descripcion..."
+                        class="form-control" 
+                        v-model="trabajo.descripcion"
+                    ></textarea>
+                </div>
+            </div>
         </div>
     </div>
 
     <div class="row border rounded-4 p-3 mt-2">
-        <div class="col-12 d-flex justify-content-between align-items-start">
-            <h3 class="display-4">Detalle</h3>
+        <div class="col-12 d-flex justify-content-between align-items-start mb-2">
+            <div class="d-flex justify-content-evenly align-items-end">
+                <span class="display-4 me-2 me-md-2">Detalle</span>
+                <button id="btnAgregarDetalle" type="button" class="btn btn-primary mx-2" @@click="abrirModalTablaMateriales">Agregar Detalle</button>
+            </div>
             <button type="button" class="btn btn-danger mt-2 mt-md-0" @@click="borrarDetalle">Borrar Detalle</button>
         </div>
-        <div class="col mt-1">
-            <div class="accordion shadow-sm" id="accordionForms"> 
-                <div class="accordion-item">
-                    <h2 class="accordion-header">
-                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseChapas" aria-expanded="true" aria-controls="collapseChapas">
-                            <strong>Chapas</strong>
-                        </button>
-                    </h2>
-                    <div id="collapseChapas" class="accordion-collapse collapse show" data-bs-parent="#accordionForms">
-                        <div class="accordion-body">
-                            <div class="row">
-                                <div class="col-12 col-md-6 col-lg">
-                                    <label for="tipoOperacion" class="form-label fw-bold">Tipo Operación</label>
-                                    <select id="tipoOperacion" class="form-select" :class="{ 'is-invalid': erroresDetalleChapa.tipoOperacion }" v-model="itemDetalle.tipoOperacion">
-                                        <option value="" selected disabled>Seleccionar...</option>
-                                        <option :value="to.id" v-for="to in tiposOperacion" :key="to.id">{{ to.nombre }}</option>
-                                    </select>
-                                    <div id="error_tipoOperacion" class="invalid-feedback" v-if="erroresDetalleChapa.tipoOperacion">{{ erroresDetalleChapa.tipoOperacion }}</div>
-                                </div>
-                                <div class="col-12 col-md-6 col-lg mt-3 mt-md-0">
-                                    <label for="chapa" class="form-label fw-bold">Chapa</label>
-                                    <select id="chapa" class="form-select" :class="{ 'is-invalid': erroresDetalleChapa.chapa }" v-model="itemDetalle.chapa">
-                                        <option value="" selected disabled>Seleccionar...</option>
-                                        <option :value="c.id" v-for="c in getChapas" :key="c.id">{{ c.descripcion }}</option>
-                                    </select>
-                                    <div id="error_chapa" class="invalid-feedback" v-if="erroresDetalleChapa.chapa">{{ erroresDetalleChapa.chapa }}</div>
-                                </div>
-                                <div class="col-12 col-md-6 col-lg mt-3 mt-lg-0">
-                                    <label for="largo" class="form-label fw-bold">Largo (mm)</label>
-                                    <input type="number" id="largo" class="form-control" :class="{ 'is-invalid': erroresDetalleChapa.largo }" v-model="itemDetalle.largo">
-                                    <div id="error_largo" class="invalid-feedback" v-if="erroresDetalleChapa.largo">{{ erroresDetalleChapa.largo }}</div>
-                                </div>
-                                <div class="col-12 col-md-6 col-lg mt-3 mt-lg-0">
-                                    <label for="ancho" class="form-label fw-bold">Ancho (mm)</label>
-                                    <input type="number" id="ancho" class="form-control" :class="{ 'is-invalid': erroresDetalleChapa.ancho }" v-model="itemDetalle.ancho">
-                                    <div id="error_ancho" class="invalid-feedback" v-if="erroresDetalleChapa.ancho">{{ erroresDetalleChapa.ancho }}</div>
-                                </div>
-                                <div class="col-12 col-md-6 col-lg mt-3 mt-lg-0">
-                                    <label for="cantidad" class="form-label fw-bold">Cantidad</label>
-                                    <input type="number" id="cantidad" class="form-control" :class="{ 'is-invalid': erroresDetalleChapa.cantidad }" v-model="itemDetalle.cantidad">
-                                    <div id="error_cantidad" class="invalid-feedback" v-if="erroresDetalleChapa.cantidad">{{ erroresDetalleChapa.cantidad }}</div>
-                                </div>
-                                <div class="col-12 mt-4 d-flex justify-content-evenly">
-                                    <button type="button" class="btn btn-secondary" @@click="limpiarInputsChapas">{{ getTextoBotonLimpiar }}</button>
-                                    <button type="button" class="btn btn-primary" @@click="addItemChapas">{{ getTextoBotonAdd }}</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+        <div class="col-12 mt-3">
+            <div class="row g-2">
+                <div class="col-12 col-md-6 col-lg">
+                    <label for="tipoOperacionId" class="form-label fw-bold">Tipo Operación</label>
+                    <select 
+                        id="tipoOperacionId" 
+                        class="form-select" 
+                        :class="{ 'is-invalid': erroresDetalle.tipoOperacionId }" 
+                        v-model="itemDetalle.tipoOperacionId"
+                        @@change="onChangeTipoOperacionSelect"
+                    >
+                        <option value="0">Ninguna</option>
+                        @* <option :value="to.id" v-for="to in tiposOperacion" :key="to.id" :selected="to.id==itemDetalle.tipoOperacion.id"> *@
+                        @* <option :value="to.id" v-for="to in tiposOperacion" :key="to.id">
+                            {{ to.nombre }}
+                        </option> *@
+                        @foreach(var to in Model.TipoOperaciones)
+                        {
+                            <option value="@to.Id">@to.Nombre</option>
+                        }
+                    </select>
+                    <div id="error_tipoOperacionId" class="invalid-feedback" v-if="erroresDetalle.tipoOperacionId">{{ erroresDetalle.tipoOperacionId }}</div>
                 </div>
-                <div class="accordion-item">
-                    <h2 class="accordion-header">
-                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCanios" aria-expanded="true" aria-controls="collapseCanios">
-                            <strong>Caños Estructurales</strong>
-                        </button>
-                    </h2>
-                    <div id="collapseCanios" class="accordion-collapse collapse" data-bs-parent="#accordionForms">
-                        <div class="accordion-body">
-                            <div class="row">
-                                <div class="col-12 col-md-6 col-lg">
-                                    <label for="canio" class="form-label fw-bold">Caño</label>
-                                    <select id="canio" class="form-select" :class="{ 'is-invalid': erroresDetalleCanio.canio }" v-model="itemDetalle.canio">
-                                        <option value="" selected disabled>Seleccionar...</option>
-                                        <option :value="c.id" v-for="c in getCanios" :key="c.id">{{ c.descripcion }}</option>
-                                    </select>
-                                    <div id="error_canio" class="invalid-feedback" v-if="erroresDetalleCanio.canio">{{ erroresDetalleCanio.canio }}</div>
-                                </div>
-                                <div class="col-12 col-md-6 col-lg mt-3 mt-lg-0">
-                                    <label for="largoCanio" class="form-label fw-bold">Largo</label>
-                                    <input type="number" id="largoCanio" class="form-control" :class="{ 'is-invalid': erroresDetalleCanio.largoCanio }" v-model="itemDetalle.largoCanio">
-                                    <div id="error_largoCanio" class="invalid-feedback" v-if="erroresDetalleCanio.largoCanio">{{ erroresDetalleCanio.largoCanio }}</div>
-                                </div>
-                                <div class="col-12 col-md-6 col-lg mt-3 mt-lg-0">
-                                    <label for="cantidadCanios" class="form-label fw-bold">Cantidad</label>
-                                    <input type="number" id="cantidadCanios" class="form-control" :class="{ 'is-invalid': erroresDetalleCanio.cantidadCanios }" v-model="itemDetalle.cantidadCanios">
-                                    <div id="error_cantidadCanios" class="invalid-feedback" v-if="erroresDetalleCanio.cantidadCanios">{{ erroresDetalleCanio.cantidadCanios }}</div>
-                                </div>
-                                <div class="col-12 mt-4 d-flex justify-content-evenly">
-                                    <button type="button" class="btn btn-secondary" @@click="limpiarInputsCanios">{{ getTextoBotonLimpiar }}</button>
-                                    <button type="button" class="btn btn-primary" @@click="addItemCanio">{{ getTextoBotonAdd }}</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                <div class="col-12 col-md-6 col-lg">
+                    <label for="largo" class="form-label fw-bold">Largo (mm)</label>
+                    <input type="number" id="largo" class="form-control" :class="{ 'is-invalid': erroresDetalle.largo }" v-model="itemDetalle.largo">
+                    <div id="error_largo" class="invalid-feedback" v-if="erroresDetalle.largo">{{ erroresDetalle.largo }}</div>
                 </div>
-                <div class="accordion-item">
-                    <h2 class="accordion-header">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapsePintura" aria-expanded="true" aria-controls="collapsePintura">
-                            <strong>Pintura</strong>
-                        </button>
-                    </h2>
-                    <div id="collapsePintura" class="accordion-collapse collapse" data-bs-parent="#accordionForms">
-                        <div class="accordion-body">
-                            <div class="row">
-                                <div class="col-12 col-md-6 col-lg">
-                                    <label for="tipoPintura" class="form-label fw-bold">Tipo Pintura</label>
-                                    <select id="tipoPintura" class="form-select" :class="{ 'is-invalid': erroresDetallePintura.tipoPintura }" v-model="itemDetalle.tipoPintura">
-                                        <option value="" selected disabled>Seleccionar...</option>
-                                        <option :value="p.id" v-for="p in getPinturas" :key="p.id">{{ p.descripcion }}</option>
-                                    </select>
-                                    <div id="error_tipoPintura" class="invalid-feedback" v-if="erroresDetallePintura.tipoPintura">{{ erroresDetallePintura.tipoPintura }}</div>
-                                </div>
-                                <div class="col-12 col-md-6 col-lg mt-3 mt-lg-0">
-                                    <label for="color" class="form-label fw-bold">Color</label>
-                                    <input type="text" id="color" class="form-control" :class="{ 'is-invalid': erroresDetallePintura.color }" v-model="itemDetalle.color">
-                                    <div id="error_color" class="invalid-feedback" v-if="erroresDetallePintura.color">{{ erroresDetallePintura.color }}</div>
-                                </div>
-                                <div class="col-12 mt-4 d-flex justify-content-evenly">
-                                    <button type="button" class="btn btn-secondary" @@click="limpiarInputsPintura">{{ getTextoBotonLimpiar }}</button>
-                                    <button type="button" class="btn btn-primary" @@click="addItemPintura">{{ getTextoBotonAdd }}</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                <div class="col-12 col-md-6 col-lg">
+                    <label for="ancho" class="form-label fw-bold">Ancho (mm)</label>
+                    <input type="number" id="ancho" class="form-control" :class="{ 'is-invalid': erroresDetalle.ancho }" v-model="itemDetalle.ancho">
+                    <div id="error_ancho" class="invalid-feedback" v-if="erroresDetalle.ancho">{{ erroresDetalle.ancho }}</div>
+                </div>
+                <div class="col-12 col-md-6 col-lg">
+                    <label for="cantidad" class="form-label fw-bold">Cantidad</label>
+                    <input type="number" id="cantidad" class="form-control" :class="{ 'is-invalid': erroresDetalle.cantidad }" v-model="itemDetalle.cantidad">
+                    <div id="error_cantidad" class="invalid-feedback" v-if="erroresDetalle.cantidad">{{ erroresDetalle.cantidad }}</div>
+                </div>
+                <div class="col-12 col-lg d-flex justify-content-evenly align-items-end">
+                    <button type="button" class="btn btn-primary" @@click="confirmarEdit">Confirmar</button>
+                    <button type="button" class="btn btn-secondary" @@click="cancelarEdit">Cancelar</button>
                 </div>
             </div>
-            
+        </div>
+        <div class="col-12 mt-1">
             <div class="row mt-4">
                 <div class="col">
-                    <ul class="list-group list-group-flush">
+                    <ul id="lista-detalles" class="list-group list-group-flush">
                         <li class="list-group-item d-flex justify-content-between align-items-center" v-for="(i, index) in listaDetalle" :key="i.id">
                             <span>
+                                <i 
+                                    class="bi bi-x-circle text-danger fw-bold me-2" 
+                                    v-show="i.hasError"
+                                    data-bs-toggle="tooltip" 
+                                    data-bs-title="Este item de detalle tiene errores"
+                                ></i>
                                 {{ mostrarItemDetalle(i) }}
                                 <span>
                                     <i 
@@ -199,35 +166,26 @@
                                         data-bs-toggle="tooltip" 
                                         data-bs-title="Editar" 
                                         :data-item="index"
-                                        @@click="editarDetalle(i)"
+                                        @@click="edit(i)"
                                     ></i>
                                     <i 
                                         class="bi bi-trash text-danger icon-hover fs-5 ms-2 ms-md-3" 
                                         data-bs-toggle="tooltip" 
                                         data-bs-title="Eliminar" 
                                         :data-item="index"
-                                        @@click="eliminarDetalle(i, index)"
+                                        @@click="eliminarItemDetalle(i, index)"
                                     ></i>
                                 </span>
                             </span>
                             <span class="badge text-bg-primary rounded-pill" v-if="i.cantidad">{{ i.cantidad }}</span>
-                            <span class="badge text-bg-primary rounded-pill" v-if="i.cantidadCanios">{{ i.cantidadCanios }}</span>
                         </li>
                     </ul>
                 </div>
             </div>
         </div>
-        @* <div class="col-12 border-top pt-2 px-0"> 
-            <ul class="list-group list-group-horizontal-lg">
-                <li class="list-group-item fs-5">Cantidad de chapas estimada</li>
-                <li class="list-group-item fs-5" v-for="(value, key) in cantidadesChapas">
-                    {{ getTipoChapa(key) }}: {{ value }}
-                </li>
-            </ul>
-        </div> *@
     </div>
 
-    <div class="row border rounded-4 p-3 mt-2 mb-2">
+    <div class="row border border-start-0 border-end-0 p-3 mt-2 mb-2">
         <div class="col-12 d-flex flex-row-reverse p-1">
             <span class="fs-4">Importe: $ {{ formatearImporte }}</span>
         </div>
@@ -238,315 +196,479 @@
             <span class="fs-4">Importe Total: $ {{ formatearImporteTotal }}</span>
         </div>
     </div>
-    
+
+    <div class="row p-3 mt-2">
+        <div class="col d-flex justify-content-evenly align-items-center">
+            <button class="btn btn-primary" @@click="guadarTrabajo" :class="{ disabled: estaGuardando }" :disabled="estaGuardando">Guardar</button>
+            <button class="btn btn-danger" @@click="limpiarTrabajo">Limpiar</button>
+        </div>
+    </div>
+
+    <form asp-antiforgery="true"></form>
+
+    <div id="modal_buscar_materiales" class="modal fade" data-bs-keyboard="false" tabindex="-1" aria-describedby="titulo-modal">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content bg-light-subtle">
+                <div class="modal-header">
+                    <div id="titulo-modal" class="modal-title fs-5">Formulario</div>
+                    <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close" @@click="darFocusAlBotonAgregarDetalle"></button>
+                </div>
+                <div class="modal-body justify-content-center align-items-center">
+                    <div class="container-md">
+                        <div class="row">
+                            <div class="col">
+                                <div class="input-group mb-3">
+                                    <label class="input-group-text" for="selectTipoMaterial">Tipo de Material</label>
+                                    <select class="form-select" id="selectTipoMaterial" v-model="selectTipoMaterial" @@change="getMateriales(1)">
+                                        <option value="" selected>TODOS</option>
+                                        <option value="CHAPA">CHAPA</option>
+                                        <option value="CAÑO">CAÑO</option>
+                                        <option value="PINTURA">PINTURA</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col my-2">
+                                <div class="table-responsive my-2 fixed-height-table-buscar-materiales-container">
+                                    <table class="table table-hover">
+                                        <thead class="table-light border border-start-0 border-top-0 border-end-0 border-2 border-black">
+                                            <tr>
+                                                <th>Código</th>
+                                                <th>Material</th>
+                                                <th>ACCIONES</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="cuerpo">
+                                            <tr :id="m.id" v-for="m in materiales" :key="m.id">
+                                                <td class="align-middle py-0 ps-2">{{ m.id }} </td>
+                                                <td class="align-middle py-0 ps-2"> {{ m.descripcion }} </td>
+                                                <td>
+                                                    @* <div class="d-flex justify-content-evenly align-items-center"> *@
+                                                    @* <div> *@
+                                                        @* <button class="btn btn-primary" @@click="add(m)"> *@
+                                                        <button class="btn btn-primary btn-sm" @@click="add(m)">
+                                                            <i class="bi bi-plus"></i>
+                                                            Agregar
+                                                        </button>
+                                                        @* <button class="btn btn-danger" @@click="remove(m.id)">Quitar</button> *@
+                                                    @* </div> *@
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row border-top position-relative">
+                            <nav id="nav" class="border-top pt-3">
+                                <ul class="pagination justify-content-center">
+                                    <li id="flecha-pag-izq" class="page-item" :class="{ disabled: esPrimeraPaginaMateriales }" data-bs-toggle="tooltip" data-bs-title="Anterior">
+                                        <span @@click="getMateriales(paginaAnteriorMateriales)" class="page-link"><span>&laquo;</span></span>
+                                    </li>
+                                    <li class="page-item" v-for="p in cantidadPaginasMateriales">
+                                        <a  @@click="getMateriales(p)" class="page-link" :class="{ active: p == paginaActualMateriales, disabled: cantidadPaginasMateriales == 1 }">{{ p }}</a>
+                                    </li>
+                                    <li id="flecha-pag-der" class="page-item" :class="{ disabled: esUltimaPaginaMateriales }" data-bs-toggle="tooltip" data-bs-title="Siguiente">
+                                        <span @@click="getMateriales(paginaSiguienteMateriales)" class="page-link"><span>&raquo;</span></span>
+                                    </li>
+                                </ul>
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <partial name="_ModalMensaje"></partial>
+
 </div>
 
 @section Scripts {
-    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script>
         const { createApp } = Vue;
-        @* const itemDetalleDefault = { id: 0, tipo: "", tipoOperacion: "", chapa: "", espesor: "", largo: 0, ancho: 0, cantidad: 0 }; *@
-        const itemDetalleDefault = { id: 0, tipo: "", tipoOperacion: "", chapa: "", largo: 0, ancho: 0, cantidad: 0, canio: "", cantidadCanios: 0, largoCanio: 0, tipoPintura: "", color: "" };
-        @* const itemDetalleDefault = { id: 4, tipo: "chapa", tipoOperacion: "Corte", chapa: "Chapa Acero al Carbono 14", largo: 1200, ancho: 560, cantidad: 3 }; *@
-        const erroresDetalleChapaDefault = { tipoOperacion: null, chapa: null, largo: null, ancho: null, cantidad: null };
-        const erroresDetalleCanioDefault = { largoCanio: null, canio: null, cantidadCanios: null };
-        const erroresDetallePinturaDefault = { tipoPintura: null, color: null };
-        const trabajoDefault = { id: 0, fechaSolicitado: null, clienteId: 0, detalle: [] };
+        let modalTablaMateriales;
+        let modalMonseaje;
+        const almacenClientes = [];
+        const tipoOperacionDefault = { id: 0, nombre: "" };
+        const itemDetalleDefault = { id: 0, tipoOperacionId: 0, material: null, largo: 0, ancho: 0, cantidad: 1, hasError: false };
+        const erroresDetalleDefault = { largo: null, ancho: null, cantidad: null, tipoOperacionId: null };
+        const trabajoDefault = { id: 0, fechaSolicitado: null, clienteId: 0, detalles: [], importe: 0, descripcion: "", estado: "" };
+        const erroresTrabajoDefault = { fechaSolicitado: null, cliente: null, estado: null, detalles: null };
         const importeDefault = { monto: 0, iva: 0, total: 0 };
-        @* const cantidadesChapasDefault = { galvanizada: 0, Acarbono: 0, prepintada: 0 }; *@
 
         createApp({
             data() {
                 return {
-                    listaDetalle: [
-                        @* { id: 1, tipo: "chapa", tipoOperacion: "Corte", chapa: "Chapa Acero al Carbono 14", largo: 1200, ancho: 560, cantidad: 3 },
-                        { id: 2, tipo: "chapa", tipoOperacion: "Plegado", chapa: "Chapa Acero al Carbono 14", largo: 1200, ancho: 560, cantidad: 3 },
-                        { id: 3, tipo: "chapa", tipoOperacion: "Cilindrado", chapa: "Chapa Acero al Carbono 16", largo: 850, ancho: 300, cantidad: 1 },
-                        { id: 4, tipo: "pintura", tipoPintura: "Pintura", color: "negro" },
-                        { id: 5, tipo: "caño", canio: "40x80x1.6", largoCanio: 3, cantidadCanios: 1 } *@
-                    ],
+                    urlBase: "/api/trabajos",
+                    listaDetalle: [],
                     itemDetalle: { ...itemDetalleDefault },
-                    erroresDetalleChapa: { ...erroresDetalleChapaDefault },
-                    erroresDetalleCanio: { ...erroresDetalleCanioDefault },
-                    erroresDetallePintura: { ...erroresDetallePinturaDefault },
+                    erroresDetalle: { ...erroresDetalleDefault },
                     estaEditandoDetalle: false,
-                    trabajo: { ...trabajoDefault },
+                    trabajo: @Html.Raw(JsonSerializer.Serialize(Model.Trabajo, serializationOptions)),
+                    erroresTrabajo: { ...erroresTrabajoDefault },
                     search: "",
+                    estaGuardando: false,
+                    mensaje: "",
+                    esMensajeError: false,
                     searchFocused: false,
+                    itemClienteFocused: false,
                     itemsClientes: [],
-                    timeout: null,
+                    timeoutBuscarClientes: null,
                     clienteSeleccionado: null,
                     importe: { ...importeDefault },
-                    @* cantidadesChapas: { ...cantidadesChapasDefault }, *@
                     tooltipTriggerList: [],
                     tooltipList: [],
-                    accordionCollapseElementList: [],
-                    accordionCollapseList:[],
                     materiales: @Html.Raw(JsonSerializer.Serialize(Model.Materiales, serializationOptions)),
                     tiposOperacion: @Html.Raw(JsonSerializer.Serialize(Model.TipoOperaciones, serializationOptions)),
-                    formateador: new Intl.NumberFormat('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                    formateador: new Intl.NumberFormat('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+                    paginaActualMateriales: 1,
+                    esPrimeraPaginaMateriales: true,
+                    esUltimaPaginaMateriales: false,
+                    cantidadPaginasMateriales: @Model.CantidadPaginasMateriales,
+                    paginaAnteriorMateriales: 0,
+                    paginaSiguienteMateriales: 2,
+                    limitMateriales: 10,
+                    selectTipoMaterial: "",
+                    urlBaseMateriales: "/api/materiales",
+                    cargandoMateriales: false
                 }
             },
             methods: {
-                limpiarInputsChapas() {
+                limpiarInputs() {
                     if (this.estaEditandoDetalle)
                         this.estaEditandoDetalle = false;
                     this.itemDetalle = { ...itemDetalleDefault };
-                    this.erroresDetalleChapa = { ...erroresDetalleChapaDefault };
-                },
-                limpiarInputsCanios() {
-                    if (this.estaEditandoDetalle)
-                        this.estaEditandoDetalle = false;
-                    this.itemDetalle = { ...itemDetalleDefault };
-                    this.erroresDetalleCanio = { ...erroresDetalleCanioDefault };
-                },
-                limpiarInputsPintura() {
-                    if (this.estaEditandoDetalle)
-                        this.estaEditandoDetalle = false;
-                    this.itemDetalle = { ...itemDetalleDefault };
-                    this.erroresDetallePintura = { ...erroresDetallePinturaDefault };
+                    this.erroresDetalle = { ...erroresDetalleDefault };
                 },
                 limpiarSearch() {
                     this.search = "";
                     this.itemsClientes = [];
                     this.searchFocused = false;
+                    this.clienteSeleccionado = null;
+                    this.erroresTrabajo.cliente = null;
                 },
-                addItemChapas() {
-                    if (!this.esDetalleChapasValido())
-                        return;
-                    if (this.estaEditandoDetalle) {
-                        const indiceItemEditado = this.listaDetalle.findIndex(d => d.id == this.itemDetalle.id);
-                        if (indiceItemEditado >= 0)
-                            this.listaDetalle[indiceItemEditado] = this.itemDetalle;
-                        this.estaEditandoDetalle = false;
-                        this.itemDetalle = { ...itemDetalleDefault };
-                    } else {
-                        const fechaActual = new Date();
-                        this.itemDetalle.id = `${fechaActual.getTime()}`; // antes de guardar lo busco con typeof `${new Date().getTime()}` == "string" y lo seteo en 0
-                        this.itemDetalle.tipo = "CHAPA";
-                        this.listaDetalle.push(this.itemDetalle);
-                        this.itemDetalle = { ...this.itemDetalle };
-                        setTimeout(() => { this.inicializarTooltips(); }, 1000+(this.listaDetalle.length*100));
+                darFocusAlBotonAgregarDetalle() {
+                    document.getElementById("btnAgregarDetalle").focus();
+                },
+                mostrarMensaje(mensaje, ok = true) {
+                    this.mensaje = mensaje;
+                    this.esMensajeError = !ok;
+                    if (!modalMonseaje)
+                        modalMonseaje = new bootstrap.Modal(document.getElementById('modal-mensaje'), {});
+                    modalMonseaje.show();
+                },
+                mostrarItemDetalle(item) {
+                    if (item.material.tipo == "CHAPA") {
+                        const tipoOperacion = this.tiposOperacion.find(to => to.id == item.tipoOperacionId);
+                        let mensaje = tipoOperacion ? `${tipoOperacion.nombre} en ` : "";
+                        return mensaje + `${item.material.descripcion} ${item.largo} x ${item.ancho}`;
                     }
-                    this.calcularPrecio();
-                    @* this.calcularCantidadChapas(); *@
+                    if (item.material.tipo == "PINTURA") 
+                        return `Pintado con ${item.material.descripcion}`;
+                    if (item.material.tipo == "CAÑO") 
+                        return `${item.largo} mts de ${item.material.descripcion}`;
+                    return "";
                 },
-                addItemCanio() {
-                    if (!this.esDetalleCanioValido())
-                        return;
-                    if (this.estaEditandoDetalle) {
-                        const indiceItemEditado = this.listaDetalle.findIndex(d => d.id == this.itemDetalle.id);
-                        if (indiceItemEditado >= 0)
-                            this.listaDetalle[indiceItemEditado] = this.itemDetalle;
-                        this.estaEditandoDetalle = false;
-                        this.itemDetalle = { ...itemDetalleDefault };
-                    } else {
-                        const fechaActual = new Date();
-                        this.itemDetalle.id = `${fechaActual.getTime()}`; // antes de guardar lo busco con typeof `${new Date().getTime()}` == "string" y lo seteo en 0
-                        this.itemDetalle.tipo = "CAÑO";
-                        this.listaDetalle.push(this.itemDetalle);
-                        this.itemDetalle = { ...this.itemDetalle };
-                        setTimeout(() => { this.inicializarTooltips(); }, 1000+(this.listaDetalle.length*100));
-                    }
-                    // this.calcularPrecio();
+                add(material) {
+                    const fechaActual = new Date();
+                    this.listaDetalle.push({
+                        id: `${fechaActual.getTime()}`,
+                        tipoOperacionId: 0, 
+                        material: material, 
+                        largo: 0, 
+                        ancho: 0, 
+                        cantidad: 1,
+                        hasError: false
+                    });
+                    setTimeout(() => { this.inicializarTooltips(); }, 1000+(this.listaDetalle.length*100));
                 },
-                addItemPintura() {
-                    if (!this.esDetallePinturaValido())
-                        return;
-                    if (this.estaEditandoDetalle) {
-                        const indiceItemEditado = this.listaDetalle.findIndex(d => d.id == this.itemDetalle.id);
-                        if (indiceItemEditado >= 0)
-                            this.listaDetalle[indiceItemEditado] = this.itemDetalle;
-                        this.estaEditandoDetalle = false;
-                        this.itemDetalle = { ...itemDetalleDefault };
-                    } else {
-                        const fechaActual = new Date();
-                        this.itemDetalle.id = `${fechaActual.getTime()}`; // antes de guardar lo busco con typeof `${new Date().getTime()}` == "string" y lo seteo en 0
-                        this.itemDetalle.tipo = "PINTURA";
-                        this.listaDetalle.push(this.itemDetalle);
-                        this.itemDetalle = { ...this.itemDetalle };
-                        setTimeout(() => { this.inicializarTooltips(); }, 1000+(this.listaDetalle.length*100));
-                    }
-                    // this.calcularPrecio();
+                remove(id) {
+
                 },
-                esDetalleChapasValido() {
-                    const mapaValidador = new Map([
-                        ["tipoOperacion", validarFormSelect],
-                        ["chapa", validarFormSelect],
-                        ["largo", validarInputNumber],
-                        ["ancho", validarInputNumber],
-                        ["cantidad", validarInputNumber]
-                    ]);
-                    const clavesAValidar = [...mapaValidador.keys()];
-                    Object.keys(this.itemDetalle)
-                        .forEach(key => {
-                            if (!clavesAValidar.includes(key)) return;
-                            this.erroresDetalleChapa[key] = mapaValidador.get(key)(this.itemDetalle[key]);
-                        }
-                    );
-                    return !Object.keys(this.erroresDetalleChapa).some(v => this.erroresDetalleChapa[v]);
-                },
-                esDetalleCanioValido() {
-                    const mapaValidador = new Map([
-                        ["canio", validarFormSelect],
-                        ["largoCanio", validarInputNumber],
-                        ["cantidadCanios", validarInputNumber]
-                    ]);
-                    const clavesAValidar = [...mapaValidador.keys()];
-                    Object.keys(this.itemDetalle)
-                        .forEach(key => {
-                            if (!clavesAValidar.includes(key)) return;
-                            this.erroresDetalleCanio[key] = mapaValidador.get(key)(this.itemDetalle[key]);
-                        }
-                    );
-                    return !Object.keys(this.erroresDetalleCanio).some(v => this.erroresDetalleCanio[v]);
-                },
-                esDetallePinturaValido() {
-                    const mapaValidador = new Map([
-                        ["tipoPintura", validarFormSelect]
-                    ]);
-                    const clavesAValidar = [...mapaValidador.keys()];
-                    Object.keys(this.itemDetalle)
-                        .forEach(key => {
-                            if (!clavesAValidar.includes(key)) return;
-                            this.erroresDetallePintura[key] = mapaValidador.get(key)(this.itemDetalle[key]);
-                        }
-                    );
-                    return !Object.keys(this.erroresDetallePintura).some(v => this.erroresDetallePintura[v]);
-                },
-                editarDetalle(detalle) {
-                    this.itemDetalle = { ...detalle };
+                edit(item) {
+                    this.itemDetalle = { ...item };
                     this.estaEditandoDetalle = true;
-                    if (detalle.tipo == "pintura") {
-                        this.erroresDetallePintura = { ...erroresDetallePinturaDefault };
-                        bootstrap.Collapse.getInstance(document.getElementById("collapseChapas")).hide();
-                        bootstrap.Collapse.getInstance(document.getElementById("collapseCanios")).hide();
-                        bootstrap.Collapse.getInstance(document.getElementById("collapsePintura")).show();
-                        // this.accordionCollapseList.forEach(accordion => {
-                        //     console.log(accordion);
-                        // });
-                    } else if (detalle.tipo == "CHAPA") {
-                        this.erroresDetalleChapa = { ...erroresDetalleChapaDefault };
-                        bootstrap.Collapse.getInstance(document.getElementById("collapseCanios")).hide();
-                        bootstrap.Collapse.getInstance(document.getElementById("collapsePintura")).hide();
-                        bootstrap.Collapse.getInstance(document.getElementById("collapseChapas")).show();
-                    } else {
-                        this.erroresDetalleCanio = { ...erroresDetalleCanioDefault };
-                        bootstrap.Collapse.getInstance(document.getElementById("collapseChapas")).hide();
-                        bootstrap.Collapse.getInstance(document.getElementById("collapsePintura")).hide();
-                        bootstrap.Collapse.getInstance(document.getElementById("collapseCanios")).show();
-                    }
+                    this.erroresDetalle = { ...erroresDetalleDefault };
+                    if (item.material.tipo == "CHAPA")
+                        document.getElementById("tipoOperacionId").focus();
+                    if (item.material.tipo == "CAÑO")
+                        document.getElementById("largo").focus();
                 },
-                eliminarDetalle(detalle, index) {
+                confirmarEdit() {
+                    if (!this.estaEditandoDetalle || !this.esItemDetalleValido(this.itemDetalle))
+                        return;
+                    const indiceDetalleEditado = this.listaDetalle.findIndex(d => d.id == this.itemDetalle.id);
+                    this.listaDetalle[indiceDetalleEditado] = { ...this.itemDetalle };
+                    this.itemDetalle = { ...itemDetalleDefault };
+                    this.estaEditandoDetalle = false;
+                    this.calcularPrecio();
+                },
+                cancelarEdit() {
+                    this.itemDetalle = { ...itemDetalleDefault };
+                    this.erroresDetalle = { ...erroresDetalleDefault };
+                    this.estaEditandoDetalle = false;
+                },
+                eliminarItemDetalle(item, index) {
                     this.tooltipList = this.tooltipList.filter(tooltip => {
                         if (tooltip._element.dataset["item"] == index)
                             tooltip.dispose(); // esto hace que tooltip._element sea null
                         return tooltip._element; // si tooltip._element es null, ese tooltip se borro y no lo quiero en la lista
                     });
-                    this.listaDetalle.splice(this.listaDetalle.findIndex(d => d == detalle), 1);
-                    this.calcularPrecio();
-                    @* this.calcularCantidadChapas(); *@
+                    this.listaDetalle.splice(this.listaDetalle.findIndex(d => d == item), 1);
+                    @* this.calcularPrecio(); *@
                 },
-                mostrarItemDetalle(item) {
-                    if (item.tipo == "CHAPA") {
-                        const chapa = this.materiales.find(m => m.id == item.chapa);
-                        const tipoOperacion = this.tiposOperacion.find(to => to.id == item.tipoOperacion);
-                        return `${tipoOperacion.nombre} en ${chapa.descripcion} ${item.largo} x ${item.ancho}`;
+                onChangeTipoOperacionSelect(event) {
+                    if (this.estaEditandoDetalle) {
+                        @* this.itemDetalle.tipoOperacion = this.tiposOperacion.find(to => to.id == event.target.value); *@
+                        this.itemDetalle.tipoOperacion = +event.target.value;
                     }
-                    if (item.tipo == "PINTURA") {
-                        const pintura = this.materiales.find(m => m.id == item.tipoPintura);
-                        return `Pintado con ${pintura.descripcion}` + (item.color ? ` color ${item.color}` : "");
+                },
+                abrirModalTablaMateriales() {
+                    if (!modalTablaMateriales)
+                        modalTablaMateriales = new bootstrap.Modal(document.getElementById('modal_buscar_materiales'), {});
+                    modalTablaMateriales.show();
+                },
+                async getMateriales(pagina) {
+                    if (pagina <= 0 || pagina > this.cantidadPaginasMateriales || this.cargandoMateriales)
+                        return;
+                    let url = `${this.urlBaseMateriales}?Limit=${this.limitMateriales}&Pagina=${pagina}`;
+                    if (this.selectTipoMaterial.length > 0)
+                        url += `&Tipo=${this.selectTipoMaterial}`;
+                    this.cargandoMateriales = true;
+                    const data = await this.hacerPeticion(url);
+                    this.cargandoMateriales = false;
+                    if (data) {
+                        this.actualizarMateriales(data, pagina);
                     }
-                    if (item.tipo == "CAÑO") {
-                        const canio = this.materiales.find(m => m.id == item.canio);
-                        return `${canio.descripcion} x ${item.largoCanio} mts`;
+                },
+                async hacerPeticion(url) {
+                    try{
+                        const response = await fetch(url);
+                        if (response.ok) {
+                            return await response.json();
+                        } else {
+                            const { mensaje, errors } = await response.json();
+                            if (mensaje) {
+                                this.mostrarMensaje(mensaje, false);
+                            }
+                            if (errors) {
+                                mensaje = "";
+                                Object.keys(errors).forEach((e, i) => {
+                                    mensaje += `${e}: ${errors[e].join(", ")}`;
+                                    if (i < errors.length-1)
+                                        mensaje += " - ";
+                                });
+                            }
+                            return null;
+                        }
                     }
-                    return "";
+                    catch {
+                        this.mostrarMensaje("Error al traer los clientes", false);
+                    }
+                },
+                actualizarMateriales(data, pagina) {
+                    this.materiales = data.materiales;
+                    this.cantidadPaginasMateriales = data.cantidadPaginas;
+                    this.paginaActualMateriales = pagina;
+                    this.paginaAnteriorMateriales = pagina - 1;
+                    this.paginaSiguienteMateriales = pagina + 1;
+                    this.esPrimeraPaginaMateriales = this.paginaAnteriorMateriales == 0;
+                    this.esUltimaPaginaMateriales = this.paginaSiguienteMateriales > this.cantidadPaginasMateriales;
+                },
+                esItemDetalleValido(item) {
+                    this.erroresDetalle = { ...erroresDetalleDefault };
+                    if (item.material.tipo == "CHAPA") {
+                        // la chapa debe tener tipoOperacion, largo, ancho y cantidad
+                        this.erroresDetalle.tipoOperacionId = this.validarSelectTipoOperacion(item.tipoOperacionId);
+                        this.erroresDetalle.largo = this.validarNumeroMayorACero(item.largo);
+                        this.erroresDetalle.ancho = this.validarNumeroMayorACero(item.ancho);
+                        this.erroresDetalle.cantidad = this.validarNumeroMayorACero(item.cantidad);
+                        return !Object.keys(this.erroresDetalle).some(e => this.erroresDetalle[e]);
+                    } else if(d.material.tipo == "CAÑO") {
+                        // el caño debe tener el largo y la cantidad
+                        this.erroresDetalle.largo = this.validarNumeroMayorACero(item.largo);
+                        this.erroresDetalle.cantidad = this.validarNumeroMayorACero(item.cantidad);
+                        return !Object.keys(this.erroresDetalle).some(e => this.erroresDetalle[e]);
+                    }
+                    return true;
+                },
+                validarSelectTipoOperacion(valor) {
+                    const valorNum = +valor;
+                    if (valorNum == 0)
+                        return "Requerido para las chapas";
+                    return;
+                },
+                validarNumeroMayorACero(valor) {
+                    if (typeof valor == "string")
+                        return "Requerido";
+                    if (valor <= 0)
+                        return "Debe ser mayor a 0";
                 },
                 borrarDetalle() {
                     this.listaDetalle = [];
                     this.itemDetalle = { ...itemDetalleDefault };
                     this.importe = { ...importeDefault };
-                    @* this.cantidadesChapas = { ...cantidadesChapasDefault }; *@
                 },
                 async searchInputListener(e) {
                     if (this.search.trim() == 0) {
                         this.itemsClientes = [];
                         return;
                     }
-                    // Debounce: espera 300ms después de que el usuario deja de escribir
-                    clearTimeout(this.timeout);
-                    this.timeout = setTimeout(async () => {
+                    clearTimeout(this.timeoutBuscarClientes);
+                    this.erroresTrabajo.cliente = null;
+                    this.timeoutBuscarClientes = setTimeout(async () => {
                         if (this.search.trim() == 0)
                             return;
-                        // Lógica de filtrado
                         try {
                             const response = await fetch(`/api/clientes?busqueda=${this.search}`);
-                            const data = await response.json();
-                            this.itemsClientes = data.clientes;
+                            if (response.ok) {
+                                const data = await response.json();
+                                this.itemsClientes = data.clientes;
+                                if (data.clientes.length == 0) 
+                                    this.erroresTrabajo.cliente = `No hay clientes que coincidan con '${this.search}'`;
+                            } else {
+                                const { mensaje } = await response.json();
+                                this.erroresTrabajo.cliente = mensaje ?? "No se pudieron obtener los clientes";
+                            }
                         } catch (error) {
                             console.error("Error en la búsqueda:", error);
+                            this.erroresTrabajo.cliente = "Error de conexión";
                         }
-                    }, 300);
+                    }, 1000);
                 },
                 seleccionarCliente(c) {
                     this.clienteSeleccionado = c;
+                    this.search = `${c.apellido}, ${c.nombre}`;
+                    this.itemClienteFocused = false;
                 },
-                mostrarItemsClientes(valor) {
+                mostrarItemsClientes(valor, event) {
+                    if (!valor) {
+                        const relatedTarget = event.relatedTarget;
+                        if (relatedTarget && relatedTarget.parentElement.id == "resultsList") 
+                            this.itemClienteFocused = true;
+                    }
                     this.searchFocused = valor;
                 },
                 inicializarTooltips() {
                     this.tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
                     this.tooltipList = [...this.tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
                 },
-                inicializarAccordion() {
-                    this.accordionCollapseElementList = document.querySelectorAll('#accordionForms .collapse')
-                    this.accordionCollapseList = [...this.accordionCollapseElementList].map(accordionCollapseEl => 
-                        new bootstrap.Collapse(accordionCollapseEl, { toggle: false }))
-                },
                 calcularPrecio() {
                     this.importe.monto = 0;
                     this.listaDetalle.forEach(d => {
-                        if (d.tipo == "CHAPA") {
+                        if (d.material.tipo == "CHAPA") {
                             /*
                                 largo y ancho estan en mm y pesoXm2 esta en m
                                 ¿deberia pasar los mm a m?
                             */
                             const area = (d.largo / 1000) * (d.ancho / 1000); // los pase m, pero despues veo bien
-                            const chapa = this.getChapas.find(c => c.id == d.chapa);
-                            const peso = area * chapa.pesoXm2;
-                            const precio = peso * chapa.precioXkg;
+                            const peso = area * d.material.pesoXm2;
+                            const precio = peso * d.material.precioXkg;
+
+                            this.importe.monto += Math.ceil(precio);
+                        } else if (d.material.tipo == "CAÑO") {
+                            const precio = d.material.precio * d.largo;
 
                             this.importe.monto += Math.ceil(precio);
                         }
                     });
                     this.importe.iva = this.importe.monto * 0.21;
                     this.importe.total = this.importe.monto + this.importe.iva;
-                    // this.importe.total = this.importe.monto * 1.21;
-                }@* ,
-                calcularCantidadChapas() {
-                    this.cantidadesChapas = { ...cantidadesChapasDefault };
-                    this.listaDetalle.forEach(d => {
-                        if (d.tipo == "CHAPA") {
-                            const areaDeseada = (d.largo/1000 * d.ancho/1000) * d.cantidad;
-                            // const chapa = chapas[mapaChapas.get(d.chapa)][d.espesor];
-                            const chapa = this.getChapas.find(c => c.id == d.chapa);
-                            const areaChapa = chapa.largo * chapa.ancho;
-                            this.cantidadesChapas[mapaChapas.get(d.chapa)] += Math.ceil(areaDeseada / areaChapa);
-                        }
-                    });
                 },
-                getTipoChapa(clave) {
-                    return mapaChapas.entries().find(entry => entry[1] == clave)[0];
-                } *@
+                async guadarTrabajo() {
+                    let hayErroresEnDetalles = true;
+                    this.listaDetalle.forEach(d => {
+                        const estadosValidez = [];
+                        if (d.material.tipo == "CHAPA") {
+                            estadosValidez.push(this.validarSelectTipoOperacion(d.tipoOperacionId));
+                            estadosValidez.push(this.validarNumeroMayorACero(d.largo));
+                            estadosValidez.push(this.validarNumeroMayorACero(d.ancho));
+                            estadosValidez.push(this.validarNumeroMayorACero(d.cantidad));
+                            d.hasError = estadosValidez.some(ev => ev !== undefined);
+                            hayErroresEnDetalles = hayErroresEnDetalles && d.hasError;
+                        } else if(d.material.tipo == "CAÑO") {
+                            estadosValidez.push(this.validarNumeroMayorACero(d.largo));
+                            estadosValidez.push(this.validarNumeroMayorACero(d.cantidad));
+                            d.hasError = estadosValidez.some(ev => ev !== undefined);
+                            hayErroresEnDetalles = hayErroresEnDetalles && d.hasError;
+                        } else 
+                            hayErroresEnDetalles = hayErroresEnDetalles && d.hasError;
+                    });
+                    if (!this.esTrabajoValido() || hayErroresEnDetalles || this.estaGuardando)
+                        return;
+                    this.trabajo.clienteId = this.clienteSeleccionado.id;
+                    this.trabajo.importe = this.importe.monto;
+                    this.trabajo.detalles = this.listaDetalle.map(d => {
+                        const item = { };
+                        if (typeof d.id === 'string') item.id = 0;
+                        else item.id = d.id;
+                        item.materialId = d.material.id;
+                        item.largo = d.largo;
+                        item.ancho = d.ancho;
+                        item.cantidad = d.cantidad;
+                        if (d.material.tipo == "CHAPA") {
+                            item.kgPlegados = (( (d.largo/1000) * (d.ancho/1000) ) * d.material.pesoXm2) * d.cantidad;
+                            item.tipoOperacionId = d.tipoOperacionId;
+                        }
+                        item.precioMaterial = d.material.precio;
+                        item.precioTipoOperacion = this.tiposOperacion.find(to => to.id == d.tipoOperacionId).costoFijo;
+                        return item;
+                    });
+                    try {
+                        this.estaGuardando = true;
+                        const response = await fetch(this.urlBase, { 
+                            method: "POST",
+                            body: JSON.stringify(this.trabajo),
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'RequestVerificationToken': document.getElementsByName("__RequestVerificationToken")?.item(0)?.value
+                            }
+                        });
+                        if (response.ok) {
+                            this.mostrarMensaje("Trabajo Guardado");
+                        } else {
+                            const { mensaje, errors } = await response.json();
+                            if (mensaje)
+                                this.mostrarMensaje(mensaje, false);
+                            if (errors) {
+                                Object.keys(errors).forEach(e => {
+                                    this.erroresTrabajo[e[0].toLowerCase()+e.substring(1)] = errors[e].join(", ");
+                                });
+                            }
+                        }
+                    } catch {
+                        @* this.mostrarMensaje(`Se produjo un error al ${this.estaEditando ? "Actualizar" : "Guardar" }`, false); *@
+                        this.mostrarMensaje(`Se produjo un error al Guardar`, false);
+                    } finally {
+                        this.estaGuardando = false;
+                    }
+                },
+                esTrabajoValido() {
+                    let esValido = true;
+                    if (!this.clienteSeleccionado){
+                        this.erroresTrabajo.cliente = "El cliente es requerido";
+                        esValido = false;
+                    }
+                    if (!this.trabajo.fechaSolicitado) {
+                        this.erroresTrabajo.fechaSolicitado = "La fecha solicitado es requerida";
+                        esValido = false;
+                    }
+                    if (!this.trabajo.estado) {
+                        this.erroresTrabajo.estado = "El estado es requerido";
+                        esValido = false;
+                    }
+                    return esValido;
+                },
+                limpiarTrabajo() {
+                    this.listaDetalle = [];
+                    this.erroresDetalle = { ...erroresDetalleDefault };
+                    this.trabajo = { ...trabajoDefault };
+                    this.erroresTrabajo = { ...erroresTrabajoDefault };
+                }
             },
             computed: {
-                getTextoBotonAdd() {
-                    return this.estaEditandoDetalle ? "Confirmar Edición" : "Agregar"
-                },
-                getTextoBotonLimpiar() {
-                    return this.estaEditandoDetalle ? "Cancelar Edición" : "Limpiar Campos";
-                },
                 formatearImporte() {
                     return this.formateador.format(this.importe.monto);
                 },
@@ -557,33 +679,25 @@
                     return this.formateador.format(this.importe.total);
                 },
                 getChapas() {
-                    return this.materiales.filter(m => m.tipo == "CHAPA");//.map(c => { c.descripcion = c.descripcion.replace("Chapa ", ""); return c; });
+                    return this.materiales.filter(m => m.tipo == "CHAPA");
                 },
                 getCanios() {
-                    return this.materiales.filter(m => m.tipo == "CAÑO");//.map(c => { c.descripcion = c.descripcion.replace("Caño Estructural ", ""); return c; });
+                    return this.materiales.filter(m => m.tipo == "CAÑO");
                 },
                 getPinturas() {
                     return this.materiales.filter(m => m.tipo == "PINTURA");
                 }
             },
             mounted() {
+                if (this.trabajo.id > 0) {
+                    this.listaDetalle = this.trabajo.detalles.map(d => {
+                        d.hasError = false;
+                        return d;
+                    });
+                    this.calcularPrecio();
+                }
                 this.inicializarTooltips();
-                this.calcularPrecio();
-                @* this.calcularCantidadChapas(); *@
-                this.inicializarAccordion();
             }
         }).mount("#app");
-        function validarFormSelect(valor) {
-            const valorNum = +valor;
-            if (valor == 0)
-                return "Requerido";
-            return;
-        }
-        function validarInputNumber(valor) {
-            if (typeof valor == "string")
-                return "Requerido";
-            if (valor <= 0)
-                return "Debe ser mayor a 0";
-        }
     </script>
 }

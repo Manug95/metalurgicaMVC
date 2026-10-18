@@ -8,8 +8,8 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/styles.css" asp-append-version="true" >
-    <link rel="stylesheet" href="~/css/tablas.css" asp-append-version="true" >
+    @* <link rel="stylesheet" href="~/css/styles.css" asp-append-version="true" > *@
+    @* <link rel="stylesheet" href="~/css/tablas.css" asp-append-version="true" > *@
     <link rel="stylesheet" href="~/metalurgicaMVC.styles.css" asp-append-version="true" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -35,14 +35,8 @@
                         <li class="nav-item@(linkActivo == "clientes" ? " active-link" : "")">
                             <a class="nav-link text-dark nav-font" asp-area="" asp-controller="Cliente" asp-action="Index">Clientes</a>
                         </li>
-                        <li class="nav-item@(linkActivo == "empleados" ? " active-link" : "")">
-                            <a class="nav-link text-dark nav-font" asp-area="" asp-controller="Empleado" asp-action="Index">Empleados</a>
-                        </li>
                         <li class="nav-item@(linkActivo == "trabajos" ? " active-link" : "")">
                             <a class="nav-link text-dark nav-font" asp-area="" asp-controller="Trabajo" asp-action="Index">Trabajos</a>
-                        </li>
-                        <li class="nav-item@(linkActivo == "pagos" ? " active-link" : "")">
-                            <a class="nav-link text-dark nav-font" asp-area="" asp-controller="Pago" asp-action="Index">Pagos</a>
                         </li>
                         <li class="nav-item@(linkActivo == "usuarios" ? " active-link" : "")">
                             <a class="nav-link text-dark nav-font" asp-area="" asp-controller="Usuario" asp-action="Index">Usuarios</a>
@@ -65,6 +59,7 @@
     </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
     @* <script>
