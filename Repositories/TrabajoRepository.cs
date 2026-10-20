@@ -101,7 +101,7 @@ public class TrabajoRepository(DBContext dbContext) : BaseRepository(dbContext),
         {
             return await _context.Trabajos
                 .Include(t => t.Detalles)
-                    .ThenInclude(d => d.Meterial)
+                    .ThenInclude(d => d.Material)
                 .Include(t => t.Detalles)
                     .ThenInclude(d => d.TipoOperacion)
                 .Include(t => t.Cliente)
@@ -157,6 +157,11 @@ public class TrabajoRepository(DBContext dbContext) : BaseRepository(dbContext),
     {
         try
         {
+            foreach (var detalle in trabajo.Detalles)
+            {
+                if (detalle.Borrado)
+                    _context.Detalles.Remove(detalle);
+            }
             return (await _context.SaveChangesAsync()) > 0;
         }
         catch (OperationCanceledException ex)

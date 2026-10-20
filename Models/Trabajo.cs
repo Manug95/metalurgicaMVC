@@ -56,6 +56,7 @@ public class Trabajo
             FechaSolicitado = vm.FechaSolicitado,
             FechaFinalizado = vm.FechaFinalizado,
             Importe = vm.Importe,
+            Descripcion = vm.Descripcion,
             // Observacion = vm.Observacion,
             Estado = vm.Estado
         };
@@ -99,7 +100,42 @@ public class Trabajo
             Importe = vm.Importe;
         if (vm.Estado != Estado)
             Estado = vm.Estado;
+        if (vm.Descripcion != Descripcion)
+            Descripcion = vm.Descripcion;
         // if (vm.Observacion != Observacion)
         //     Observacion = vm.Observacion;
+        if (vm.Detalles != null)
+        {
+            foreach (var dVM in vm.Detalles)
+            {
+                if (dVM.Id == 0)
+                {
+                    Detalles.Add(new Detalle()
+                    {
+                        TrabajoId = vm.Id,
+                        MaterialId = dVM.MaterialId,
+                        TipoOperacionId = dVM.TipoOperacionId,
+                        Largo = dVM.Largo,
+                        Ancho = dVM.Ancho,
+                        Cantidad = dVM.Cantidad,
+                        KgPlegados = dVM.KgPlegados,
+                        PrecioMaterial = dVM.PrecioMaterial,
+                        PrecioTipoOperacion = dVM.PrecioTipoOperacion
+                    });
+                }
+                else
+                {
+                    var detalle = Detalles.FirstOrDefault(d => d.Id == dVM.Id);
+                    detalle?.UpdateFrom(dVM);
+                }
+            }
+            var idsDetallesVM = vm.Detalles.Where(d => d.Id > 0).Select(d => d.Id).ToList();
+            var detallesAEliminar = Detalles.Where(d => !idsDetallesVM.Contains(d.Id) && d.Id > 0).ToList();
+            foreach (var d in detallesAEliminar)
+            {
+                d.Borrado = true;
+            }
+        }
+
     }
 }

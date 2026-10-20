@@ -79,6 +79,7 @@ public class TrabajoVM
             FechaSolicitado = trabajo.FechaSolicitado,
             FechaFinalizado = trabajo.FechaFinalizado,
             Importe = trabajo.Importe,
+            Descripcion = trabajo.Descripcion,
             // Observacion = trabajo.Observacion,
             Estado = trabajo.Estado
         };

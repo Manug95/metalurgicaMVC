@@ -100,12 +100,12 @@ public class TrabajoController(ITrabajoRepository repo) : ControllerBase
         {
             Trabajo? trabajo = await _repo.GetByIdAsync(id);
             if (trabajo == null)
-                return BadRequest(new { mensaje = "El trabajo no existe" });
+                return NotFound(new { mensaje = "El trabajo no existe" });
 
             trabajo.UpdateFrom(vm);
 
             if (await _repo.UpdateAsync(trabajo))
-                return Ok(new { trabajo = TrabajoVM.From(trabajo) });
+                return Ok(new { trabajo = TrabajoVM.From(trabajo) }); // o NoContent();
             else
                 return BadRequest(new { mensaje = "No se pudo actualizar el trabajo" });
         }

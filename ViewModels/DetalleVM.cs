@@ -20,7 +20,7 @@ public class DetalleVM
     [Required(ErrorMessage = "El MaterialId es requerido")]
     [Range(1, int.MaxValue, ErrorMessage = "El MaterialId debe ser una cantidad positiva")]
     public int MaterialId { get; set; }
-    public MaterialVM? Meterial { get; set; }
+    public MaterialVM? Material { get; set; }
 
     [Range(0.001, 999999.99, ErrorMessage = "El largo debe ser una cantidad positiva")]
     public decimal? Largo { get; set; }
@@ -56,8 +56,8 @@ public class DetalleVM
             PrecioTipoOperacion = vm.PrecioTipoOperacion
         };
 
-        if (vm.Meterial != null)
-            detalle.Meterial = MaterialVM.From(vm.Meterial);
+        if (vm.Material != null)
+            detalle.Material = MaterialVM.From(vm.Material);
         if (vm.TipoOperacion != null)
             detalle.TipoOperacion = TipoOperacionVM.From(vm.TipoOperacion);
 

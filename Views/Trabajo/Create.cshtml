@@ -3,7 +3,7 @@
 @model FormTrabajoVM
 
 @{
-    ViewData["Title"] = "Trabajo";
+    ViewData["Title"] = @$"{(Model.Trabajo.Id > 0 ? "Actualizar" : "Registrar")} Trabajo";
     var serializationOptions = new JsonSerializerOptions {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase
     };
@@ -14,12 +14,12 @@
     <div class="row border rounded-4 mt-2 p-3">
         <div class="col-12 mb-1">
             <div class="row">
-                <div class="col-12 col-md-6 col-lg mb-2 mb-md-0">
-                    <label for="" class="form-label fw-bold">Fecha Solicitado</label>
-                    <input type="date" class="form-control" v-model="trabajo.fechaSolicitado" :class="{ 'is-invalid': erroresTrabajo.fechaSolicitado }">
+                <div class="col-12 col-md-6 col-lg mb-3 mb-md-0">
+                    <label for="fechaSolicitado" class="form-label fw-bold">Fecha Solicitado</label>
+                    <input id="fechaSolicitado" type="date" class="form-control" v-model="trabajo.fechaSolicitado" :class="{ 'is-invalid': erroresTrabajo.fechaSolicitado }">
                     <div class="invalid-feedback" v-if="erroresTrabajo.fechaSolicitado">{{ erroresTrabajo.fechaSolicitado }}</div>
                 </div>
-                <div class="col-12 col-md-6 col-lg mb-2 mb-md-3">
+                <div class="col-12 col-md-6 col-lg mb-3 mb-md-3">
                     <label for="estadoTrabajo" class="form-label fw-bold">Estado</label>
                     <select id="estadoTrabajo" class="form-select" v-model="trabajo.estado" :class="{ 'is-invalid': erroresTrabajo.estado }">
                         <option value="" selected>Seleccionar...</option>
@@ -28,6 +28,25 @@
                         <option value="RECHAZADO" v-if="trabajo.id>0">RECHAZADO</option>
                     </select>
                     <div class="invalid-feedback" v-if="erroresTrabajo.estado">{{ erroresTrabajo.estado }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 mb-3">
+            <div class="row g-3">
+                <div class="col-12 col-md">
+                    <label for="fechaIniciado" class="form-label fw-bold">Fecha Iniciado</label>
+                    <input id="fechaIniciado" type="date" class="form-control" v-model="trabajo.fechaIniciado" :class="{ 'is-invalid': erroresTrabajo.fechaIniciado }">
+                    <div class="invalid-feedback" v-if="erroresTrabajo.fechaIniciado">{{ erroresTrabajo.fechaIniciado }}</div>
+                </div>
+                <div class="col-12 col-md">
+                    <label for="fechaFinalizado" class="form-label fw-bold">Fecha Finalizado</label>
+                    <input id="fechaFinalizado" type="date" class="form-control" v-model="trabajo.fechaFinalizado" :class="{ 'is-invalid': erroresTrabajo.fechaFinalizado }">
+                    <div class="invalid-feedback" v-if="erroresTrabajo.fechaFinalizado">{{ erroresTrabajo.fechaFinalizado }}</div>
+                </div>
+                <div class="col-12 col-md">
+                    <label for="fechaRetirado" class="form-label fw-bold">Fecha Retirado</label>
+                    <input id="fechaRetirado" type="date" class="form-control" v-model="trabajo.fechaRetirado" :class="{ 'is-invalid': erroresTrabajo.fechaRetirado }">
+                    <div class="invalid-feedback" v-if="erroresTrabajo.fechaRetirado">{{ erroresTrabajo.fechaRetirado }}</div>
                 </div>
             </div>
         </div>
@@ -88,8 +107,10 @@
                         maxlength="255" 
                         placeholder="(opcional) agregar descripcion..."
                         class="form-control" 
+                        :class="{ 'is-invalid': erroresTrabajo.descripcion }"
                         v-model="trabajo.descripcion"
                     ></textarea>
+                    <div class="invalid-feedback" v-if="erroresTrabajo.descripcion">{{ erroresTrabajo.descripcion }}</div>
                 </div>
             </div>
         </div>
@@ -294,8 +315,8 @@
         const tipoOperacionDefault = { id: 0, nombre: "" };
         const itemDetalleDefault = { id: 0, tipoOperacionId: 0, material: null, largo: 0, ancho: 0, cantidad: 1, hasError: false };
         const erroresDetalleDefault = { largo: null, ancho: null, cantidad: null, tipoOperacionId: null };
-        const trabajoDefault = { id: 0, fechaSolicitado: null, clienteId: 0, detalles: [], importe: 0, descripcion: "", estado: "" };
-        const erroresTrabajoDefault = { fechaSolicitado: null, cliente: null, estado: null, detalles: null };
+        const trabajoDefault = { id: 0, fechaSolicitado: null, clienteId: 0, detalles: [], importe: 0, descripcion: "", estado: "", fechaIniciado: null, fechaFinalizado: null, fechaRetirado: null };
+        const erroresTrabajoDefault = { fechaSolicitado: null, cliente: null, estado: null, descripcion: null, detalles: null, "fechaIniciado": null, "fechaFinalizado": null, "fechaRetirado": null };
         const importeDefault = { monto: 0, iva: 0, total: 0 };
 
         createApp({
@@ -417,7 +438,7 @@
                         return tooltip._element; // si tooltip._element es null, ese tooltip se borro y no lo quiero en la lista
                     });
                     this.listaDetalle.splice(this.listaDetalle.findIndex(d => d == item), 1);
-                    @* this.calcularPrecio(); *@
+                    this.calcularPrecio();
                 },
                 onChangeTipoOperacionSelect(event) {
                     if (this.estaEditandoDetalle) {
@@ -555,30 +576,34 @@
                     this.tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
                     this.tooltipList = [...this.tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
                 },
-                calcularPrecio() {
-                    this.importe.monto = 0;
-                    this.listaDetalle.forEach(d => {
-                        if (d.material.tipo == "CHAPA") {
-                            /*
-                                largo y ancho estan en mm y pesoXm2 esta en m
-                                ¿deberia pasar los mm a m?
-                            */
-                            const area = (d.largo / 1000) * (d.ancho / 1000); // los pase m, pero despues veo bien
-                            const peso = area * d.material.pesoXm2;
-                            const precio = peso * d.material.precioXkg;
+                calcularPrecio(importe) {
+                    if (importe === undefined) {
+                        this.importe.monto = 0;
+                        this.listaDetalle.forEach(d => {
+                            if (d.material.tipo == "CHAPA") {
+                                /*
+                                    largo y ancho estan en mm y pesoXm2 esta en m
+                                    ¿deberia pasar los mm a m?
+                                */
+                                const area = (d.largo / 1000) * (d.ancho / 1000); // los pase m, pero despues veo bien
+                                const peso = area * d.material.pesoXm2;
+                                const precio = peso * d.material.precioXkg;
 
-                            this.importe.monto += Math.ceil(precio);
-                        } else if (d.material.tipo == "CAÑO") {
-                            const precio = d.material.precio * d.largo;
+                                this.importe.monto += Math.ceil(precio);
+                            } else if (d.material.tipo == "CAÑO") {
+                                const precio = d.material.precio * d.largo;
 
-                            this.importe.monto += Math.ceil(precio);
-                        }
-                    });
+                                this.importe.monto += Math.ceil(precio);
+                            }
+                        });
+                    } else {
+                        this.importe.monto = importe;
+                    }
                     this.importe.iva = this.importe.monto * 0.21;
                     this.importe.total = this.importe.monto + this.importe.iva;
                 },
                 async guadarTrabajo() {
-                    let hayErroresEnDetalles = true;
+                    let hayErroresEnDetalles = true; // si el detalle puede estar vacio ponerlo en false
                     this.listaDetalle.forEach(d => {
                         const estadosValidez = [];
                         if (d.material.tipo == "CHAPA") {
@@ -600,11 +625,17 @@
                         return;
                     this.trabajo.clienteId = this.clienteSeleccionado.id;
                     this.trabajo.importe = this.importe.monto;
+                    this.trabajo.fechaIniciado = Boolean(this.trabajo.fechaIniciado) ? this.trabajo.fechaIniciado : null;
+                    this.trabajo.fechaFinalizado = Boolean(this.trabajo.fechaFinalizado) ? this.trabajo.fechaFinalizado : null;
+                    this.trabajo.fechaRetirado = Boolean(this.trabajo.fechaRetirado) ? this.trabajo.fechaRetirado : null;
+                    this.trabajo.registrador = null;
+                    this.trabajo.anulador = null;
                     this.trabajo.detalles = this.listaDetalle.map(d => {
                         const item = { };
                         if (typeof d.id === 'string') item.id = 0;
                         else item.id = d.id;
                         item.materialId = d.material.id;
+                        item.trabajoId = this.trabajo.id;
                         item.largo = d.largo;
                         item.ancho = d.ancho;
                         item.cantidad = d.cantidad;
@@ -618,14 +649,21 @@
                     });
                     try {
                         this.estaGuardando = true;
-                        const response = await fetch(this.urlBase, { 
-                            method: "POST",
+                        let url = this.urlBase;
+                        const fetchOptions = {
                             body: JSON.stringify(this.trabajo),
                             headers: {
                                 'Content-Type': 'application/json',
                                 'RequestVerificationToken': document.getElementsByName("__RequestVerificationToken")?.item(0)?.value
                             }
-                        });
+                        };
+                        if (this.trabajo.id > 0) {
+                            url += `/${this.trabajo.id}`;
+                            fetchOptions.method = "PUT";
+                        }
+                        else
+                            fetchOptions.method = "POST";
+                        const response = await fetch(url, fetchOptions);
                         if (response.ok) {
                             this.mostrarMensaje("Trabajo Guardado");
                         } else {
@@ -639,25 +677,43 @@
                             }
                         }
                     } catch {
-                        @* this.mostrarMensaje(`Se produjo un error al ${this.estaEditando ? "Actualizar" : "Guardar" }`, false); *@
-                        this.mostrarMensaje(`Se produjo un error al Guardar`, false);
+                        this.mostrarMensaje(`Se produjo un error al ${this.trabajo.id > 0 ? "Actualizar" : "Guardar" } el trabajo`, false);
                     } finally {
                         this.estaGuardando = false;
                     }
                 },
                 esTrabajoValido() {
+                    this.erroresTrabajo = { ...erroresTrabajoDefault };
                     let esValido = true;
                     if (!this.clienteSeleccionado){
                         this.erroresTrabajo.cliente = "El cliente es requerido";
                         esValido = false;
                     }
-                    if (!this.trabajo.fechaSolicitado) {
-                        this.erroresTrabajo.fechaSolicitado = "La fecha solicitado es requerida";
-                        esValido = false;
-                    }
                     if (!this.trabajo.estado) {
                         this.erroresTrabajo.estado = "El estado es requerido";
                         esValido = false;
+                    }
+                    if (this.trabajo.descripcion && this.trabajo.descripcion.length > 255) {
+                        this.erroresTrabajo.descripcion = "Supera el máximo de 255 caracteres";
+                        esValido = false;
+                    }
+                    const fechas = [
+                        { fecha: "fechaSolicitado", valor: this.trabajo.fechaSolicitado },
+                        { fecha: "fechaIniciado", valor: this.trabajo.fechaIniciado },
+                        { fecha: "fechaFinalizado", valor: this.trabajo.fechaFinalizado },
+                        { fecha: "fechaRetirado", valor: this.trabajo.fechaRetirado }
+                    ];
+                    if (!fechas[0].valor) {
+                        this.erroresTrabajo[fechas[0].fecha] = "La fecha solicitado es requerida";
+                        esValido = false;
+                    }
+                    const fechasIngresadas = fechas.filter(fecha => fecha.valor);
+                    for (let i = 1; i < fechasIngresadas.length; i++) {
+                        if (fechasIngresadas[i].valor < fechasIngresadas[i - 1].valor) {
+                            const fechaAnterior = fechasIngresadas[i - 1].fecha;
+                            this.erroresTrabajo[fechasIngresadas[i].fecha] = `No puede ser anterior a ${fechaAnterior.substring(0, 5)} ${fechaAnterior.replace("fecha", "")}`;
+                            esValido = false;
+                        }
                     }
                     return esValido;
                 },
@@ -694,7 +750,13 @@
                         d.hasError = false;
                         return d;
                     });
-                    this.calcularPrecio();
+                    this.calcularPrecio(this.trabajo.importe);
+                    this.clienteSeleccionado = this.trabajo.cliente;
+                    this.search = `${this.trabajo.cliente.apellido}, ${this.trabajo.cliente.nombre}`;
+                    this.trabajo.fechaSolicitado = this.trabajo.fechaSolicitado?.split("T")[0];
+                    this.trabajo.fechaIniciado = this.trabajo.fechaIniciado?.split("T")[0];
+                    this.trabajo.fechaFinalizado = this.trabajo.fechaFinalizado?.split("T")[0];
+                    this.trabajo.fechaRetirado = this.trabajo.fechaRetirado?.split("T")[0];
                 }
                 this.inicializarTooltips();
             }

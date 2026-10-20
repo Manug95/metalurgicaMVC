@@ -68,19 +68,35 @@ public class TrabajoController(ITrabajoRepository repo) : Controller
     public async Task<IActionResult> Edit([FromRoute] long id, [FromServices] IMaterialRepository materialRepository, [FromServices] ITipoOperacionRepository tipoOperacionRepository)
     {
         var filtersMaterial = new FiltrosMaterial();
-        var materiales = await materialRepository.ListAsync(filtersMaterial);
-        var cantidadMateriales = await materialRepository.CountAsync(filtersMaterial);
-        decimal cantidadPaginasMateriales = Math.Ceiling((decimal)cantidadMateriales / filtersMaterial.Limit);
-        var tiposOperacion = await tipoOperacionRepository.ListAsync(new FiltrosTipoOperacion(){ Limit = 0 });
-        var trabajo = await _repo.GetByIdAsync(id);
+        Trabajo? trabajo = null;
+        List<Material> materiales = [];
+        List<TipoOperacion> tiposOperacion = [];
+        int cantidadMateriales;
+        decimal cantidadPaginasMateriales = 0m;
 
-        return View("Create2", 
+        try
+        {
+            materiales = await materialRepository.ListAsync(filtersMaterial);
+            cantidadMateriales = await materialRepository.CountAsync(filtersMaterial);
+            cantidadPaginasMateriales = Math.Ceiling((decimal)cantidadMateriales / filtersMaterial.Limit);
+            tiposOperacion = await tipoOperacionRepository.ListAsync(new FiltrosTipoOperacion(){ Limit = 0 });
+            trabajo = await _repo.GetByIdAsync(id);
+        }
+        catch (ClientException ex)
+        {
+            ViewBag.MensajeError = ex.Message;
+        }
+        catch (AppException)
+        {
+            ViewBag.MensajeError = "Error interno del servidor: No se pudieron traer los trabajos";
+        }
+
+        return View("Create", 
             new FormTrabajoVM(trabajo != null ? TrabajoVM.From(trabajo) : new TrabajoVM(), materiales, tiposOperacion) 
             { 
                 CantidadPaginasMateriales = (int)(cantidadPaginasMateriales <= 0 ? 1 : cantidadPaginasMateriales) 
             }
         );
-        // return View("Create", new FormTrabajoVM(trabajo ?? new Trabajo(), materiales, tiposOperacion));
     }
 
     [HttpGet]
