@@ -35,7 +35,7 @@ public class FileService : IFileService
             string fileName = name + Path.GetExtension(formFile.FileName);
             string pathCompletoArchivo = Path.Combine(PATH_ABSOLUTO_AVATARES, fileName);
 
-            WriteFile(formFile, pathCompletoArchivo);
+            Write(formFile, pathCompletoArchivo);
 
             return Path.Combine(PATH_RELATIVO_AVATARES, fileName);
         }
@@ -66,7 +66,7 @@ public class FileService : IFileService
             string fileName = name + Path.GetExtension(formFile.FileName);
             string pathCompletoArchivo = Path.Combine(pathFotosDeTrabajo, fileName);
 
-            WriteFile(formFile, pathCompletoArchivo);
+            Write(formFile, pathCompletoArchivo);
 
             return Path.Combine(PATH_RELATIVO_FOTOS, trabajoId.ToString(), fileName);
         }
@@ -80,19 +80,19 @@ public class FileService : IFileService
         }
     }
 
-    public void DeleteAvatar(string path)
+    public void DeleteFile(string path)
     {
         var pathCompletoArchivo = Path.Combine(PATH_ROOT, path.Substring(1));
-        DeleteFile(pathCompletoArchivo);
+        Delete(pathCompletoArchivo);
     }
 
-    private static async void WriteFile(IFormFile file, string path)
+    private static async void Write(IFormFile file, string path)
     {
         using FileStream stream = new(path, FileMode.Create);
         await file.CopyToAsync(stream);
     }
 
-    private static void DeleteFile(string path)
+    private static void Delete(string path)
     {
         try
         {

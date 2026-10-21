@@ -1,6 +1,7 @@
 using metalurgicaMVC.Exceptions;
 using metalurgicaMVC.Interfaces;
 using metalurgicaMVC.Models;
+using metalurgicaMVC.Utils;
 using metalurgicaMVC.ViewModels;
 using Microsoft.EntityFrameworkCore;
 
@@ -26,19 +27,75 @@ public class FotoRepository(DBContext dBContext) : BaseRepository(dBContext), IF
         throw new NotImplementedException();
     }
 
-    public Task<long> CreateAsync(Foto entidad)
+    public async Task<long> CreateAsync(Foto foto)
     {
-        throw new NotImplementedException();
+        try
+        {
+            foto.Id = 0;
+            _context.Fotos.Add(foto);
+            return await _context.SaveChangesAsync();
+        }
+        catch (OperationCanceledException ex)
+        {
+            Util.LoguearExcepcion(ex);
+            throw new AppException("No se pudo completar la operación", ex);
+        }
+        catch (DbUpdateException ex)
+        {
+            Util.LoguearExcepcion(ex);
+            throw new AppException("No se pudo guardar la foto", ex);
+        }
+        catch (Exception ex)
+        {
+            Util.LoguearExcepcion(ex);
+            throw new AppException("Ocurrió un error inesperado", ex);
+        }
     }
 
-    public Task<bool> DeleteAsync(long id)
+    public async Task<bool> DeleteAsync(long id)
     {
-        throw new NotImplementedException();
+        try
+        {
+            var entryFoto = _context.Fotos.Local.FindEntry(nameof(Foto.Id), id);
+            if (entryFoto != null)
+                _context.Fotos.Remove(entryFoto.Entity);
+            else
+                _context.Fotos.Remove(new Foto() { Id = id });
+            return await _context.SaveChangesAsync() > 0;
+        }
+        catch (OperationCanceledException ex)
+        {
+            Util.LoguearExcepcion(ex);
+            throw new AppException("No se pudo completar la operación", ex);
+        }
+        catch (DbUpdateConcurrencyException ex)
+        {
+            Util.LoguearExcepcion(ex);
+            throw new AppException("No se pudo eliminar el trabajo", ex);
+        }
+        catch (DbUpdateException ex)
+        {
+            Util.LoguearExcepcion(ex);
+            throw new AppException("Error al eliminar el trabajo", ex);
+        }
+        catch (Exception ex)
+        {
+            Util.LoguearExcepcion(ex);
+            throw new AppException("Ocurrió un error inesperado", ex);
+        }
     }
 
-    public Task<Foto?> GetByIdAsync(long id)
+    public async Task<Foto?> GetByIdAsync(long id)
     {
-        throw new NotImplementedException();
+        try
+        {
+            return await _context.Fotos.FindAsync(id);
+        }
+        catch (Exception ex)
+        {
+            Util.LoguearExcepcion(ex);
+            throw new AppException("Ocurrió un error inesperado", ex);
+        }
     }
 
     public Task<List<Foto>> ListAsync(int limit, int offset)
@@ -46,9 +103,34 @@ public class FotoRepository(DBContext dBContext) : BaseRepository(dBContext), IF
         throw new NotImplementedException();
     }
 
-    public Task<List<Foto>> ListAsync(FiltrosFoto filters)
+    public async Task<List<Foto>> ListAsync(FiltrosFoto filters)
     {
-        throw new NotImplementedException();
+        try
+        {
+            IQueryable<Foto> fotos = _context.Fotos;
+
+            if (filters.TrabajoId > 0)
+                fotos = fotos.Where(f => f.TrabajoId == filters.TrabajoId);
+
+            if (filters.Limit > 0 && filters.Offset() >= 0)
+                fotos = fotos.Skip(filters.Offset()).Take(filters.Limit);
+
+            return await fotos.ToListAsync();
+        }
+        catch (OperationCanceledException ex)
+        {
+            Util.LoguearExcepcion(ex);
+            throw new AppException("No se pudo completar la operación", ex);
+        }
+        catch (ArgumentNullException)
+        {
+            throw new ClientException("No se pasaron valores");
+        }
+        catch (Exception ex)
+        {
+            Util.LoguearExcepcion(ex);
+            throw new AppException("Ocurrió un error inesperado", ex);
+        }
     }
 
     public Task<bool> UpdateAsync(Foto entidad)

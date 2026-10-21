@@ -251,7 +251,7 @@ public class UsuarioController(IUsuarioRepository repo, IConfiguration config) :
                 return NotFound(new { mensaje = "El usuario no existe" });
 
             if (usuario.Avatar != null)
-                fileService.DeleteAvatar(usuario.Avatar);
+                fileService.DeleteFile(usuario.Avatar);
 
             usuario.Avatar = await fileService.SaveAvatar(vm.AvatarFile, $"avatar_{usuario.Id}_{DateTime.Now.Ticks}");
 
@@ -285,7 +285,7 @@ public class UsuarioController(IUsuarioRepository repo, IConfiguration config) :
             if (usuario.Avatar == null)
                 return BadRequest(new { mensaje = "El usuario no tiene una foto de perfil" });;
 
-            fileService.DeleteAvatar(usuario.Avatar);
+            fileService.DeleteFile(usuario.Avatar);
             usuario.Avatar = null;
 
             if (await _repo.UpdateAsync(usuario))

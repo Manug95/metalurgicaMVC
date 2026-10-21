@@ -130,10 +130,15 @@ public class Trabajo
                 }
             }
             var idsDetallesVM = vm.Detalles.Where(d => d.Id > 0).Select(d => d.Id).ToList();
-            var detallesAEliminar = Detalles.Where(d => !idsDetallesVM.Contains(d.Id) && d.Id > 0).ToList();
-            foreach (var d in detallesAEliminar)
+            // var detallesAEliminar = Detalles.Where(d => !idsDetallesVM.Contains(d.Id) && d.Id > 0).ToList();
+            // foreach (var d in detallesAEliminar)
+            // {
+            //     d.Borrado = true;
+            // }
+            foreach (var d in Detalles)
             {
-                d.Borrado = true;
+                if (!idsDetallesVM.Contains(d.Id) && d.Id > 0)
+                    d.Borrado = true;
             }
         }
 

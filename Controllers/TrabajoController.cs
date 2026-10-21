@@ -100,10 +100,23 @@ public class TrabajoController(ITrabajoRepository repo) : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> FotosForm([FromRoute] int id, [FromServices] IFotoRepository repoFotos)
+    public async Task<IActionResult> FotosForm([FromRoute] long id, [FromServices] IFotoRepository repoFotos)
     {
-        List<Foto> fotos = await repoFotos.ListAsync(new FiltrosFoto { TrabajoId = id });
-        ViewBag.MensajeError = TempData["MensajeError"] as string;
+        List<Foto> fotos = [];
+
+        try
+        {
+            fotos = await repoFotos.ListAsync(new FiltrosFoto() { TrabajoId = id });
+        }
+        catch (ClientException ex)
+        {
+            ViewBag.MensajeError = ex.Message;
+        }
+        catch (AppException)
+        {
+            ViewBag.MensajeError = "Error interno del servidor: No se pudieron traer las fotos";
+        }
+
         return View(new FotoVM()
         {
             TrabajoId = id,

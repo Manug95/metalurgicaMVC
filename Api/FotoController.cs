@@ -22,11 +22,11 @@ public class FotoController(IFotoRepository repo) : ControllerBase
         try
         {
             List<Foto> fotos = [];
-            foreach(var foto in viewModel.FotosFiles)
+            foreach(var fotoFile in viewModel.FotosFiles)
             {
-                if (foto.ContentType.Contains("image/"))
+                if (fotoFile.ContentType.Contains("image/"))
                 {
-                    fotoURL = await fileService.SaveFoto(foto, $"foto_{Guid.NewGuid()}", viewModel.TrabajoId);
+                    fotoURL = await fileService.SaveFoto(fotoFile, $"foto_{Guid.NewGuid()}", viewModel.TrabajoId);
                     fotos.Add(new Foto()
                     {
                         TrabajoId = viewModel.TrabajoId,
@@ -48,11 +48,11 @@ public class FotoController(IFotoRepository repo) : ControllerBase
         }
     }
 
-    [HttpDelete]
+    [HttpDelete("{id}")]
     public async Task<IActionResult> Delete([FromRoute] long id, [FromServices] IFileService fileService)
     {
         if (id <= 0)
-            return BadRequest();
+            return BadRequest(new { mensaje = "id de foto incorrecta" });
 
         try
         {
@@ -62,9 +62,9 @@ public class FotoController(IFotoRepository repo) : ControllerBase
                 return NotFound(new { mensaje = "La foto no existe" });
 
             if (!await _repo.DeleteAsync(id))
-                return BadRequest(new { mensaje = "No se pudo borrar la imagen" });
+                return BadRequest(new { mensaje = "No se pudo borrar la foto" });
 
-            fileService.DeleteAvatar(foto.Ruta);
+            fileService.DeleteFile(foto.Ruta);
 
             return Ok();
         }

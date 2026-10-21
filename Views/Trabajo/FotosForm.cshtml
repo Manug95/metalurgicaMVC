@@ -9,36 +9,55 @@
     };
 }
 
-<div class="container-fluid mt-4" id="app-fotos">
+<div class="container mt-4" id="app-fotos" v-cloak>
     
-    <form class="row p-3 w-75 mx-auto border rounded-4 shadow-sm mt-3 mb-3 bg-light-subtle" @@submit.prevent="subirFotos">
-        <h2 class="mb-4">@Html.DisplayNameFor(model => model.FotosFiles)</h2>
-        <div class="mb-3">
-            <label asp-for="FotosFiles" class="form-label">Selecciona las fotos</label>
-            <input type="file" id="Fotos" asp-for="FotosFiles" multiple accept="image/*" class="form-control" @@change="seleccionarImagenes"/>
+    <form class="row p-3 border rounded-4 shadow-sm mt-3 mb-3 bg-light-subtle needs-validation" @@submit.prevent="subirFotos">
+        <div class="col-12">
+            <h2 class="display-5 mb-4">@Html.DisplayNameFor(model => model.FotosFiles)</h2>
         </div>
-        <input type="hidden" asp-for="TrabajoId">
-        <button id="btn-subir-fotos" type="submit" class="btn btn-primary mt-3" :disabled="subiendo">
-            {{ subiendo ? 'Subiendo...' : 'Subir imágenes' }}
-        </button>
+        <div class="col-12">
+            <label asp-for="FotosFiles" class="form-label fw-bold">Selecciona las fotos</label>
+            <div class="input-group has-validation mb-3">
+                <input 
+                    id="Fotos" 
+                    asp-for="FotosFiles" 
+                    type="file" 
+                    multiple 
+                    accept="image/*" 
+                    class="form-control" 
+                    :class="{ 'is-invalid': errorFotosSeleccionadas }"
+                    @@change="seleccionarImagenes"
+                />
+                <button class="btn btn-outline-danger" type="button" @@click="limpiarFotos">Borrar Seleccionadas</button>
+                <div id="error_validacion" class="invalid-feedback" v-if="errorFotosSeleccionadas">{{ errorFotosSeleccionadas }}</div>
+            </div>
+            <input type="hidden" asp-for="TrabajoId">
+        </div>
+        <div class="col-12 d-flex justify-content-center my-3">
+            <button id="btn-subir-fotos" type="submit" class="btn btn-primary" :disabled="subiendo" :class="{ disabled: subiendo }">
+                {{ subiendo ? 'Subiendo...' : 'Subir fotos' }}
+            </button>
+        </div>
 
-        <div id="preview" class="row g-3">
-            <div class="col-md-3 col-sm-4 mb-3" v-for="(foto, index) in fotosSeleccionadas">
-                <div class="card shadow-sm">
-                    <img :src="foto.url" class="card-img-top img-fluid" :alt="foto.archivo.name">
-                    <div class="card-body p-2 d-flex justify-content-between align-items-center">
-                        <small class="text-muted">{{ imagen.archivo.name }}</small>
-                        <button type="button" class="btn btn-sm btn-outline-danger remove-btn" @@click="eliminarImagenSeleccionada(index)">
-                            <i class="bi bi-x-circle"></i>
-                        </button>
+        <div class="col-12">
+            <div id="preview" class="row g-3">
+                <div class="col-sm-4 col-md-3 mb-3" v-for="(foto, index) in fotosSeleccionadas">
+                    <div class="card shadow-sm">
+                        <img :src="foto.url" class="card-img-top img-fluid" :alt="foto.archivo.name">
+                        <div class="card-body p-2 d-flex justify-content-between align-items-center">
+                            <small class="text-muted">{{ foto.archivo.name }}</small>
+                            <button type="button" class="btn btn-sm btn-outline-danger remove-btn" @@click="eliminarImagenSeleccionada(index)">
+                                <i class="bi bi-x-circle"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </form>
 
-    <div class="row p-2 w-75 mx-auto border rounded-4 shadow-sm mt-3 mb-3 bg-light-subtle" v-if="fotos.length>0">
-        <h2 class="mb-4">Fotos del Trabajo</h2>
+    <div class="row p-3 border rounded-4 shadow-sm mt-3 mb-3 bg-light-subtle" v-if="fotos.length>0">
+        <h2 class="display-5 mb-4">Fotos del Trabajo</h2>
         <div class="col-sm-6 col-md-4 mb-4" v-for="(f, index) in fotos">
             <div class="card shadow-sm">
                 <div class="img-container">
@@ -52,12 +71,15 @@
             </div>
         </div>
     </div>
+    <div class="row mt-3 mb-3 bg-light-subtle" v-else>
+        <h2 class="display-5">El trabajo no tiene fotos cargadas...</h2>
+    </div>
+
     <partial name="_ModalMensaje"/>
 </div>
 
 
 @section Scripts {
-    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", _ => {
             const { createApp } = Vue;
@@ -65,7 +87,7 @@
             createApp({
                 data() {
                     return {
-                        fotos: @Html.Raw(JsonSerializer.Serialize(Model, serializationOptions)),
+                        fotos: @Html.Raw(JsonSerializer.Serialize(Model.Fotos, serializationOptions)),
                         trabajoId: @Model.TrabajoId,
                         subiendo: false,
                         eliminando: false,
@@ -85,25 +107,31 @@
                             if (!archivo.type.startsWith('image/')) {
                                 continue;
                             }
+                            if (this.fotosSeleccionadas.findIndex(f => f.archivo.name == archivo.name) >= 0)
+                                continue;
                             const url = URL.createObjectURL(archivo);
                             this.fotosSeleccionadas.push({
                                 archivo,
                                 url
                             });
                         }
-                        // Permite volver a seleccionar el mismo archivo.
                         event.target.value = '';
                     },
                     eliminarImagenSeleccionada(index) {
                         const imagen = this.fotosSeleccionadas[index];
                         URL.revokeObjectURL(imagen.url);
                         this.fotosSeleccionadas.splice(index, 1);
+                        if (this.fotosSeleccionadas.length == 0)
+                            this.errorFotosSeleccionadas = null;
+                        else
+                            this.sonFotosValidas();
                     },
                     limpiarFotos() {
                         this.fotosSeleccionadas.forEach(imagen => {
                             URL.revokeObjectURL(imagen.url);
                         });
                         this.fotosSeleccionadas = [];
+                        this.errorFotosSeleccionadas = null;
                     },
                     async subirFotos() {
                         if (!this.sonFotosValidas() || this.subiendo) {
@@ -111,8 +139,9 @@
                         }
                         const formData = new FormData();
                         this.fotosSeleccionadas.forEach(foto => {
-                            formData.append('fotos', foto.archivo);
+                            formData.append('fotosFiles', foto.archivo);
                         });
+                        formData.append("trabajoId", this.trabajoId);
                         this.subiendo = true;
                         try {
                             const respuesta = await fetch('/api/fotos', {
@@ -122,6 +151,7 @@
                             if (respuesta.ok) {
                                 const fotosSubidas = await respuesta.json();
                                 this.fotos.push(...fotosSubidas);
+                                this.limpiarFotos();
                                 this.mostrarMensaje("Fotos Guardadas");
                             } else {
                                 const { mensaje } = await respuesta.json();
@@ -130,31 +160,31 @@
                             // Si ya no necesitás las vistas previas:
                             this.limpiarFotos();
                         } catch (error) {
-                            console.error(error);
-                            this.mostrarMensaje("Ocurrió un error al subir las imágenes", false);
+                            this.mostrarMensaje("Ocurrió un error al subir las fotos", false);
                         } finally {
                             this.subiendo = false;
                         }
                     },
                     sonFotosValidas() {
+                        this.errorFotosSeleccionadas = null;
                         const extensionesVálidas = ["jpg", "jpeg", "png", "gif", "webp"];
                         if (this.fotosSeleccionadas.length === 0) {
-                            this.errorFotosSeleccionadas = "No se cargo ninguna foto";
+                            this.errorFotosSeleccionadas = "No se cargó ninguna foto";
                             return false;
                         }
-                        forEach (foto of this.fotosSeleccionadas) {
-                            if (!extensionesVálidas.includes(foto.name.split(".")[1])) {
+                        for (const foto of this.fotosSeleccionadas) {
+                            if (!extensionesVálidas.includes(foto.archivo.name.split(".")[1])) {
                                 this.errorFotosSeleccionadas = "Hay un archivo con una extensión no permitida";
                                 return false;
                             }
-                            if (foto.size > 5*1024*1024) {
+                            if (foto.archivo.size > 5*1024*1024) {
                                 this.erroresEditAvatar.avatarFile = "Las fotos no pueden pesar más de 5 MB";
                                 return false;
                             }
                         }
                         return true;
                     },
-                    eliminarFoto(index) {
+                    async eliminarFoto(index) {
                         if (this.fotos.length === 0 || this.eliminando) {
                             return;
                         }
@@ -171,7 +201,6 @@
                                 this.mostrarMensaje(mensaje ?? "No se pudo eliminar la foto", false);
                             }
                         } catch (error) {
-                            console.error(error);
                             this.mostrarMensaje("Ocurrió un error", false);
                         } finally {
                             this.eliminando = false;
@@ -180,9 +209,9 @@
                     mostrarMensaje(mensaje, ok = true) {
                         this.mensaje = mensaje;
                         this.esMensajeError = !ok;
-                        if (!modalMonseaje)
-                            modalMonseaje = new bootstrap.Modal(document.getElementById('modal-mensaje'), {});
-                        modalMonseaje.show();
+                        if (!modalMensaje)
+                            modalMensaje = new bootstrap.Modal(document.getElementById('modal-mensaje'), {});
+                        modalMensaje.show();
                     }
                 },
                 beforeUnmount() {

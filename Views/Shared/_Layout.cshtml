@@ -62,11 +62,5 @@
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
-    @* <script>
-        document.addEventListener("DOMContentLoaded", _ => {
-            const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
-            const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
-        });
-    </script> *@
 </body>
 </html>
