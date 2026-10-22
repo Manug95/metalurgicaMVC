@@ -63,7 +63,32 @@ public class MaterialRepository(DBContext dBContext) : BaseRepository(dBContext)
 
     public async Task<bool> DeleteAsync(int id)
     {
-        throw new NotImplementedException();
+        Material material = await GetByIdAsync(id) ?? throw new ClientException("El material no existe");
+        try
+        {
+            material.Eliminado = true;
+            return await _context.SaveChangesAsync() > 0;
+        }
+        catch (OperationCanceledException ex)
+        {
+            Util.LoguearExcepcion(ex);
+            throw new AppException("No se pudo completar la operación", ex);
+        }
+        catch (DbUpdateConcurrencyException ex)
+        {
+            Util.LoguearExcepcion(ex);
+            throw new AppException("No se pudo eliminar el material", ex);
+        }
+        catch (DbUpdateException ex)
+        {
+            Util.LoguearExcepcion(ex);
+            throw new AppException("Error al eliminar el material", ex);
+        }
+        catch (Exception ex)
+        {
+            Util.LoguearExcepcion(ex);
+            throw new AppException("Ocurrió un error inesperado", ex);
+        }
     }
 
     public async Task<Material?> GetByIdAsync(int id)
@@ -88,10 +113,16 @@ public class MaterialRepository(DBContext dBContext) : BaseRepository(dBContext)
     {
         try
         {
-            IQueryable<Material> materiales = _context.Materiales;
+            IQueryable<Material> materiales = _context.Materiales.Where(m => !m.Eliminado);
 
             if (!string.IsNullOrWhiteSpace(filters.Tipo))
-                materiales = materiales.Where(m => m.Tipo == filters.Tipo);
+            {
+                materiales = materiales
+                    .Where(m => m.Tipo == filters.Tipo)
+                    .OrderBy(m => m.Descripcion);
+            }
+            else
+                materiales = materiales.OrderBy(m => m.Tipo);
 
             if (filters.Limit > 0 && filters.Offset() >= 0)
                 materiales = materiales.Skip(filters.Offset()).Take(filters.Limit);

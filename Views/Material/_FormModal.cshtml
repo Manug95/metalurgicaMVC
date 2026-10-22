@@ -1,0 +1,137 @@
+@using metalurgicaMVC.ViewModels
+@model MaterialVM
+
+<div id="modal_formulario_material" class="modal fade" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-describedby="titulo-modal">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content bg-light-subtle">
+            <div class="modal-header">
+                <div id="titulo-modal" class="modal-title fs-5">Formulario</div>
+                <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close" @@click="cancelarEditar"></button>
+            </div>
+            <div class="modal-body bg-light">
+                <div class="container">
+                    <form 
+                        id="form-material" 
+                        @@submit.prevent="onSubmitMaterial" 
+                        class="row g-3" 
+                        asp-antiforgery="true"
+                        novalidate
+                    >
+                        <div class="col-12 col-md-6">
+                            <label asp-for="Tipo" class="form-label fw-bold">
+                                @Html.DisplayNameFor(model => model.Tipo)
+                                <span class="text-danger">*</span>
+                            </label>
+                            <select 
+                                asp-for="Tipo" 
+                                v-model="material.tipo" 
+                                class="form-select" 
+                                :class="{ 'is-invalid': erroresMaterial.tipo }"
+                                id="tipoMaterial" 
+                                aria-describedby="error_tipoMaterial"
+                            >
+                                @* <option :value="material.tipo" selected disabled>Seleccionar...</option>
+                                <option :value="o.value" v-for="o in opcionesTipoMaterial">{{ o.text }}</option> *@
+                                <option value="" selected disabled>Seleccionar...</option>
+                                <option value="CHAPA">CHAPA</option>
+                                <option value="CAÑO">CAÑO</option>
+                                <option value="PINTURA">PINTURA</option>
+                            </select>
+                            <div id="error_tipoMaterial" class="invalid-feedback" v-if="erroresMaterial.tipo">{{ erroresMaterial.tipo }}</div>
+                        </div>
+
+                        <div class="col-12 col-md-6">
+                            <label asp-for="Precio" class="form-label fw-bold">
+                                @Html.DisplayNameFor(model => model.Precio)
+                                <span class="text-danger">*</span>
+                            </label>
+                            <input 
+                                type="number" 
+                                asp-for="Precio" 
+                                v-model="material.precio" 
+                                class="form-control" 
+                                :class="{ 'is-invalid': erroresMaterial.precio }"
+                                id="precio" 
+                                aria-describedby="error_precio"
+                            >
+                            <div id="error_precio" class="invalid-feedback" v-if="erroresMaterial.precio">{{ erroresMaterial.precio }}</div>
+                        </div>
+
+                        <div class="col-12">
+                            <label asp-for="Descripcion" class="form-label fw-bold">
+                                @Html.DisplayNameFor(model => model.Descripcion)
+                                <span class="text-danger">*</span>
+                            </label>
+                            <textarea 
+                                asp-for="Descripcion" 
+                                v-model="material.descripcion" 
+                                class="form-control" 
+                                :class="{ 'is-invalid': erroresMaterial.descripcion }"
+                                id="descripcion" 
+                                aria-describedby="error_descripcion"
+                                maxlength="255"
+                                rows="3"
+                            ></textarea>
+                            <div id="error_descripcion" class="invalid-feedback" v-if="erroresMaterial.descripcion">{{ erroresMaterial.descripcion }}</div>
+                        </div>
+
+                        <div class="col-12 col-md-6" v-show="material.tipo=='CHAPA'">
+                            <label asp-for="PrecioXkg" class="form-label fw-bold">
+                                @Html.DisplayNameFor(model => model.PrecioXkg)
+                                <span class="text-danger">*</span>
+                            </label>
+                            <input 
+                                type="number" 
+                                step="any"
+                                min="0"
+                                asp-for="PrecioXkg" 
+                                v-model="material.precioXkg" 
+                                class="form-control" 
+                                :class="{ 'is-invalid': erroresMaterial.precioXkg }"
+                                id="precioXkg" 
+                                aria-describedby="error_precioXkg"
+                            >
+                            <div id="error_precioXkg" class="invalid-feedback" v-if="erroresMaterial.precioXkg">{{ erroresMaterial.precioXkg }}</div>
+                        </div>
+                        
+                        <div class="col-12 col-md-6" v-show="material.tipo=='CHAPA'">
+                            <label asp-for="PesoXm2" class="form-label fw-bold">
+                                @Html.DisplayNameFor(model => model.PesoXm2)
+                                <span class="text-danger">*</span>
+                            </label>
+                            <input 
+                                type="number" 
+                                step="any"
+                                min="0"
+                                asp-for="PesoXm2" 
+                                v-model="material.pesoXm2" 
+                                class="form-control" 
+                                :class="{ 'is-invalid': erroresMaterial.pesoXm2 }"
+                                id="pesoXm2" 
+                                aria-describedby="error_pesoXm2"
+                            >
+                            <div id="error_pesoXm2" class="invalid-feedback" v-if="erroresMaterial.pesoXm2">{{ erroresMaterial.pesoXm2 }}</div>
+                        </div>
+
+                        <input id="materialId" type="hidden" asp-for="Id" v-model="material.id" aria-hidden="true"/>
+
+                        <div class="col-12 d-flex justify-content-around align-items-end my-4">
+                            <button type="submit" class="btn btn-primary" :class="{ disabled: estaGuardando }" :disabled="estaGuardando">
+                                <i class="bi bi-floppy"></i> Guardar
+                            </button>
+                            <button type="button" class="btn btn-secondary" @@click="limpiarFormulario">
+                                <i class="bi bi-eraser"></i> Limpiar
+                            </button>
+                            <button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal" @@click="cancelarEditar">
+                                <i class="bi bi-x-circle"></i> Cancelar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="d-flex flex-column justify-content-center align-items-start border-top p-3">
+                <span>Los campos con <span class="text-danger fw-bold">*</span> son obligatorios.</span>
+            </div>
+        </div>
+    </div>
+</div>

@@ -6,30 +6,30 @@ namespace metalurgicaMVC.ViewModels;
 public class MaterialVM
 {
     [Range(0, long.MaxValue, ErrorMessage = "La ID es incorrecta")]
+    [Display(Name = "Código")]
     public int Id { get; set; }
 
     [Required(ErrorMessage = "El tipo de material es Requerido")]
-    [AllowedValues(["SIN_TIPO", "CHAPA", "CAÑO", "PINTURA"])]
+    [AllowedValues(["CHAPA", "CAÑO", "PINTURA"], ErrorMessage = "Tipo de material incorrecto")]
+    [Display(Name = "Tipo de Material")]
     public string? Tipo { get; set; }
 
+    [Required(ErrorMessage = "La descripción es Requerida")]
     [MaxLength(255, ErrorMessage = "Supera el máximo de 255 caracteres")]
+    [Display(Name = "Descripción")]
     public string? Descripcion { get; set; }
 
     [Required(ErrorMessage = "El precio es Requerido")]
-    [Range(0.1, double.MaxValue, ErrorMessage = "El precio debe ser una cantidad positiva")]
+    [Range(0.01, 99999999.99, ErrorMessage = "El precio debe ser una cantidad positiva")]
     public decimal Precio { get; set; }
 
-    [Range(0.1, double.MaxValue, ErrorMessage = "El precio por kg debe ser una cantidad positiva")]
+    [Range(0.01, 999999.99, ErrorMessage = "El precio por kg debe ser una cantidad positiva")]
+    [Display(Name = "Precio por kg")]
     public decimal? PrecioXkg { get; set; }
 
-    [Range(0.001, double.MaxValue, ErrorMessage = "El peso por kg debe ser una cantidad positiva")]
+    [Range(0.001, 9999.999, ErrorMessage = "El peso por kg debe ser una cantidad positiva")]
+    [Display(Name = "Peso por m^2")]
     public decimal? PesoXm2 { get; set; }
-
-    [MaxLength(50, ErrorMessage = "Supera el máximo de 50 caracteres")]
-    public string? Color { get; set; }
-
-    [Range(0.1, double.MaxValue, ErrorMessage = "Los litros deben ser una cantidad positiva")]
-    public decimal? Litros { get; set; }
 
     public static MaterialVM From(Material m)
     {
@@ -40,9 +40,7 @@ public class MaterialVM
             Descripcion = m.Descripcion,
             Precio = m.Precio,
             PrecioXkg = m.PrecioXkg,
-            PesoXm2 = m.PesoXm2,
-            Color = m.Color,
-            Litros = m.Litros
+            PesoXm2 = m.PesoXm2
         };
     }
 

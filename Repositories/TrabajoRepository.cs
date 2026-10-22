@@ -132,6 +132,8 @@ public class TrabajoRepository(DBContext dbContext) : BaseRepository(dbContext),
 
             trabajos = trabajos.Where(t => !t.Anulado);
 
+            trabajos = trabajos.OrderByDescending(m => m.FechaSolicitado);
+
             if (filters.Limit > 0 && filters.Offset() >= 0)
                 trabajos = trabajos.Skip(filters.Offset()).Take(filters.Limit);
 

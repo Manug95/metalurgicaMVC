@@ -1,0 +1,381 @@
+@using System.Text.Json
+@using metalurgicaMVC.ViewModels
+@model IEnumerable<MaterialVM>
+@{
+    ViewData["Title"] = "Materiales";
+    int cantidadPaginas = ViewBag.cantPag;
+    int pagina = ViewBag.pagina;
+    int paginaAnterior = pagina - 1;
+    int paginaSiguiente = pagina + 1;
+    int limit = ViewBag.cantidadPaginado;
+    string tipoMaterial = ViewBag.tipoMaterial;
+    string mensajeEliminar = "¿Eliminar el material?";
+    var serializationOptions = new JsonSerializerOptions {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+    };
+    bool hayMensajeError = !string.IsNullOrWhiteSpace(ViewBag.MensajeError);
+}
+
+<div id="app-materiales" class="container-fluid bg-light-subtle" v-cloak>
+    <h1 class="text-center display-4">Materiales</h1>
+
+    <div class="row">
+        <div class="col d-flex justify-content-end align-items-center mt-3 me-0 me-md-5">
+            <button class="btn btn-outline-dark" @@click="recargar">
+                <i class="bi bi-arrow-clockwise"></i>
+                Recargar Todos
+            </button>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col my-2">
+            <div class="table-responsive my-2 fixed-height-table-container">
+                <table class="table table-hover text-nowrap">
+                    <thead class="table-light border border-start-0 border-top-0 border-end-0 border-2 border-black">
+                        <tr>
+                            <th>
+                                @Html.DisplayNameFor(model => model.Id).ToUpper()
+                            </th>
+                            <th>
+                                @Html.DisplayNameFor(model => model.Tipo).ToUpper()
+                            </th>
+                            <th colspan="2">
+                                @Html.DisplayNameFor(model => model.Descripcion).ToUpper()
+                            </th>
+                            <th>
+                                @Html.DisplayNameFor(model => model.Precio).ToUpper()
+                            </th>
+                            <th>ACCIONES</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cuerpo">
+                        <tr :id="m.id" v-for="m in materiales" :key="m.id">
+                            <td class="align-middle py-0 ps-2"> {{ m.id }} </td>
+                            <td class="align-middle py-0 ps-2"> {{ m.tipo }} </td>
+                            <td class="align-middle py-0 ps-2" colspan="2"> {{ m.descripcion }} </td>
+                            <td class="align-middle py-0 ps-2"> {{ m.precio }} </td>
+                            <td>
+                                <div class="d-flex justify-content-evenly align-items-center">
+                                    <i 
+                                        :data-material-id="m.id" 
+                                        class="bi bi-pencil-square fs-3 text-primary icon-hover" 
+                                        @@click="abrirFormModal(m)" 
+                                        data-bs-toggle="tooltip" data-bs-title="Editar"
+                                    ></i>
+                                    <i 
+                                        :data-material-id="m.id" 
+                                        class="bi bi-trash fs-3 text-danger icon-hover" 
+                                        @@click="abrirModalEliminar(m.id)" 
+                                        data-bs-toggle="tooltip" data-bs-title="Eliminar"
+                                    ></i>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row border-top position-relative">
+        <nav id="nav" class="col pt-3">
+            <ul id="paginador" class="pagination justify-content-center">
+                <li id="flecha-pag-izq" class="page-item" :class="{ disabled: esPrimeraPagina }" data-bs-toggle="tooltip" data-bs-title="Anterior">
+                    <span @@click="pedirMateriales(paginaAnterior)" class="page-link"><span>&laquo;</span></span>
+                </li>
+                <li class="page-item" v-for="p in cantidadPaginas">
+                    <a  @@click="pedirMateriales(p)" class="page-link" :class="{ active: p == paginaActual, disabled: cantidadPaginas == 1 }">{{ p }}</a>
+                </li>
+                <li id="flecha-pag-der" class="page-item" :class="{ disabled: esUltimaPagina }" data-bs-toggle="tooltip" data-bs-title="Siguiente">
+                    <span @@click="pedirMateriales(paginaSiguiente)" class="page-link"><span>&raquo;</span></span>
+                </li>
+            </ul>
+        </nav>
+        <div id="btn_add" class="position-absolute top-0 end-0 me-1 mt-3 mt-sm-2 mt-lg-1">
+            <i 
+                class="bi bi-plus-square fs-1 text-primary icon-hover d-inline-block" 
+                data-bs-toggle="tooltip" data-bs-title="Registrar Nuevo" 
+                @@click="abrirFormModal"
+            ></i>
+        </div>
+    </div>
+
+    <partial name="_ModalEliminar" model="mensajeEliminar"/>
+    <partial name="_FormModal" model="new MaterialVM()"/>
+    <partial name="_ModalMensaje"/>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", _ => {
+            const { createApp } = Vue;
+            let modalEliminar;
+            let formModal;
+            let modalMonseaje;
+            const materialDefault = { id: 0, tipo: "", descripcion: "", precio: undefined, precioXkg: undefined, pesoXm2: undefined }
+            const erroresMaterialDefault = { tipo: null, descripcion: null, precio: null, precioXkg: null, pesoXm2: null };
+            createApp({
+                data() {
+                    return {
+                        materiales: @Html.Raw(JsonSerializer.Serialize(Model, serializationOptions)),
+                        urlBase: "/api/materiales",
+                        limit: @limit,
+                        tipoMaterial: "@tipoMaterial",
+                        errorTipoMaterial: null,
+                        paginaActual: @pagina,
+                        cantidadPaginas: @cantidadPaginas,
+                        paginaSiguiente: @paginaSiguiente,
+                        paginaAnterior: @paginaAnterior,
+                        esPrimeraPagina: @(paginaAnterior == 0 ? "true" : "false"),
+                        esUltimaPagina: @(paginaSiguiente > cantidadPaginas ? "true" : "false"),
+                        estaCargando: false,
+                        estaEliminando: false,
+                        estaGuardando: false,
+                        estaEditando: false,
+                        materialIdEliminar: 0,
+                        material: { ...materialDefault },
+                        erroresMaterial: { ...erroresMaterialDefault },
+                        mensaje: "",
+                        esMensajeError: false,
+                        tooltipTriggerList: [],
+                        tooltipList: []
+                    };
+                },
+                methods: {
+                    async pedirMateriales(page) {
+                        if (page <= 0 || page > this.cantidadPaginas)
+                            return;
+                        let url = `${this.urlBase}?Limit=${this.limit}&Pagina=${page}`;
+                        @* if (this.tipoMaterial.length > 0)
+                            url += `&Tipo=${this.tipoMaterial}`; *@
+                        this.estaCargando = true;
+                        const data = await this.hacerPeticion(url);
+                        this.estaCargando = false;
+                        if (data) {
+                            this.actualizarDOM(data, page);
+                        }
+                    },
+                    async hacerPeticion(url) {
+                        try{
+                            const response = await fetch(url);
+                            if (response.ok) {
+                                return await response.json();
+                            } else {
+                                const { mensaje, errors } = await response.json();
+                                if (mensaje) {
+                                    this.mostrarMensaje(mensaje, false);
+                                }
+                                if (errors) {
+                                    mensaje = "";
+                                    Object.keys(errors).forEach((e, i) => {
+                                        mensaje += `${e}: ${errors[e].join(", ")}`;
+                                        if (i < errors.length-1)
+                                            mensaje += " - ";
+                                    });
+                                }
+                                return null;
+                            }
+                        }
+                        catch {
+                            this.mostrarMensaje("Error al traer los materiales", false);
+                        }
+                    },
+                    actualizarDOM(data, page) {
+                        this.materiales = data.materiales;
+                        this.cantidadPaginas = data.cantidadPaginas;
+                        this.paginaActual = page;
+                        this.paginaAnterior = page - 1;
+                        this.paginaSiguiente = page + 1;
+                        this.esPrimeraPagina = this.paginaAnterior == 0;
+                        this.esUltimaPagina = this.paginaSiguiente > this.cantidadPaginas;
+                        setTimeout(() => { this.inicializarTooltips(); }, 2000);
+                    },
+                    recargar() {
+                        this.pedirMateriales(1);
+                    },
+                    abrirModalEliminar(id) {
+                        this.materialIdEliminar = id;
+                        if (modalEliminar  == undefined)
+                            modalEliminar = new bootstrap.Modal(document.getElementById('modal-eliminar'), {});
+                        modalEliminar.show();
+                    },
+                    async eliminar() {
+                        if (this.materialIdEliminar > 0) {
+                            this.estaEliminando = true;
+                            try {
+                                const response = await fetch(`${this.urlBase}/${this.materialIdEliminar}`, { method: "DELETE" });
+                                if (response.ok) {
+                                    let url = `${this.urlBase}?Limit=${this.limit}&Pagina=${this.paginaActual}`;
+                                    const data = await this.hacerPeticion(url);
+                                    if (data) {
+                                        this.actualizarDOM(data, this.paginaActual);
+                                    }
+                                    this.mostrarMensaje("Material eliminado");
+                                } else {
+                                    const { mensaje } = await response.json();
+                                    this.mostrarMensaje(mensaje, false);
+                                }
+                            }
+                            catch {
+                                this.mostrarMensaje("Error al eliminar el material", false);
+                            }
+                            this.estaEliminando = false;
+
+                            if (modalEliminar)
+                                modalEliminar.hide();
+                        }
+                    },
+                    abrirFormModal(material) {
+                        if (!material || material instanceof Event) {
+                            this.material = { ...materialDefault };
+                        }
+                        else {
+                            this.material = { ...material };
+                            this.estaEditando = true;
+                        }
+                        this.erroresMaterial = { ...erroresMaterialDefault };
+                        if (!formModal)
+                            formModal = new bootstrap.Modal(document.getElementById('modal_formulario_material'), {});
+                        formModal.show();
+                    },
+                    cancelarEditar() {
+                        this.estaEditando = false;
+                        document.getElementById("app-materiales").focus();
+                    },
+                    async onSubmitMaterial() {
+                        if (!this.esFormularioValido())
+                            return;
+                        if (this.material.tipo != "CHAPA") {
+                            this.material.precioXkg = null;
+                            this.material.pesoXm2 = null;
+                        }
+                        let url = this.urlBase;
+                        const opcionesFetch = { 
+                            method: "POST",
+                            headers: { 
+                                'Content-Type': 'application/json',
+                                'RequestVerificationToken': document.getElementsByName("__RequestVerificationToken")?.item(0)?.value
+                            },
+                            body: JSON.stringify(this.material)
+                        };
+                        if (this.estaEditando) {
+                            url += `/${this.material.id}`;
+                            opcionesFetch.method = "PUT";
+                        }
+                        try {
+                            this.estaGuardando = true;
+                            const response = await fetch(url, opcionesFetch);
+                            if (response.ok) {
+                                const data = await response.json();
+                                if (this.estaEditando) {
+                                    const indiceMaterialActualizado = this.materiales.findIndex(c => c.id == data?.material.id);
+                                    if (indiceMaterialActualizado >= 0) {
+                                        this.materiales[indiceMaterialActualizado] = data?.material;
+                                    }
+                                } else {
+                                    url = `${this.urlBase}?Limit=${this.limit}&Pagina=${this.paginaActual}`;
+                                    const data2 = await this.hacerPeticion(url);
+                                    if (data2) {
+                                        this.actualizarDOM(data2, this.paginaActual);
+                                    }
+                                }
+                                if (formModal)
+                                    formModal.hide();
+                                this.mostrarMensaje(`Material ${this.estaEditando ? "Actualizado" : "Guardado" }`);
+                            } else {
+                                const { mensaje, errors } = await response.json();
+                                if (errors) {
+                                    Object.keys(errors).forEach(e => {
+                                        this.erroresMaterial[e.toLowerCase()] = errors[e].join(", ");
+                                    });
+                                } else {
+                                    this.mostrarMensaje(mensaje ?? "La petición no es correcta", false);
+                                }
+                            }
+                        } catch {
+                            this.mostrarMensaje(`Se produjo un error al ${this.estaEditando ? "Actualizar" : "Guardar" }`, false);
+                        }
+                        finally {
+                            this.estaEditando = false;
+                            this.estaGuardando = false;
+                        }
+                    },
+                    esFormularioValido() {
+                        const mapaValidador = new Map([
+                            ["tipo", this.validarTipo],
+                            ["descripcion", this.validarDescripcion],
+                            ["precio", this.validarPrecio],
+                            ["precioXkg", this.validarCamposDeChapas],
+                            ["pesoXm2", this.validarCamposDeChapas]
+                        ]);
+                        const clavesAValidar = [...mapaValidador.keys()];
+                        Object.keys(this.material)
+                            .forEach(key => {
+                                if (!clavesAValidar.includes(key)) return;
+                                this.erroresMaterial[key] = mapaValidador.get(key)(this.material[key]);
+                            }
+                        );
+                        return !Object.keys(this.erroresMaterial).some(v => this.erroresMaterial[v]);
+                    },
+                    validarTipo(valor) {
+                        if (!valor)
+                            return "El tipo es Requerido";
+                        return;
+                    },
+                    validarDescripcion(valor) {
+                        if (!valor)
+                            return "La descripción es Requerida";
+                        if (valor.length > 255)
+                            return "Supera el límite de 255 caracteres";
+                        return;
+                    },
+                    validarPrecio(valor) {
+                        if (valor === undefined)
+                            return "El precio es Requerido";
+                        const numero = Number(valor);
+                        if (isNaN(numero))
+                            return "Valor incorrecto";
+                        if (numero <= 0)
+                            return "Debe ser mayor a 0";
+                        return;
+                    },
+                    validarCamposDeChapas(valor) {
+                        if (!this.material.tipo || this.material.tipo != "CHAPA")
+                            return;
+                        if (valor === undefined)
+                            return "Es Requerido";
+                        const numero = Number(valor);
+                        if (isNaN(valor))
+                            return "Valor incorrecto";
+                        if (valor <= 0)
+                            return "Debe ser mayor a 0";
+                        return;
+                    },
+                    limpiarFormulario() {
+                        this.material = { ...materialDefault };
+                        this.erroresMaterial = { ...erroresMaterialDefault };
+                    },
+                    mostrarMensaje(mensaje, ok = true) {
+                        this.mensaje = mensaje;
+                        this.esMensajeError = !ok;
+                        if (!modalMonseaje)
+                            modalMonseaje = new bootstrap.Modal(document.getElementById('modal-mensaje'), {});
+                        modalMonseaje.show();
+                    },
+                    inicializarTooltips() {
+                        this.tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+                        this.tooltipList = [...this.tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
+                    }
+                },
+                mounted() {
+                    if (@(hayMensajeError.ToString().ToLower())) {
+                        this.mostrarMensaje("@ViewBag.MensajeError", false);
+                    }
+                    this.inicializarTooltips();
+                    this.abrirFormModal();
+                }
+            }).mount("#app-materiales");
+        });
+    </script>
+}

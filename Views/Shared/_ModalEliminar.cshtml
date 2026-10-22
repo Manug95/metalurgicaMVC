@@ -7,8 +7,12 @@
                 <div id="titulo-modal-pregunta" class="modal-title fs-5">Alerta</div>
                 <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body justify-content-center align-items-center">
-                <p id="pregunta" class="text-center"><strong class="text-danger">@Model</strong></p>
+            <div class="modal-body d-flex justify-content-center align-items-center">
+                <span id="pregunta" class="text-center">
+                    <strong class="text-danger fs-5">
+                        @Model
+                    </strong>
+                </span>
             </div>
             <div class="modal-footer justify-content-around">
                 <button id="btn_si" class="btn btn-danger" :class="{ disabled: estaEliminando }" type="button" @@click="eliminar">&nbsp;&nbsp;SI&nbsp;&nbsp;</button>

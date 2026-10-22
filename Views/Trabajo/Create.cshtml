@@ -757,6 +757,8 @@
                     this.trabajo.fechaIniciado = this.trabajo.fechaIniciado?.split("T")[0];
                     this.trabajo.fechaFinalizado = this.trabajo.fechaFinalizado?.split("T")[0];
                     this.trabajo.fechaRetirado = this.trabajo.fechaRetirado?.split("T")[0];
+                } else {
+                    this.trabajo.fechaSolicitado = new Date().toJSON().split("T")[0];
                 }
                 this.inicializarTooltips();
             }
