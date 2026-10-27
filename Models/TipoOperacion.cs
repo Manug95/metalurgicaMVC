@@ -32,4 +32,12 @@ public class TipoOperacion
         }
         return tiposOperacion;
     }
+
+    public void UpdateFrom(TipoOperacionVM vm)
+    {
+        if (Nombre != vm.Nombre)
+            Nombre = vm.Nombre;
+        if (CostoFijo != vm.CostoFijo)
+            CostoFijo = vm.CostoFijo;
+    }
 }

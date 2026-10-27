@@ -9,19 +9,83 @@ namespace metalurgicaMVC.Repositories;
 
 public class TipoOperacionRepository(DBContext dBContext) : BaseRepository(dBContext), ITipoOperacionRepository
 {
-    public Task<int> CountAsync(FiltrosTipoOperacion filters)
+    public async Task<int> CountAsync(FiltrosTipoOperacion filters)
     {
-        throw new NotImplementedException();
+        try
+        {
+            return await  _context.TipoOperaciones
+                .Where(to => !to.Eliminado)
+                .CountAsync();
+        }
+        catch (OperationCanceledException ex)
+        {
+            Util.LoguearExcepcion(ex);
+            throw new AppException("No se pudo completar la operación", ex);
+        }
+        catch (ArgumentNullException)
+        {
+            throw new ClientException("No se pasaron valores");
+        }
+        catch (Exception ex)
+        {
+            Util.LoguearExcepcion(ex);
+            throw new AppException("Ocurrió un error inesperado", ex);
+        }
     }
 
-    public Task<int> CreateAsync(TipoOperacion entidad)
+    public async Task<int> CreateAsync(TipoOperacion tipoOperacion)
     {
-        throw new NotImplementedException();
+        try
+        {
+            tipoOperacion.Id = 0; // por si las moscas
+            _context.TipoOperaciones.Add(tipoOperacion);
+            return await _context.SaveChangesAsync();
+        }
+        catch (OperationCanceledException ex)
+        {
+            Util.LoguearExcepcion(ex);
+            throw new AppException("No se pudo completar la operación", ex);
+        }
+        catch (DbUpdateException ex)
+        {
+            Util.LoguearExcepcion(ex);
+            throw new AppException("No se pudo guardar el tipo de operación", ex);
+        }
+        catch (Exception ex)
+        {
+            Util.LoguearExcepcion(ex);
+            throw new AppException("Ocurrió un error inesperado", ex);
+        }
     }
 
-    public Task<bool> DeleteAsync(int id)
+    public async Task<bool> DeleteAsync(int id)
     {
-        throw new NotImplementedException();
+        TipoOperacion tipoOperacion = await GetByIdAsync(id) ?? throw new ClientException("El tipo de operación no existe");
+        try
+        {
+            tipoOperacion.Eliminado = true;
+            return await _context.SaveChangesAsync() > 0;
+        }
+        catch (OperationCanceledException ex)
+        {
+            Util.LoguearExcepcion(ex);
+            throw new AppException("No se pudo completar la operación", ex);
+        }
+        catch (DbUpdateConcurrencyException ex)
+        {
+            Util.LoguearExcepcion(ex);
+            throw new AppException("No se pudo eliminar el tipo de operación", ex);
+        }
+        catch (DbUpdateException ex)
+        {
+            Util.LoguearExcepcion(ex);
+            throw new AppException("Error al eliminar el tipo de operación", ex);
+        }
+        catch (Exception ex)
+        {
+            Util.LoguearExcepcion(ex);
+            throw new AppException("Ocurrió un error inesperado", ex);
+        }
     }
 
     public async Task<TipoOperacion?> GetByIdAsync(int id)
@@ -46,12 +110,14 @@ public class TipoOperacionRepository(DBContext dBContext) : BaseRepository(dBCon
     {
         try
         {
-            IQueryable<TipoOperacion> tiposOperaciones = _context.TipoOperaciones;
+            IQueryable<TipoOperacion> tiposOperaciones = _context.TipoOperaciones.OrderBy(to => to.Nombre);
 
             if (filters.Limit > 0 && filters.Offset() >= 0)
                 tiposOperaciones = tiposOperaciones.Skip(filters.Offset()).Take(filters.Limit);
 
-            return await tiposOperaciones.ToListAsync();
+            return await tiposOperaciones
+                .Where(to => !to.Eliminado)
+                .ToListAsync();
         }
         catch (OperationCanceledException ex)
         {
@@ -69,17 +135,40 @@ public class TipoOperacionRepository(DBContext dBContext) : BaseRepository(dBCon
         }
     }
 
-    public Task<bool> UpdateAsync(TipoOperacion entidad)
+    public async Task<bool> UpdateAsync(TipoOperacion tipoOperacion)
     {
-        throw new NotImplementedException();
+        try
+        {
+            return (await _context.SaveChangesAsync()) > 0;
+        }
+        catch (OperationCanceledException ex)
+        {
+            Util.LoguearExcepcion(ex);
+            throw new AppException("No se pudo completar la operación", ex);
+        }
+        catch (DbUpdateConcurrencyException ex)
+        {
+            Util.LoguearExcepcion(ex);
+            throw new AppException("No se pudo actualizar el tipo de operación", ex);
+        }
+        catch (DbUpdateException ex)
+        {
+            Util.LoguearExcepcion(ex);
+            throw new AppException("Error al actualizar el tipo de operación", ex);
+        }
+        catch (Exception ex)
+        {
+            Util.LoguearExcepcion(ex);
+            throw new AppException("Ocurrió un error inesperado", ex);
+        }
     }
 
     public async Task<bool> UpdateCostoFijoAsync(TipoOperacion tipoOperacion)
     {
         try
         {
-            _context.Attach(tipoOperacion);
-            _context.Entry(tipoOperacion).Property(nameof(TipoOperacion.CostoFijo)).IsModified = true;
+            // _context.Attach(tipoOperacion);
+            // _context.Entry(tipoOperacion).Property(nameof(TipoOperacion.CostoFijo)).IsModified = true;
             return (await _context.SaveChangesAsync()) > 0;
         }
         catch (OperationCanceledException ex)

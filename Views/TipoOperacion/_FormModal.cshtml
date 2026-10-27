@@ -1,0 +1,75 @@
+@using metalurgicaMVC.ViewModels
+@model TipoOperacionVM
+
+<div id="modal_formulario_tipoOperacion" class="modal fade" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-describedby="titulo-modal">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-light-subtle">
+            <div class="modal-header">
+                <div id="titulo-modal" class="modal-title fs-5">Formulario</div>
+                <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close" @@click="cancelarEditar"></button>
+            </div>
+            <div class="modal-body bg-light">
+                <div class="container">
+                    <form 
+                        id="form-tipoOperacion" 
+                        @@submit.prevent="onSubmitTipoOperacion" 
+                        class="row g-3" 
+                        asp-antiforgery="true"
+                        novalidate
+                    >
+                        <div class="col-12">
+                            <label asp-for="Nombre" class="form-label fw-bold">
+                                @Html.DisplayNameFor(model => model.Nombre)
+                                <span class="text-danger" v-show="!estaEditando">*</span>
+                            </label>
+                            <input 
+                                type="text"
+                                asp-for="Nombre" 
+                                v-model="tipoOperacion.nombre" 
+                                class="form-control" 
+                                :class="{ 'is-invalid': erroresTipoOperacion.nombre }"
+                                id="nombre" 
+                                aria-describedby="error_nombre"
+                                :disabled="estaEditando"
+                            >
+                            <div id="error_nombre" class="invalid-feedback" v-if="erroresTipoOperacion.nombre">{{ erroresTipoOperacion.nombre }}</div>
+                        </div>
+
+                        <div class="col-12">
+                            <label asp-for="CostoFijo" class="form-label fw-bold">
+                                @Html.DisplayNameFor(model => model.CostoFijo)
+                                <span class="text-danger">*</span>
+                            </label>
+                            <input 
+                                type="number" 
+                                asp-for="CostoFijo" 
+                                v-model="tipoOperacion.costoFijo" 
+                                class="form-control" 
+                                :class="{ 'is-invalid': erroresTipoOperacion.costoFijo }"
+                                id="costoFijo" 
+                                aria-describedby="error_costoFijo"
+                            >
+                            <div id="error_costoFijo" class="invalid-feedback" v-if="erroresTipoOperacion.costoFijo">{{ erroresTipoOperacion.costoFijo }}</div>
+                        </div>
+
+                        <div class="col-12 d-flex justify-content-around align-items-end">
+                            <button type="submit" class="btn btn-primary" :class="{ disabled: estaGuardando }" :disabled="estaGuardando">
+                                <i class="bi bi-floppy"></i> Guardar
+                            </button>
+                            <button type="button" class="btn btn-secondary" @@click="limpiarFormulario">
+                                <i class="bi bi-eraser"></i> Limpiar
+                            </button>
+                            <button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal" @@click="cancelarEditar">
+                                <i class="bi bi-x-circle"></i> Cancelar
+                            </button>
+                        </div>
+                        <input id="tipoOperacionId" type="hidden" asp-for="Id" v-model="tipoOperacion.id" aria-hidden="true"/>
+                    </form>
+                </div>
+            </div>
+            <div class="d-flex flex-column justify-content-center align-items-start border-top p-3">
+                <span>Los campos con <span class="text-danger fw-bold">*</span> son obligatorios.</span>
+            </div>
+        </div>
+    </div>
+</div>
