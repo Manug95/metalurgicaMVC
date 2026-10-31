@@ -39,7 +39,7 @@
                     v-model="busqueda" 
                     class="form-control" 
                     :class="{ 'is-invalid': errorBusqueda }" 
-                    placeholder="nombre o apellido del empleado" 
+                    placeholder="nombre o apellido del cliente" 
                     value="@busqueda"
                 >
                 <span class="input-group-text" id="limpiar" style="cursor: pointer;" @@click="limpiarBusqueda">
@@ -172,7 +172,7 @@
                             return;
                         let url = `${this.urlBase}?Limit=${this.limit}&Pagina=${page}`;
                         if (this.busqueda.length > 0)
-                            url += `&Busqueda=${this.busqueda}`;
+                            url += `&Cliente=${this.busqueda}`;
                         this.estaCargando = true;
                         const data = await this.hacerPeticion(url);
                         this.estaCargando = false;
@@ -226,7 +226,7 @@
                             return;
                         }
                         this.errorBusqueda = null;
-                        let url = `${this.urlBase}?Limit=${this.limit}&Pagina=1&Busqueda=${this.busqueda}`;
+                        let url = `${this.urlBase}?Limit=${this.limit}&Pagina=1&Cliente=${this.busqueda}`;
                         this.estaCargando = true;
                         const data = await this.hacerPeticion(url);
                         this.estaCargando = false;
@@ -259,7 +259,7 @@
                                 if (response.ok) {
                                     let url = `${this.urlBase}?Limit=${this.limit}&Pagina=${this.paginaActual}`;
                                     if (this.busqueda.length > 0)
-                                        url += `&Busqueda=${this.busqueda}`;
+                                        url += `&Cliente=${this.busqueda}`;
                                     const data = await this.hacerPeticion(url);
                                     if (data) {
                                         this.actualizarDOM(data, this.paginaActual);

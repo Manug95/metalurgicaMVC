@@ -204,6 +204,8 @@ public class UsuarioRepository(DBContext context) : BaseRepository(context), IUs
                 ;
             }
 
+            usuarios = usuarios.OrderBy(u => u.Username);
+
             if (filters.Limit > 0 && filters.Offset() >= 0)
                 usuarios = usuarios.Skip(filters.Offset()).Take(filters.Limit);
 

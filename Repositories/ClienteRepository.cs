@@ -180,7 +180,10 @@ public class ClienteRepository : BaseRepository, IClienteRepository
                     .Where(c => EF.Functions.Like(c.Nombre, $"{filtros.Busqueda}%") || EF.Functions.Like(c.Apellido, $"{filtros.Busqueda}%"));
             }
 
-            clientes = clientes.Where(c => c.Activo);
+            clientes = clientes
+                .Where(c => c.Activo)
+                .OrderBy(c => c.Apellido)
+                .ThenBy(c => c.Nombre);
 
             if (filtros.Limit > 0 && filtros.Offset() >= 0)
                 clientes = clientes.Skip(filtros.Offset()).Take(filtros.Limit);

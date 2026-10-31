@@ -132,6 +132,13 @@ public class TrabajoRepository(DBContext dbContext) : BaseRepository(dbContext),
 
             trabajos = trabajos.Where(t => !t.Anulado);
 
+            if (!string.IsNullOrWhiteSpace(filters.Cliente))
+            {
+                trabajos = trabajos
+                    .Include(t => t.Cliente)
+                    .Where(t => EF.Functions.Like(t.Cliente!.Nombre, $"{filters.Cliente}%") || EF.Functions.Like(t.Cliente!.Apellido, $"{filters.Cliente}%"));
+            }
+
             trabajos = trabajos.OrderByDescending(m => m.FechaSolicitado);
 
             if (filters.Limit > 0 && filters.Offset() >= 0)

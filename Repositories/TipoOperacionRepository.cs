@@ -110,14 +110,14 @@ public class TipoOperacionRepository(DBContext dBContext) : BaseRepository(dBCon
     {
         try
         {
-            IQueryable<TipoOperacion> tiposOperaciones = _context.TipoOperaciones.OrderBy(to => to.Nombre);
+            IQueryable<TipoOperacion> tiposOperaciones = _context.TipoOperaciones
+                .Where(to => !to.Eliminado)
+                .OrderBy(to => to.Nombre);
 
             if (filters.Limit > 0 && filters.Offset() >= 0)
                 tiposOperaciones = tiposOperaciones.Skip(filters.Offset()).Take(filters.Limit);
 
-            return await tiposOperaciones
-                .Where(to => !to.Eliminado)
-                .ToListAsync();
+            return await tiposOperaciones.ToListAsync();
         }
         catch (OperationCanceledException ex)
         {

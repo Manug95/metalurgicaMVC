@@ -35,16 +35,18 @@ public  class TipoOperacionController(ITipoOperacionRepository tipoOperacionRepo
             ViewBag.pagina = filters.Pagina;
             ViewBag.linkActivo = "tipoOperacion";
             ViewBag.MensajeError = TempData["MensajeError"] as string;
+
+            return View(TipoOperacionVM.FromList(tiposOperacion));
         }
         catch (ClientException ex)
         {
-            ViewBag.MensajeError = ex.Message;
+            Response.StatusCode = StatusCodes.Status400BadRequest;
+            return View("BadRequest", ex.Message);
         }
-        catch (AppException)
+        catch (AppException ex)
         {
-            ViewBag.MensajeError = "Error interno del servidor: No se pudieron traer los tipos de operaciones";
+            Response.StatusCode = StatusCodes.Status500InternalServerError;
+            return View("InternalServerError", $"{ex.Message}\n{ex.InnerException?.Message}");
         }
-
-        return View(TipoOperacionVM.FromList(tiposOperacion));
     }
 }

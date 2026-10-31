@@ -37,50 +37,53 @@ public class TrabajoController(ITrabajoRepository repo) : Controller
             ViewBag.busqueda = "";
             ViewBag.linkActivo = "trabajos";
             ViewBag.MensajeError = TempData["MensajeError"] as string;
+
+            return View(TrabajoVM.FromList(trabajos));
         }
         catch (ClientException ex)
         {
-            ViewBag.MensajeError = ex.Message;
+            Response.StatusCode = StatusCodes.Status400BadRequest;
+            return View("BadRequest", ex.Message);
         }
-        catch (AppException)
+        catch (AppException ex)
         {
-            ViewBag.MensajeError = "Error interno del servidor: No se pudieron traer los trabajos";
+            Response.StatusCode = StatusCodes.Status500InternalServerError;
+            return View("InternalServerError", $"{ex.Message}\n{ex.InnerException?.Message}");
         }
-
-        return View(TrabajoVM.FromList(trabajos));
     }
     
     [HttpGet]
     public async Task<IActionResult> Create([FromServices] IMaterialRepository materialRepository, [FromServices] ITipoOperacionRepository tipoOperacionRepository)
     {
-        FiltrosMaterial filtersMaterial = new();
-        List<Material> materiales = [];
-        List<TipoOperacion> tiposOperacion = [];
-        int cantidadMateriales;
-        decimal cantidadPaginasMateriales = 0m;
         try
         {
-            cantidadMateriales = await materialRepository.CountAsync(filtersMaterial);
+            FiltrosMaterial filtersMaterial = new();
+            List<Material> materiales = [];
+            List<TipoOperacion> tiposOperacion = [];
+            
+            int cantidadMateriales = await materialRepository.CountAsync(filtersMaterial);
             if (cantidadMateriales > 0)
                 materiales = await materialRepository.ListAsync(filtersMaterial);
-            cantidadPaginasMateriales = Math.Ceiling((decimal)cantidadMateriales / filtersMaterial.Limit);
+            decimal cantidadPaginasMateriales = Math.Ceiling((decimal)cantidadMateriales / filtersMaterial.Limit);
             tiposOperacion = await tipoOperacionRepository.ListAsync(new FiltrosTipoOperacion(){ Limit = 0 });
+
+            return View(
+                new FormTrabajoVM(new TrabajoVM(){ Estado = "" }, materiales, tiposOperacion) 
+                { 
+                    CantidadPaginasMateriales = (int)(cantidadPaginasMateriales <= 0 ? 1 : cantidadPaginasMateriales) 
+                }
+            );
         }
         catch (ClientException ex)
         {
-            ViewBag.MensajeError = ex.Message;
+            Response.StatusCode = StatusCodes.Status400BadRequest;
+            return View("BadRequest", ex.Message);
         }
-        catch (AppException)
+        catch (AppException ex)
         {
-            ViewBag.MensajeError = "Error interno del servidor: No se pudieron traer los trabajos";
+            Response.StatusCode = StatusCodes.Status500InternalServerError;
+            return View("InternalServerError", $"{ex.Message}\n{ex.InnerException?.Message}");
         }
-
-        return View(
-            new FormTrabajoVM(new TrabajoVM(){ Estado = "" }, materiales, tiposOperacion) 
-            { 
-                CantidadPaginasMateriales = (int)(cantidadPaginasMateriales <= 0 ? 1 : cantidadPaginasMateriales) 
-            }
-        );
     }
     
     [HttpGet]
@@ -90,44 +93,44 @@ public class TrabajoController(ITrabajoRepository repo) : Controller
         {
             Response.StatusCode = StatusCodes.Status400BadRequest;
             return View("BadRequest", "La ID del trabajo es incorrecta");
-        }
-        
-        var filtrosMaterial = new FiltrosMaterial();
-        Trabajo? trabajo = new();
-        List<Material> materiales = [];
-        List<TipoOperacion> tiposOperacion = [];
-        int cantidadMateriales;
-        decimal cantidadPaginasMateriales = 0m;
+        }    
 
         try
         {
-            trabajo = await _repo.GetByIdAsync(id);
+            var filtrosMaterial = new FiltrosMaterial();
+            List<Material> materiales = [];
+            List<TipoOperacion> tiposOperacion = [];
+
+            Trabajo? trabajo = await _repo.GetByIdAsync(id);
             if (trabajo == null)
             {
                 Response.StatusCode = StatusCodes.Status404NotFound;
                 return View("NotFound");
             }
-            cantidadMateriales = await materialRepository.CountAsync(filtrosMaterial);
+
+            int cantidadMateriales = await materialRepository.CountAsync(filtrosMaterial);
             if (cantidadMateriales > 0)
                 materiales = await materialRepository.ListAsync(filtrosMaterial);
-            cantidadPaginasMateriales = Math.Ceiling((decimal)cantidadMateriales / filtrosMaterial.Limit);
+            decimal cantidadPaginasMateriales = Math.Ceiling((decimal)cantidadMateriales / filtrosMaterial.Limit);
             tiposOperacion = await tipoOperacionRepository.ListAsync(new FiltrosTipoOperacion(){ Limit = 0 });
+
+            return View("Create", 
+                new FormTrabajoVM(TrabajoVM.From(trabajo), materiales, tiposOperacion) 
+                { 
+                    CantidadPaginasMateriales = (int)(cantidadPaginasMateriales <= 0 ? 1 : cantidadPaginasMateriales) 
+                }
+            );
         }
         catch (ClientException ex)
         {
-            ViewBag.MensajeError = ex.Message;
+            Response.StatusCode = StatusCodes.Status400BadRequest;
+            return View("BadRequest", ex.Message);
         }
-        catch (AppException)
+        catch (AppException ex)
         {
-            ViewBag.MensajeError = "Error interno del servidor: No se pudieron traer los trabajos";
+            Response.StatusCode = StatusCodes.Status500InternalServerError;
+            return View("InternalServerError", $"{ex.Message}\n{ex.InnerException?.Message}");
         }
-
-        return View("Create", 
-            new FormTrabajoVM(TrabajoVM.From(trabajo ?? new Trabajo()), materiales, tiposOperacion) 
-            { 
-                CantidadPaginasMateriales = (int)(cantidadPaginasMateriales <= 0 ? 1 : cantidadPaginasMateriales) 
-            }
-        );
     }
 
     [HttpGet]
@@ -138,7 +141,7 @@ public class TrabajoController(ITrabajoRepository repo) : Controller
             Response.StatusCode = StatusCodes.Status400BadRequest;
             return View("BadRequest", "La ID del trabajo es incorrecta");
         }
-        List<Foto> fotos = [];
+
         try
         {
             Trabajo? trabajo = await _repo.GetByIdAsync(id);
@@ -147,21 +150,23 @@ public class TrabajoController(ITrabajoRepository repo) : Controller
                 Response.StatusCode = StatusCodes.Status404NotFound;
                 return View("NotFound");
             }
-            fotos = await repoFotos.ListAsync(new FiltrosFoto() { TrabajoId = id });
+            List<Foto> fotos = await repoFotos.ListAsync(new FiltrosFoto() { TrabajoId = id });
+
+            return View(new FotoVM()
+            {
+                TrabajoId = id,
+                Fotos = fotos ?? []
+            });
         }
         catch (ClientException ex)
         {
-            ViewBag.MensajeError = ex.Message;
+            Response.StatusCode = StatusCodes.Status400BadRequest;
+            return View("BadRequest", ex.Message);
         }
-        catch (AppException)
+        catch (AppException ex)
         {
-            ViewBag.MensajeError = "Error interno del servidor: No se pudieron traer las fotos";
+            Response.StatusCode = StatusCodes.Status500InternalServerError;
+            return View("InternalServerError", $"{ex.Message}\n{ex.InnerException?.Message}");
         }
-
-        return View(new FotoVM()
-        {
-            TrabajoId = id,
-            Fotos = fotos
-        });
     }
 }
