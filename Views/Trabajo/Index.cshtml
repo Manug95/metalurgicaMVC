@@ -14,6 +14,7 @@
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase
     };
     bool hayMensajeError = !string.IsNullOrWhiteSpace(ViewBag.MensajeError);
+    bool esAdmin = User.IsInRole("ADMIN");
 }
 
 <div id="app-trabajos" class="container-fluid bg-light-subtle position-relative" v-cloak>
@@ -92,12 +93,15 @@
                                     <a class="icon-enlace" :href="`/Trabajo/FotosForm/${t.id}`">
                                         <i class="bi bi-images fs-3 text-warning" data-bs-toggle="tooltip" data-bs-title="Administrar Fotos"></i>
                                     </a>
-                                    <i 
-                                        :data-empleado-id="t.id" 
-                                        class="bi bi-trash fs-3 text-danger icon-hover" 
-                                        @@click="abrirModalEliminar(t.id)" 
-                                        data-bs-toggle="tooltip" data-bs-title="Eliminar"
-                                    ></i>
+                                    @if(esAdmin)
+                                    {
+                                        <i 
+                                            :data-empleado-id="t.id" 
+                                            class="bi bi-trash fs-3 text-danger icon-hover" 
+                                            @@click="abrirModalEliminar(t.id)" 
+                                            data-bs-toggle="tooltip" data-bs-title="Eliminar"
+                                        ></i>
+                                    }
                                 </div>
                             </td>
                         </tr>
@@ -128,22 +132,21 @@
         </div>
     </div>
 
-    <partial name="_ModalEliminar" model="mensajeEliminar"/>
+    @if(esAdmin) {<partial name="_ModalEliminar" model="mensajeEliminar"/>}
     <partial name="_ModalMensaje"/>
 </div>
 
 @section Scripts {
-    @* <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script> *@
     <script>
         document.addEventListener("DOMContentLoaded", _ => {
             const { createApp } = Vue;
             let modalEliminar;
-            let modalMonseaje;
+            let modalMensaje;
             createApp({
                 data() {
                     return {
                         trabajos: @Html.Raw(JsonSerializer.Serialize(Model, serializationOptions)),
-                        urlBase: "api/trabajos",
+                        urlBase: "/api/trabajos",
                         limit: @limit,
                         paginaActual: @pagina,
                         busqueda: "@busqueda",
@@ -179,7 +182,7 @@
                     },
                     async hacerPeticion(url) {
                         try{
-                            const response = await fetch(url);
+                            const response = await fetch(url, { headers: { Authorization: `Bearer ${sessionStorage.getItem("jwt")}` } });
                             if (response.ok) {
                                 return await response.json();
                             } else {
@@ -199,7 +202,7 @@
                             }
                         }
                         catch {
-                            this.mostrarMensaje("Error al traer los empleados", false);
+                            this.mostrarMensaje("Error al traer los trabajos realizados", false);
                         }
                     },
                     actualizarDOM(data, page) {
@@ -249,7 +252,10 @@
                         if (this.trabajoIdEliminar > 0) {
                             this.estaEliminando = true;
                             try {
-                                const response = await fetch(`${this.urlBase}/${this.trabajoIdEliminar}`, { method: "DELETE" });
+                                const response = await fetch(`${this.urlBase}/${this.trabajoIdEliminar}`, { 
+                                    method: "DELETE",
+                                    headers: { Authorization: `Bearer ${sessionStorage.getItem("jwt")}` }
+                                });
                                 if (response.ok) {
                                     let url = `${this.urlBase}?Limit=${this.limit}&Pagina=${this.paginaActual}`;
                                     if (this.busqueda.length > 0)
@@ -275,9 +281,9 @@
                     mostrarMensaje(mensaje, ok = true) {
                         this.mensaje = mensaje;
                         this.esMensajeError = !ok;
-                        if (!modalMonseaje)
-                            modalMonseaje = new bootstrap.Modal(document.getElementById('modal-mensaje'), {});
-                        modalMonseaje.show();
+                        if (!modalMensaje)
+                            modalMensaje = new bootstrap.Modal(document.getElementById('modal-mensaje'), {});
+                        modalMensaje.show();
                     },
                     getNombreCliente(t) {
                         return `${t.cliente.apellido}, ${t.cliente.nombre}`;

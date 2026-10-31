@@ -3,10 +3,12 @@ using metalurgicaMVC.Interfaces;
 using metalurgicaMVC.Models;
 using metalurgicaMVC.Utils;
 using metalurgicaMVC.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace metalurgicaMVC.Controllers;
 
+[Authorize(Policy = "ADMIN")]
 public  class TipoOperacionController(ITipoOperacionRepository tipoOperacionRepository) : Controller
 {
     private readonly ITipoOperacionRepository _repo = tipoOperacionRepository;
@@ -14,7 +16,6 @@ public  class TipoOperacionController(ITipoOperacionRepository tipoOperacionRepo
     public async Task<IActionResult> Index([FromQuery] FiltrosTipoOperacion filters)
     {
         List<TipoOperacion> tiposOperacion = [];
-
         if (!ModelState.IsValid)
         {
             ViewBag.MensajeError = Util.ModelStateViewError(ModelState);

@@ -3,7 +3,6 @@ namespace metalurgicaMVC.Utils;
 public enum Rol
 {
     ADMIN,
-    JEFE,
     EMPLEADO
 }
 

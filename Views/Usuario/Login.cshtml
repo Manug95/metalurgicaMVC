@@ -1,0 +1,166 @@
+@using metalurgicaMVC.ViewModels.UsuarioViewModels
+@model LoginVM;
+
+@{
+    ViewData["Title"] = "Login";
+}
+
+<h1 class="text-center display-4 mt-5">Login</h1>
+
+<div id="app-login" class="container d-flex justify-content-center align-items-center mt-md-5" v-cloak>
+    <form id="form-login" class="row g-3 p-3 border rounded-4 shadow-sm my-3 bg-light-subtle" @@submit.prevent="login">
+        <div class="col-12">
+            <label for="username" class="form-label fw-bold">
+                @Html.DisplayNameFor(model => model.Username)
+            </label>
+            <input 
+                type="text" 
+                class="form-control" 
+                :class="{ 'is-invalid': erroresLogin.username }" 
+                id="username" 
+                v-model="credenciales.username" 
+                autofocus
+            >
+            <div id="error_password" class="invalid-feedback" v-show="erroresLogin.username">{{ erroresLogin.username }}</div>
+        </div>
+        <div class="col-12">
+            <label for="password" class="form-label fw-bold">
+                @Html.DisplayNameFor(model => model.Password)
+            </label>
+            <div class="input-group has-validation">
+                <input 
+                    :type="passwordInputType" 
+                    v-model="credenciales.password" 
+                    class="form-control" 
+                    :class="{ 'is-invalid': erroresLogin.password }" 
+                    id="password" 
+                    aria-describedby="error_password"
+                >
+                <span class="input-group-text" id="inputGroupPrepend" @@click="mostrarOcultarPasssword" style="cursor: pointer;">
+                    <i 
+                        id="i-password"
+                        class="bi text-secondary" 
+                        :class="{ 'bi-eye': mostrarPassword, 'bi-eye-slash': !mostrarPassword }"
+                        data-bs-toggle="tooltip" :data-bs-title="passwordTooltip"
+                    ></i>
+                </span>
+                <div id="error_password" class="invalid-feedback" v-show="erroresLogin.password">{{ erroresLogin.password }}</div>
+            </div>
+        </div>
+        <div class="col-12 d-flex justify-content-center">
+            <input type="submit" value="Entrar" class="btn btn-primary d-block mx-auto" :class="{ disabled: cargando }" :disabled="cargando">
+        </div>
+        <input type="hidden" asp-for="ReturnUrl">
+    </form>
+    <partial name="_ModalMensaje"/>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        document.addEventListener("DOMContentLoaded", _ => {
+            const { createApp } = Vue;
+            let modalMensaje;
+            createApp({
+                data() {
+                    return {
+                        credenciales: { username: "", password: "" },
+                        returnUrl: "@Model.ReturnUrl",
+                        erroresLogin: { username: null, password: null },
+                        mostrarPassword: false,
+                        passwordInputType: "password",
+                        passwordTooltip: "Mostrar Contraseña",
+                        tooltipTriggerList: [],
+                        tooltipList: [],
+                        cargando: false,
+                        mensaje: "",
+                        esMensajeError: false
+                    };
+                },
+                methods: {
+                    mostrarOcultarPasssword() {
+                        this.mostrarPassword = !this.mostrarPassword;
+                        if (this.mostrarPassword) {
+                            this.passwordInputType = "text";
+                            this.passwordTooltip = "Ocultar Contraseña";
+                        }
+                        else {
+                            this.passwordInputType = "password";
+                            this.passwordTooltip = "Mostrar Contraseña";
+                        }
+                        bootstrap.Tooltip.getInstance("#i-password")
+                            .setContent({ '.tooltip-inner': this.passwordTooltip });
+                    },
+                    async login() {
+                        if (!this.credencialesValidas() || this.cargando)
+                            return;
+                        try {
+                            this.cargando = true;
+                            const response = await fetch("/api/usuarios/login", {
+                                method: "POST",
+                                headers: { 
+                                    "Content-Type": "application/json",
+                                    credentials: "include"
+                                },
+                                body: JSON.stringify(this.credenciales)
+                            });
+                            if (response.ok) {
+                                const { token } = await response.json();
+                                window.sessionStorage.setItem("jwt", token);
+                                if (this.returnUrl && this.returnUrl != "/")
+                                    window.location.assign(this.returnUrl);
+                                else
+                                    window.location.assign("/Trabajo/Index");
+                            } 
+                            else {
+                                const { mensaje, errors } = await response?.json();
+                                if (errors) {
+                                    Object.keys(errors).forEach(e => {
+                                        this.erroresLogin[e.toLowerCase()] = errors[e].join(", ");
+                                    });
+                                } 
+                                else {
+                                    this.mostrarMensaje(mensaje ?? "La petición no es correcta", false);
+                                }
+                            }
+                        } catch(e) {
+                            this.mostrarMensaje("No se pudo iniciar sesión", false);
+                        } finally {
+                            this.cargando = false;
+                        }
+                    },
+                    credencialesValidas() {
+                        let sonValidas = true;
+                        if (!this.credenciales.username) {
+                            this.erroresLogin.username = "Requerido";
+                            sonValidas = false;
+                        }
+                        if (this.credenciales.username.length > 20) {
+                            this.erroresLogin.username = "Supera el máximo de 20 caracteres";
+                            sonValidas = false;
+                        }
+                        if (!this.credenciales.password) {
+                            this.erroresLogin.password = "Requerido";
+                            sonValidas = false;
+                        }
+                        return sonValidas;
+                    },
+                    mostrarMensaje(mensaje, ok = true) {
+                        this.mensaje = mensaje;
+                        this.esMensajeError = !ok;
+                        if (!modalMensaje)
+                            modalMensaje = new bootstrap.Modal(document.getElementById('modal-mensaje'), {});
+                        modalMensaje.show();
+                    },
+                    inicializarTooltips() {
+                        this.tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+                        this.tooltipList = [...this.tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
+                    }
+                },
+                mounted() {
+                    this.inicializarTooltips();
+                }
+            }).mount("#app-login");
+        });
+    </script>
+}

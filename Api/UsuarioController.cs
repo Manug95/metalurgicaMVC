@@ -1,24 +1,38 @@
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 using metalurgicaMVC.Exceptions;
 using metalurgicaMVC.Interfaces;
 using metalurgicaMVC.Models;
 using metalurgicaMVC.ViewModels.UsuarioViewModels;
-using Microsoft.AspNetCore.Cryptography.KeyDerivation;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 
 namespace metalurgicaMVC.Api;
 
 [ApiController]
 [Route("api/usuarios")]
-public class UsuarioController(IUsuarioRepository repo, IConfiguration config) : ControllerBase
+[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+public class UsuarioController(
+    IUsuarioRepository repo, 
+    IConfiguration config,
+    IUserService userService
+) : ControllerBase
 {
     private readonly IUsuarioRepository _repo = repo;
     private readonly IConfiguration _config = config;
+    private readonly IUserService _userService = userService;
 
     [HttpGet("{id}")]
-    public async Task<IActionResult> GetUsuario([FromRoute] int id)
+    [Authorize(Policy = "ADMIN")]
+    public async Task<IActionResult> Get([FromRoute] int id)
     {
         if (id <= 0)
-            return BadRequest();
+            return BadRequest(new { mensaje = "id incorrecta" });
 
         try
         {
@@ -40,15 +54,18 @@ public class UsuarioController(IUsuarioRepository repo, IConfiguration config) :
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetUsuario([FromQuery] FiltrosUsuario filters)
+    [Authorize(Policy = "ADMIN")]
+    public async Task<IActionResult> Get([FromQuery] FiltrosUsuario filters)
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
-            
+        
+        List<Usuario> usuarios = [];
         try
         {
-            List<Usuario> usuarios = await _repo.ListAsync(filters);
             int cantidadUsuarios = await _repo.CountAsync(filters);
+            if (cantidadUsuarios > 0)
+                usuarios = await _repo.ListAsync(filters);
 
             decimal cp = Math.Ceiling((decimal)cantidadUsuarios / filters.Limit);
 
@@ -68,22 +85,21 @@ public class UsuarioController(IUsuarioRepository repo, IConfiguration config) :
     }
 
     [HttpPost]
-	[ValidateAntiForgeryToken]
-    public async Task<IActionResult> PostUsuario([FromBody] UsuarioVM vm)
+    [Authorize(Policy = "ADMIN")]
+    public async Task<IActionResult> Post([FromBody] UsuarioVM vm)
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        Usuario usuario = Usuario.From(vm);
-
         try
         {
-            usuario.Password = HashearPassword(usuario.Password!);
+            Usuario usuario = Usuario.From(vm);
+            usuario.Password = _userService.HashearPassword(usuario.Password!, _config);
 
             if ((await _repo.CreateAsync(usuario)) > 0)
             {
                 vm.Id = usuario.Id;
-                return Created($"api/clientes/{usuario.Id}", new { usuario = vm });
+                return Created($"api/usuarios/{usuario.Id}", new { usuario = vm });
             }
             else
                 return UnprocessableEntity(new { mensaje = "No se pudo crear el usuario" });
@@ -99,11 +115,11 @@ public class UsuarioController(IUsuarioRepository repo, IConfiguration config) :
     }
 
     [HttpPut("{id}")]
-	[ValidateAntiForgeryToken]
-    public async Task<IActionResult> PutUsuario([FromRoute] int id, [FromBody] UsuarioVM vm)
+    [Authorize(Policy = "ADMIN")]
+    public async Task<IActionResult> Put([FromRoute] int id, [FromBody] UsuarioVM vm)
     {
         if (id <= 0)
-            return BadRequest();
+            return BadRequest(new { mensaje = "id incorrecta" });
 
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
@@ -113,6 +129,8 @@ public class UsuarioController(IUsuarioRepository repo, IConfiguration config) :
             Usuario? usuario = await _repo.GetByIdAsync(id);
             if (usuario == null)
                 return BadRequest(new { mensaje = "El usuario no existe" });
+
+            usuario.UpdateFrom(vm);
 
             if (await _repo.UpdateAsync(usuario))
                 return Ok(new { usuario = UsuarioVM.From(usuario) });
@@ -130,10 +148,11 @@ public class UsuarioController(IUsuarioRepository repo, IConfiguration config) :
     }
 
     [HttpDelete("{id}")]
-    public async Task<IActionResult> DeleteUsuario([FromRoute] int id)
+    [Authorize(Policy = "ADMIN")]
+    public async Task<IActionResult> Delete([FromRoute] int id)
     {
         if (id <= 0)
-            return BadRequest();
+            return BadRequest(new { mensaje = "id incorrecta" });
 
         try
         {
@@ -153,11 +172,16 @@ public class UsuarioController(IUsuarioRepository repo, IConfiguration config) :
     }
 
     [HttpPatch("password/{id}")]
-	[ValidateAntiForgeryToken]
     public async Task<IActionResult> UpdatePassword([FromRoute] int id, [FromBody] UpdatePasswordVM vm)
     {
         if (id <= 0)
-            return BadRequest();
+            return BadRequest(new { mensaje = "id incorrecta" });
+
+        var userId = _userService.GetUserId(User);
+        if (!userId.HasValue)
+            return Unauthorized();
+        if (!User.IsInRole("ADMIN") && (userId.Value != id))
+            return Unauthorized(new { mensaje = "Usuario equivocado" });
 
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
@@ -175,10 +199,10 @@ public class UsuarioController(IUsuarioRepository repo, IConfiguration config) :
             if (usuario == null)
                 return BadRequest(new { mensaje = "El usuario no existe" });
 
-            if (usuario.Password != HashearPassword(vm.PasswordActual))
+            if (usuario.Password != _userService.HashearPassword(vm.PasswordActual, _config))
                 return BadRequest(new { mensaje = "La contraseña actual no es correcta" });
 
-            usuario.Password = HashearPassword(vm.PasswordNuevo);
+            usuario.Password = _userService.HashearPassword(vm.PasswordNuevo, _config);
 
             if (await _repo.UpdatePasswordAsync())
                 return Ok();
@@ -196,11 +220,16 @@ public class UsuarioController(IUsuarioRepository repo, IConfiguration config) :
     }
 
     [HttpPatch("{id}")]
-	[ValidateAntiForgeryToken]
     public async Task<IActionResult> UpdateUsuario([FromRoute] int id, [FromBody] UpdateDatosVM vm)
     {
         if (id <= 0)
-            return BadRequest();
+            return BadRequest(new { mensaje = "id incorrecta" });
+
+        var userId = _userService.GetUserId(User);
+        if (!userId.HasValue)
+            return Unauthorized();
+        if (!User.IsInRole("ADMIN") && (userId.Value != id))
+            return Unauthorized(new { mensaje = "Usuario equivocado" });
 
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
@@ -214,7 +243,8 @@ public class UsuarioController(IUsuarioRepository repo, IConfiguration config) :
             usuario.Username = vm.Username;
             usuario.Nombre = vm.Nombre;
             usuario.Apellido = vm.Apellido;
-            usuario.Rol = vm.Rol;
+            if (User.IsInRole("ADMIN"))
+                usuario.Rol = vm.Rol;
 
             if (await _repo.UpdateAsync(usuario))
                 return Ok();
@@ -232,11 +262,16 @@ public class UsuarioController(IUsuarioRepository repo, IConfiguration config) :
     }
 
     [HttpPatch("avatar/{id}")]
-	[ValidateAntiForgeryToken]
     public async Task<IActionResult> UpdateAvatar([FromRoute] int id, [FromForm] UpdateAvatarVM vm, [FromServices] IFileService fileService)
     {
         if (id <= 0)
-            return BadRequest();
+            return BadRequest(new { mensaje = "id incorrecta" });
+
+        var userId = _userService.GetUserId(User);
+        if (!userId.HasValue)
+            return Unauthorized();
+        if (!User.IsInRole("ADMIN") && (userId.Value != id))
+            return Unauthorized(new { mensaje = "Usuario equivocado" });
 
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
@@ -274,7 +309,13 @@ public class UsuarioController(IUsuarioRepository repo, IConfiguration config) :
     public async Task<IActionResult> DeleteAvatar([FromRoute] int id, [FromServices] IFileService fileService)
     {
         if (id <= 0)
-            return BadRequest();
+            return BadRequest(new { mensaje = "id incorrecta" });
+
+        var userId = _userService.GetUserId(User);
+        if (!userId.HasValue)
+            return Unauthorized();
+        if (!User.IsInRole("ADMIN") && (userId.Value != id))
+            return Unauthorized(new { mensaje = "Usuario equivocado" });
 
         try
         {
@@ -283,7 +324,7 @@ public class UsuarioController(IUsuarioRepository repo, IConfiguration config) :
                 return NotFound(new { mensaje = "El usuario no existe" });
 
             if (usuario.Avatar == null)
-                return BadRequest(new { mensaje = "El usuario no tiene una foto de perfil" });;
+                return BadRequest(new { mensaje = "El usuario no tiene una foto de perfil" });
 
             fileService.DeleteFile(usuario.Avatar);
             usuario.Avatar = null;
@@ -303,16 +344,72 @@ public class UsuarioController(IUsuarioRepository repo, IConfiguration config) :
         }
     }
 
-    private string HashearPassword(string password)
+    [HttpPost("login")]
+    [AllowAnonymous]
+    public async Task<IActionResult> Login([FromBody] LoginVM login)
     {
-        if (password == null)
-            throw new ClientException("No se ingresó una contraseña");
-        return Convert.ToBase64String(KeyDerivation.Pbkdf2(
-            password: password,
-            salt: System.Text.Encoding.ASCII.GetBytes(_config["Salt"] ?? "el mejor condimento del asado"),
-            prf: KeyDerivationPrf.HMACSHA512,
-            iterationCount: 1000,
-            numBytesRequested: 256 / 8))
-        ;
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+        
+        if (login.Username == null || login.Password == null)
+            return BadRequest(new { mensaje = "Falta el nombre de usuario o la contraseña" });
+
+        try
+        {
+            Usuario? user = await _repo.GetByUsernameAsync(login.Username);
+            string hashed = _userService.HashearPassword(login.Password, _config);
+            if (user == null || user.Password != hashed)
+                return Unauthorized(new { mensaje = "Nombre de usuario o clave incorrecto(s)" });
+
+            var claims = new List<Claim>
+            {
+                new(ClaimTypes.Name, user.Username ?? "Usuario"),
+                new(ClaimTypes.Uri, user.Avatar ?? ""),
+                new(ClaimTypes.Role, user.Rol ?? ""),
+                new("FullName", $"{user.Apellido}, {user.Nombre}"),
+                new("id", user.Id.ToString())
+            };
+
+            var claimsIdentity = new ClaimsIdentity(
+                claims, CookieAuthenticationDefaults.AuthenticationScheme);
+
+            await HttpContext.SignInAsync(
+                CookieAuthenticationDefaults.AuthenticationScheme,
+                new ClaimsPrincipal(claimsIdentity));
+            
+            var key = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(_config["TokenAuthentication:SecretKey"] ?? "jwtkey"));
+            var credenciales = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+            var token = new JwtSecurityToken(
+                issuer: _config["TokenAuthentication:Issuer"],
+                audience: _config["TokenAuthentication:Audience"],
+                claims: claims,
+                expires: DateTime.UtcNow.AddMinutes(60*10),
+                signingCredentials: credenciales
+            );
+
+            return Ok(new { Token = new JwtSecurityTokenHandler().WriteToken(token) });
+        }
+        catch (ClientException ex)
+        {
+            return BadRequest(new { mensaje = ex.Message });
+        }
+        catch (AppException)
+        {
+            return StatusCode(500, new { mensaje = "Error interno del servidor" });
+        }
+        catch (ArgumentNullException)
+        {
+            return StatusCode(500, new { mensaje = "Error interno del servidor" });
+        }
+        catch (ArgumentException)
+        {
+            return StatusCode(500, new { mensaje = "Error interno del servidor" });
+        }
+        catch (SecurityTokenEncryptionFailedException)
+        {
+            return StatusCode(500, new { mensaje = "Error interno del servidor" });
+        }
     }
 }

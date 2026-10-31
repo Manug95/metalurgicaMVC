@@ -2,12 +2,15 @@ using metalurgicaMVC.Exceptions;
 using metalurgicaMVC.Interfaces;
 using metalurgicaMVC.Models;
 using metalurgicaMVC.ViewModels;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace metalurgicaMVC.Api;
 
 [ApiController]
 [Route("api/fotos")]
+[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
 public class FotoController(IFotoRepository repo) : ControllerBase
 {
     private readonly IFotoRepository _repo = repo;
@@ -49,6 +52,7 @@ public class FotoController(IFotoRepository repo) : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Policy = "ADMIN")]
     public async Task<IActionResult> Delete([FromRoute] long id, [FromServices] IFileService fileService)
     {
         if (id <= 0)

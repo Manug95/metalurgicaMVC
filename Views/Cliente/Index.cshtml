@@ -1,4 +1,5 @@
 @using System.Text.Json
+@using Microsoft.AspNetCore.Html
 @using metalurgicaMVC.ViewModels
 @model IEnumerable<ClienteVM>
 @{
@@ -14,6 +15,7 @@
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase
     };
     bool hayMensajeError = !string.IsNullOrWhiteSpace(ViewBag.MensajeError);
+    bool esAdmin = User.IsInRole("ADMIN");
 }
 
 <div id="app-clientes" class="container-fluid bg-light-subtle position-relative" v-cloak>
@@ -92,12 +94,15 @@
                                         @@click="abrirFormModal(c)" 
                                         data-bs-toggle="tooltip" data-bs-title="Editar"
                                     ></i>
-                                    <i 
-                                        :data-cliente-id="c.id" 
-                                        class="bi bi-trash fs-3 text-danger icon-hover" 
-                                        @@click="abrirModalEliminar(c.id)" 
-                                        data-bs-toggle="tooltip" data-bs-title="Eliminar"
-                                    ></i>
+                                    @if(esAdmin)
+                                    {
+                                        <i 
+                                            :data-cliente-id="c.id" 
+                                            class="bi bi-trash fs-3 text-danger icon-hover" 
+                                            @@click="abrirModalEliminar(c.id)" 
+                                            data-bs-toggle="tooltip" data-bs-title="Eliminar"
+                                        ></i>
+                                    }
                                 </div>
                             </td>
                         </tr>
@@ -130,7 +135,7 @@
         </div>
     </div>
 
-    <partial name="_ModalEliminar" model="mensajeEliminar"/>
+    @if(esAdmin) {<partial name="_ModalEliminar" model="mensajeEliminar"/>}
     <partial name="_FormModal" model="new ClienteVM()"/>
     <partial name="_ModalMensaje"/>
 </div>
@@ -142,12 +147,12 @@
             const { createApp } = Vue;
             let modalEliminar;
             let formModal;
-            let modalMonseaje;
+            let modalMensaje;
             const clientePorDefecto = { id: 0, tipo: "", nombre: "", apellido: "", telefono: "", direccion: "", cuit: "" }
             const erroresClienteDefault = { tipo: null, nombre: null, apellido: null, telefono: null, direccion: null, cuit: null };
             createApp({
                 data() {
-                    return {
+                    const estadoApp = {
                         clientes: @Html.Raw(JsonSerializer.Serialize(Model, serializationOptions)),
                         urlBase: "api/clientes",
                         limit: @limit,
@@ -171,7 +176,12 @@
                         esMensajeError: false,
                         tooltipTriggerList: [],
                         tooltipList: []
-                    }
+                    };
+                    @* @if(esAdmin) {
+                        @:estadoApp.estaEliminando = false;
+                        @:estadoApp.clienteIdEliminar = 0;
+                    } *@
+                    return estadoApp;
                 },
                 methods: {
                     async pedirClientes(page) {
@@ -207,7 +217,7 @@
                     },
                     async hacerPeticion(url) {
                         try{
-                            const response = await fetch(url);
+                            const response = await fetch(url, { headers: { "Authorization": `Bearer ${sessionStorage.getItem("jwt")}` } });
                             if (response.ok) {
                                 return await response.json();
                             } else {
@@ -259,7 +269,10 @@
                         if (this.clienteIdEliminar > 0) {
                             this.estaEliminando = true;
                             try {
-                                const response = await fetch(`${this.urlBase}/${this.clienteIdEliminar}`, { method: "DELETE" });
+                                const response = await fetch(`${this.urlBase}/${this.clienteIdEliminar}`, { 
+                                    method: "DELETE",
+                                    headers: { "Authorization": `Bearer ${sessionStorage.getItem("jwt")}` }
+                                });
                                 if (response.ok) {
                                     let url = `${this.urlBase}?Limit=${this.limit}&Pagina=${this.paginaActual}`;
                                     if (this.busqueda.length > 0)
@@ -284,7 +297,7 @@
                         }
                     },
                     abrirFormModal(cliente) {
-                        if (cliente instanceof Event) {
+                        if (!cliente || cliente instanceof Event) {
                             this.cliente = { ...clientePorDefecto };
                         }
                         else {
@@ -307,7 +320,7 @@
                                 method: "POST",
                                 headers: { 
                                     'Content-Type': 'application/json',
-                                    'RequestVerificationToken': document.getElementsByName("__RequestVerificationToken")?.item(0)?.value
+                                    "Authorization": `Bearer ${sessionStorage.getItem("jwt")}`
                                 },
                                 body: JSON.stringify(this.cliente)
                             };
@@ -325,12 +338,6 @@
                                             this.clientes[indiceClienteActualizado] = data?.cliente;
                                         }
                                     } else {
-                                        @* if (this.clientes.length < this.limit) 
-                                            this.clientes.push(data?.usuario);
-                                        else if (this.esUltimaPagina) {
-                                            this.cantidadPaginas++;
-                                            this.esUltimaPagina = false;
-                                        } *@
                                         url = `${this.urlBase}?Limit=${this.limit}&Pagina=${this.paginaActual}`;
                                         if (this.busqueda.length > 0)
                                             url += `&Busqueda=${this.busqueda}`;
@@ -384,9 +391,9 @@
                     mostrarMensaje(mensaje, ok = true) {
                         this.mensaje = mensaje;
                         this.esMensajeError = !ok;
-                        if (!modalMonseaje)
-                            modalMonseaje = new bootstrap.Modal(document.getElementById('modal-mensaje'), {});
-                        modalMonseaje.show();
+                        if (!modalMensaje)
+                            modalMensaje = new bootstrap.Modal(document.getElementById('modal-mensaje'), {});
+                        modalMensaje.show();
                     },
                     inicializarTooltips() {
                         this.tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');

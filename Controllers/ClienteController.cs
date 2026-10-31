@@ -3,11 +3,12 @@ using metalurgicaMVC.Interfaces;
 using metalurgicaMVC.Models;
 using metalurgicaMVC.Utils;
 using metalurgicaMVC.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace metalurgicaMVC.Controllers;
 
+[Authorize]
 public class ClienteController(IClienteRepository repo) : Controller
 {
     private readonly IClienteRepository _repo = repo;
@@ -21,10 +22,12 @@ public class ClienteController(IClienteRepository repo) : Controller
             return View(new List<ClienteVM>());
         }
 
+        List<Cliente> clientes = [];
         try
         {
-            List<Cliente> clientes = await _repo.ListAsync(filters);
             int cantidadClientes = await _repo.CountAsync(filters);
+            if (cantidadClientes > 0)
+                clientes = await _repo.ListAsync(filters);
 
             decimal cp = Math.Ceiling((decimal)cantidadClientes / filters.Limit);
 
@@ -34,8 +37,6 @@ public class ClienteController(IClienteRepository repo) : Controller
             ViewBag.busqueda = filters.Busqueda;
             ViewBag.linkActivo = "clientes";
             ViewBag.MensajeError = TempData["MensajeError"] as string;
-
-            return View(ClienteVM.FromList(clientes));
         }
         catch (ClientException ex)
         {
@@ -46,12 +47,6 @@ public class ClienteController(IClienteRepository repo) : Controller
             ViewBag.MensajeError = "Error interno del servidor: No se pudieron traer los clientes";
         }
 
-        return View(new List<Cliente>());
-    }
-
-    [HttpGet]
-    public async Task<IActionResult> Form()
-    {
-        return PartialView("_FormModal", new ClienteVM());
+        return View(ClienteVM.FromList(clientes));
     }
 }

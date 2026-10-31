@@ -147,7 +147,7 @@
             const { createApp } = Vue;
             let modalEliminar;
             let formModal;
-            let modalMonseaje;
+            let modalMensaje;
             const usuarioDefault = { id: 0, username: "", password: "", rol: "", avatar: "", nombre: "", apellido: "" };
             const erroresUsuarioDefault = { username: null, password: null, rol: null, nombre: null, apellido: null };
             createApp({
@@ -158,7 +158,8 @@
                         opcionesFetch: { 
                             method: "POST",
                             headers: { 
-                                'Content-Type': 'application/json'
+                                'Content-Type': 'application/json',
+                                Authorization: `Bearer ${sessionStorage.getItem("jwt")}`
                             },
                             body: null
                         },
@@ -221,7 +222,7 @@
                     },
                     async hacerPeticion(url) {
                         try{
-                            const response = await fetch(url);
+                            const response = await fetch(url, { headers: { "Authorization": `Bearer ${sessionStorage.getItem("jwt")}` } });
                             if (response.ok) {
                                 return await response.json();
                             } else {
@@ -272,7 +273,10 @@
                     async eliminar() {
                         if (this.usuarioIdEliminar > 0) {
                             try {
-                                const response = await fetch(`${this.urlBase}/${this.usuarioIdEliminar}`, { method: "DELETE" });
+                                const response = await fetch(`${this.urlBase}/${this.usuarioIdEliminar}`, { 
+                                    method: "DELETE",
+                                    headers: { Authorization: `Bearer ${sessionStorage.getItem("jwt")}` }
+                                });
                                 if (response.ok) {
                                     let url = `${this.urlBase}?Limit=${this.limit}&Pagina=${this.paginaActual}`;
                                     if (this.busqueda.length > 0)
@@ -310,7 +314,6 @@
                             return;
                         this.estaGuardando = true;
                         this.opcionesFetch.body = JSON.stringify(this.usuario);
-                        this.opcionesFetch.headers['RequestVerificationToken'] = document.getElementsByName("__RequestVerificationToken")?.item(0)?.value;
                         try{
                             const response = await fetch(this.urlBase, this.opcionesFetch);
                             if (response.ok) {
@@ -364,9 +367,9 @@
                     mostrarMensaje(mensaje, ok = true) {
                         this.mensaje = mensaje;
                         this.esMensajeError = !ok;
-                        if (!modalMonseaje)
-                            modalMonseaje = new bootstrap.Modal(document.getElementById('modal-mensaje'), {});
-                        modalMonseaje.show();
+                        if (!modalMensaje)
+                            modalMensaje = new bootstrap.Modal(document.getElementById('modal-mensaje'), {});
+                        modalMensaje.show();
                     },
                     mostrarOcultarPasssword() {
                         this.mostrarPassword = !this.mostrarPassword;

@@ -3,10 +3,12 @@ using metalurgicaMVC.Interfaces;
 using metalurgicaMVC.Models;
 using metalurgicaMVC.Utils;
 using metalurgicaMVC.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace metalurgicaMVC.Controllers;
 
+[Authorize]
 public class MaterialController(IMaterialRepository materialRepository) : Controller
 {
     private readonly IMaterialRepository _repo = materialRepository;
@@ -15,7 +17,6 @@ public class MaterialController(IMaterialRepository materialRepository) : Contro
     public async Task<IActionResult> Index(FiltrosMaterial filters)
     {
         List<Material> materiales = [];
-
         if (!ModelState.IsValid)
         {
             ViewBag.MensajeError = Util.ModelStateViewError(ModelState);
@@ -36,8 +37,6 @@ public class MaterialController(IMaterialRepository materialRepository) : Contro
             ViewBag.tipoMaterial = filters.Tipo;
             ViewBag.linkActivo = "materiales";
             ViewBag.MensajeError = TempData["MensajeError"] as string;
-
-            return View(MaterialVM.FromList(materiales));
         }
         catch (ClientException ex)
         {

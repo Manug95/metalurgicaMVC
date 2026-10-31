@@ -2,21 +2,24 @@ using metalurgicaMVC.Exceptions;
 using metalurgicaMVC.Interfaces;
 using metalurgicaMVC.Models;
 using metalurgicaMVC.ViewModels;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace metalurgicaMVC.Api;
 
 [ApiController]
 [Route("api/clientes")]
+[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
 public class ClienteController(IClienteRepository repo) : ControllerBase
 {
     private readonly IClienteRepository _repo = repo;
 
     [HttpGet("{id}")]
-    public async Task<IActionResult> GetCliente([FromRoute] int id)
+    public async Task<IActionResult> Get([FromRoute] int id)
     {
         if (id <= 0)
-            return BadRequest();
+            return BadRequest(new { mensaje = "id incorrecta" });
 
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
@@ -41,15 +44,17 @@ public class ClienteController(IClienteRepository repo) : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetCliente([FromQuery] FiltrosCliente filters)
+    public async Task<IActionResult> Get([FromQuery] FiltrosCliente filters)
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
+        List<Cliente> clientes = [];
         try
         {
-            List<Cliente> clientes = await _repo.ListAsync(filters);
             int cantidadClientes = await _repo.CountAsync(filters);
+            if (cantidadClientes > 0)
+                clientes = await _repo.ListAsync(filters);
 
             decimal cp = Math.Ceiling((decimal)cantidadClientes / filters.Limit);
 
@@ -69,8 +74,7 @@ public class ClienteController(IClienteRepository repo) : ControllerBase
     }
 
     [HttpPost]
-	[ValidateAntiForgeryToken]
-    public async Task<IActionResult> PostCliente([FromBody] ClienteVM vm)
+    public async Task<IActionResult> Post([FromBody] ClienteVM vm)
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
@@ -98,17 +102,15 @@ public class ClienteController(IClienteRepository repo) : ControllerBase
     }
 
     [HttpPut("{id}")]
-	[ValidateAntiForgeryToken]
-    public async Task<IActionResult> PutCliente([FromRoute] int id, [FromBody] ClienteVM vm)
+    public async Task<IActionResult> Put([FromRoute] int id, [FromBody] ClienteVM vm)
     {
         if (id <= 0)
-            return BadRequest();
+            return BadRequest(new { mensaje = "id incorrecta" });
 
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
             
         vm.Id = id;
-
         try
         {
             if (await _repo.UpdateAsync(Cliente.From(vm)))
@@ -127,10 +129,11 @@ public class ClienteController(IClienteRepository repo) : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    public async Task<IActionResult> DeleteCliente([FromRoute] int id)
+    [Authorize(Policy = "ADMIN")]
+    public async Task<IActionResult> Delete([FromRoute] int id)
     {
         if (id <= 0)
-            return BadRequest();
+            return BadRequest(new { mensaje = "id incorrecta" });
 
         try
         {

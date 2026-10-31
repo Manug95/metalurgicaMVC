@@ -9,6 +9,7 @@
     };
     bool hayMensajeError = !string.IsNullOrWhiteSpace(ViewBag.MensajeError);
     string? userAvatar = Model.UpdateAvatarVM!.Avatar?.Replace("\\", "/");
+    bool esAdmin = User.IsInRole("ADMIN");
 }
 
 <div id="app-edit-usuario" class="container mt-2" v-cloak>
@@ -18,53 +19,8 @@
             id="form-datos-usuario" 
             class="p-3 w-75 mx-auto border rounded-4 shadow-sm bg-light"
             @@submit.prevent="onSubmitUpdateDatosUsuario" 
-            asp-antiforgery="true"
         >
             <span class="display-6">Actualizar Datos de Usuario</span>
-            <div class="row mt-2 mb-md-4 g-3">
-                <div class="col-12 col-md-6">
-                    <label asp-for="UpdateDatosVM.Username" class="form-label fw-bold">@Html.DisplayNameFor(model => model.UpdateDatosVM!.Username)</label>
-                    <input 
-                        type="text" 
-                        asp-for="UpdateDatosVM.Username" 
-                        v-model="editUsuario.username" 
-                        class="form-control" 
-                        :class="{ 'is-invalid': erroresEditUsuario.username }" 
-                        id="username" 
-                        aria-describedby="error_username"
-                    >
-                    <span 
-                        asp-validation-for="UpdateDatosVM.Username" 
-                        id="error_username" 
-                        class="ps-1 invalid-feedback" 
-                        @* v-if="erroresEditUsuario.username" *@
-                    >
-                        {{ erroresEditUsuario.username }}
-                    </span>
-                </div>
-                <div class="col-12 col-md-6">
-                    <label asp-for="UpdateDatosVM.Rol" class="form-label fw-bold">@Html.DisplayNameFor(model => model.UpdateDatosVM!.Rol)</label>
-                    <select 
-                        asp-for="UpdateDatosVM.Rol" 
-                        id="rol" 
-                        v-model="editUsuario.rol" 
-                        class="form-select" 
-                        :class="{ 'is-invalid': erroresEditUsuario.rol }" 
-                        aria-describedby="error_rol"
-                    >
-                        <option value="@Rol.ADMIN" selected="@(Model.UpdateDatosVM!.Rol==Rol.ADMIN.ToString())">@Rol.ADMIN</option>
-                        <option value="@Rol.EMPLEADO" selected="@(Model.UpdateDatosVM.Rol==Rol.EMPLEADO.ToString())">@Rol.EMPLEADO</option>
-                    </select>
-                    <span 
-                        asp-validation-for="UpdateDatosVM.Rol" 
-                        id="error_rol" 
-                        class="ps-1 invalid-feedback" 
-                        @* v-if="erroresEditUsuario.rol" *@
-                    >
-                        {{ erroresEditUsuario.rol }}
-                    </span>
-                </div>
-            </div>
             <div class="row mt-2 mb-md-4 g-3">
                 <div class="col-12 col-md-6">
                     <label asp-for="UpdateDatosVM.Nombre" class="form-label fw-bold">@Html.DisplayNameFor(model => model.UpdateDatosVM!.Nombre)</label>
@@ -107,6 +63,53 @@
                     </span>
                 </div>
             </div>
+            <div class="row mt-2 mb-md-4 g-3">
+                <div class="col-12 col-md-6">
+                    <label asp-for="UpdateDatosVM.Username" class="form-label fw-bold">@Html.DisplayNameFor(model => model.UpdateDatosVM!.Username)</label>
+                    <input 
+                        type="text" 
+                        asp-for="UpdateDatosVM.Username" 
+                        v-model="editUsuario.username" 
+                        class="form-control" 
+                        :class="{ 'is-invalid': erroresEditUsuario.username }" 
+                        id="username" 
+                        aria-describedby="error_username"
+                    >
+                    <span 
+                        asp-validation-for="UpdateDatosVM.Username" 
+                        id="error_username" 
+                        class="ps-1 invalid-feedback" 
+                        @* v-if="erroresEditUsuario.username" *@
+                    >
+                        {{ erroresEditUsuario.username }}
+                    </span>
+                </div>
+                @if (esAdmin)
+                {
+                    <div class="col-12 col-md-6">
+                        <label asp-for="UpdateDatosVM.Rol" class="form-label fw-bold">@Html.DisplayNameFor(model => model.UpdateDatosVM!.Rol)</label>
+                        <select 
+                            asp-for="UpdateDatosVM.Rol" 
+                            id="rol" 
+                            v-model="editUsuario.rol" 
+                            class="form-select" 
+                            :class="{ 'is-invalid': erroresEditUsuario.rol }" 
+                            aria-describedby="error_rol"
+                        >
+                            <option value="@Rol.ADMIN" selected="@(Model.UpdateDatosVM!.Rol==Rol.ADMIN.ToString())">@Rol.ADMIN</option>
+                            <option value="@Rol.EMPLEADO" selected="@(Model.UpdateDatosVM.Rol==Rol.EMPLEADO.ToString())">@Rol.EMPLEADO</option>
+                        </select>
+                        <span 
+                            asp-validation-for="UpdateDatosVM.Rol" 
+                            id="error_rol" 
+                            class="ps-1 invalid-feedback" 
+                            @* v-if="erroresEditUsuario.rol" *@
+                        >
+                            {{ erroresEditUsuario.rol }}
+                        </span>
+                    </div>
+                }
+            </div>
 
             <div class="row mb-2 mt-4 justify-content-center">
                 <div class="col d-flex justify-content-center">
@@ -123,7 +126,6 @@
             id="form-datos-usuario" 
             class="p-3 w-75 mx-auto border rounded-4 shadow-sm bg-light"
             @@submit.prevent="onSubmitUpdatePassword" 
-            asp-antiforgery="true"
         >
             <span class="display-6">Actualizar Contraseña</span>
             <div class="row mt-2 mb-md-4 g-3">
@@ -213,7 +215,6 @@
                     id="form-avatar-usuario" 
                     class="mt-2 mb-3"
                     @@submit.prevent="onSubmitUpdateAvatar" 
-                    asp-antiforgery="true"
                 >
                     <div class="p-3">
                         <label asp-for="UpdateAvatarVM.AvatarFile" class="form-label fw-bold">
@@ -264,7 +265,6 @@
 </div>
 
 @section Scripts {
-    @* <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script> *@
     <script>
         document.addEventListener("DOMContentLoaded", _ => {
             const { createApp } = Vue;
@@ -282,11 +282,17 @@
                         opcionesFetch: { 
                             method: "PATCH",
                             headers: { 
-                                'Content-Type': 'application/json'
+                                'Content-Type': 'application/json',
+                                Authorization: `Bearer ${sessionStorage.getItem("jwt")}`
                             },
                             body: null
                         },
-                        editUsuario: { username: "@Model.UpdateDatosVM!.Username", rol: "@Model.UpdateDatosVM!.Rol" },
+                        editUsuario: { 
+                            username: "@Model.UpdateDatosVM!.Username", 
+                            rol: "@Model.UpdateDatosVM!.Rol",
+                            nombre: "@Model.UpdateDatosVM!.Nombre",
+                            apellido: "@Model.UpdateDatosVM!.Apellido"
+                        },
                         erroresEditUsuario: { ...erroresEditUsuarioDefault },
                         editPassword: { ...editPasswordDefault },
                         erroresEditPassword: { ...erroresEditPasswordDefault },
@@ -319,8 +325,11 @@
                         this.estaCargando = true;
                         if (this.esFormularioEditValido()) {
                             let url = `${this.urlBase}/${this.usuarioId}`;
+                            @if (!esAdmin)
+                            {
+                                @:editUsuario.rol = "@Model.UpdateDatosVM!.Rol";
+                            }
                             this.opcionesFetch.body = JSON.stringify(this.editUsuario);
-                            this.opcionesFetch.headers['RequestVerificationToken'] = document.getElementsByName("__RequestVerificationToken")?.item(0)?.value;
                             try{
                                 const response = await fetch(url, this.opcionesFetch);
                                 if (response.ok) {
@@ -361,7 +370,6 @@
                         if (this.esFormularioEditPasswordValido()) {
                             let url = `${this.urlBase}/password/${this.usuarioId}`;
                             this.opcionesFetch.body = JSON.stringify(this.editPassword);
-                            this.opcionesFetch.headers['RequestVerificationToken'] = document.getElementsByName("__RequestVerificationToken")?.item(1)?.value;
                             try{
                                 const response = await fetch(url, this.opcionesFetch);
                                 if (response.ok) {
@@ -415,7 +423,6 @@
                         const opFectch = { ...this.opcionesFetch };
                         delete opFectch.headers['Content-Type'];
                         opFectch.body = formData;
-                        opFectch.headers['RequestVerificationToken'] = document.getElementsByName("__RequestVerificationToken")?.item(2)?.value;
                         try{
                             const response = await fetch(url, opFectch);
                             if (response.ok) {
@@ -458,7 +465,10 @@
                         this.estaCargando = true;
                         try{
                             let url = `${this.urlBase}/avatar/${this.usuarioId}`;
-                            const response = await fetch(url, { method: "DELETE" });
+                            const response = await fetch(url, { 
+                                method: "DELETE",
+                                headers: { "Authorization": `Bearer ${sessionStorage.getItem("jwt")}` }
+                            });
                             if (response.ok) {
                                 this.editAvatar.avatar = null;
                                 this.mostrarMensaje("Foto de Perfil Eliminada");
@@ -494,22 +504,16 @@
                         this[`${clavePasswrod}InputType`] = "text";
                         this[`${clavePasswrod}Tooltip`] = "Ocultar Contraseña";
                         const iconoId = `i-password-${clavePasswrod == "passwordActual" ? "actual" : "nuevo"}`;
-                        @* bootstrap.Tooltip.getInstance(document.getElementById(iconoId)) *@
                         bootstrap.Tooltip.getInstance(`#${iconoId}`)
                             .setContent({ '.tooltip-inner': this[`${clavePasswrod}Tooltip`] });
-                        @* this.tooltipList[this.tooltipList.findIndex(t => t._element.id == iconoId)]
-                            .setContent({ '.tooltip-inner': this[`${clavePasswrod}Tooltip`] }); *@
                     },
                     ocultarPassswordFn(clavePasswrod) {
                         this.mostrarPassword = false;
                         this[`${clavePasswrod}InputType`] = "password";
                         this[`${clavePasswrod}Tooltip`] = "Mostrar Contraseña";
                         const iconoId = `i-password-${clavePasswrod == "passwordActual" ? "actual" : "nuevo"}`;
-                        @* bootstrap.Tooltip.getInstance(document.getElementById(iconoId)) *@
                         bootstrap.Tooltip.getInstance(`#${iconoId}`)
                             .setContent({ '.tooltip-inner': this[`${clavePasswrod}Tooltip`] });
-                        @* this.tooltipList[this.tooltipList.findIndex(t => t._element.id == iconoId)]
-                            .setContent({ '.tooltip-inner': this[`${clavePasswrod}Tooltip`] }); *@
                     }
                 },
                 mounted() {

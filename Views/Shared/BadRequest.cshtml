@@ -1,0 +1,61 @@
+@model string
+@{
+    ViewData["Title"] = "Solicitud incorrecta";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow border-0">
+                <div class="card-body text-center p-5">
+
+                    <div class="mb-4">
+                        <i class="bi bi-exclamation-triangle-fill text-warning"
+                           style="font-size: 4rem;"></i>
+                    </div>
+
+                    <h1 class="display-6 fw-bold text-warning">
+                        Error 400
+                    </h1>
+
+                    <h2 class="h4 mt-3">
+                        Solicitud incorrecta
+                    </h2>
+
+                    <p class="lead text-muted mt-3">
+                        La solicitud enviada no es válida o contiene datos incorrectos.
+                    </p>
+
+                    <hr class="my-4" />
+
+                    <p class="text-secondary">
+                        Verifica la información proporcionada e inténtalo nuevamente.
+                    </p>
+
+                    @if (!string.IsNullOrWhiteSpace(Model))
+                    {
+                        <hr class="my-4" >
+                        <p class="mb-0">
+                            <strong>Detalle:</strong> @Model
+                        </p>
+                    }
+
+                    <div class="d-flex justify-content-center gap-2 mt-4">
+                        <!--<a asp-controller="Home"
+                           asp-action="Index"
+                           class="btn btn-primary">
+                            Ir al inicio
+                        </a>-->
+
+                        <button type="button"
+                                class="btn btn-outline-secondary"
+                                onclick="history.back()">
+                            Volver atrás
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

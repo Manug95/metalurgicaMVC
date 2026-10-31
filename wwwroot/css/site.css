@@ -84,7 +84,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 }
 
 .active-link {
-    background-color: #e2b6a5 !important;
+    background-color: #ffc2a7 !important;
     color: black !important;
     font-weight: bold;
 }

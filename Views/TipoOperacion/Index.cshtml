@@ -107,7 +107,7 @@
             const { createApp } = Vue;
             let modalEliminar;
             let formModal;
-            let modalMonseaje;
+            let modalMensaje;
             const tipoOperacionDefault = { id: 0, nombre: "", costoFijo: "" }
             const erroresTipoOperacionDefault = { nombre: null, costoFijo: null };
             createApp({
@@ -150,7 +150,7 @@
                     },
                     async hacerPeticion(url) {
                         try{
-                            const response = await fetch(url);
+                            const response = await fetch(url, { headers: { "Authorization": `Bearer ${sessionStorage.getItem("jwt")}` } });
                             if (response.ok) {
                                 return await response.json();
                             } else {
@@ -196,7 +196,10 @@
                         if (this.tipoOperacionIdEliminar > 0) {
                             this.estaEliminando = true;
                             try {
-                                const response = await fetch(`${this.urlBase}/${this.tipoOperacionIdEliminar}`, { method: "DELETE" });
+                                const response = await fetch(`${this.urlBase}/${this.tipoOperacionIdEliminar}`, { 
+                                    method: "DELETE",
+                                    headers: { "Authorization": `Bearer ${sessionStorage.getItem("jwt")}` }
+                                });
                                 if (response.ok) {
                                     let url = `${this.urlBase}?Limit=${this.limit}&Pagina=${this.paginaActual}`;
                                     const data = await this.hacerPeticion(url);
@@ -243,7 +246,7 @@
                             method: "POST",
                             headers: { 
                                 'Content-Type': 'application/json',
-                                'RequestVerificationToken': document.getElementsByName("__RequestVerificationToken")?.item(0)?.value
+                                "Authorization": `Bearer ${sessionStorage.getItem("jwt")}`
                             },
                             body: JSON.stringify(this.tipoOperacion)
                         };
@@ -330,9 +333,9 @@
                     mostrarMensaje(mensaje, ok = true) {
                         this.mensaje = mensaje;
                         this.esMensajeError = !ok;
-                        if (!modalMonseaje)
-                            modalMonseaje = new bootstrap.Modal(document.getElementById('modal-mensaje'), {});
-                        modalMonseaje.show();
+                        if (!modalMensaje)
+                            modalMensaje = new bootstrap.Modal(document.getElementById('modal-mensaje'), {});
+                        modalMensaje.show();
                     },
                     inicializarTooltips() {
                         this.tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
@@ -347,7 +350,6 @@
                         this.mostrarMensaje("@ViewBag.MensajeError", false);
                     }
                     this.inicializarTooltips();
-                    this.abrirFormModal();
                 }
             }).mount("#app-tipoOperacion");
         });

@@ -2,12 +2,15 @@ using metalurgicaMVC.Exceptions;
 using metalurgicaMVC.Interfaces;
 using metalurgicaMVC.Models;
 using metalurgicaMVC.ViewModels;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace metalurgicaMVC.Api;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Policy = "ADMIN")]
 public  class TipoOperacionController(ITipoOperacionRepository tipoOperacionRepository) : ControllerBase
 {
     private readonly ITipoOperacionRepository _repo = tipoOperacionRepository;
@@ -71,7 +74,6 @@ public  class TipoOperacionController(ITipoOperacionRepository tipoOperacionRepo
     }
 
     [HttpPost]
-	[ValidateAntiForgeryToken]
     public async Task<IActionResult> Post([FromBody] TipoOperacionVM vm)
     {
         if (!ModelState.IsValid)
@@ -100,7 +102,6 @@ public  class TipoOperacionController(ITipoOperacionRepository tipoOperacionRepo
     }
 
     [HttpPut("{id}")]
-	[ValidateAntiForgeryToken]
     public async Task<IActionResult> Put([FromRoute] int id, [FromBody] TipoOperacionVM vm)
     {
         if (id <= 0)

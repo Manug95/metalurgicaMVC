@@ -1,0 +1,47 @@
+@{
+    ViewData["Title"] = "Acceso denegado";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow border-0">
+                <div class="card-body text-center p-5">
+
+                    <div class="mb-4">
+                        <i class="bi bi-shield-lock-fill text-danger" style="font-size: 4rem;"></i>
+                    </div>
+
+                    <h1 class="display-6 fw-bold text-danger">
+                        Acceso denegado
+                    </h1>
+
+                    <p class="lead text-muted mt-3">
+                        No tienes permisos suficientes para acceder a esta página o recurso.
+                    </p>
+
+                    <hr class="my-4" />
+
+                    <p class="text-secondary">
+                        Si crees que esto es un error, contacta con el administrador del sistema.
+                    </p>
+
+                    <div class="d-flex justify-content-center gap-2 mt-4">
+                        @* <a asp-controller="Home"
+                           asp-action="Index"
+                           class="btn btn-primary">
+                            Volver al inicio
+                        </a> *@
+
+                        <button type="button"
+                                class="btn btn-outline-secondary"
+                                onclick="history.back()">
+                            Página anterior
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

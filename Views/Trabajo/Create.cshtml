@@ -225,8 +225,6 @@
         </div>
     </div>
 
-    <form asp-antiforgery="true"></form>
-
     <div id="modal_buscar_materiales" class="modal fade" data-bs-keyboard="false" tabindex="-1" aria-describedby="titulo-modal">
         <div class="modal-dialog modal-xl modal-dialog-centered">
             <div class="modal-content bg-light-subtle">
@@ -310,7 +308,7 @@
     <script>
         const { createApp } = Vue;
         let modalTablaMateriales;
-        let modalMonseaje;
+        let modalMensaje;
         const almacenClientes = [];
         const tipoOperacionDefault = { id: 0, nombre: "" };
         const itemDetalleDefault = { id: 0, tipoOperacionId: 0, material: null, largo: 0, ancho: 0, cantidad: 1, hasError: false };
@@ -376,9 +374,9 @@
                 mostrarMensaje(mensaje, ok = true) {
                     this.mensaje = mensaje;
                     this.esMensajeError = !ok;
-                    if (!modalMonseaje)
-                        modalMonseaje = new bootstrap.Modal(document.getElementById('modal-mensaje'), {});
-                    modalMonseaje.show();
+                    if (!modalMensaje)
+                        modalMensaje = new bootstrap.Modal(document.getElementById('modal-mensaje'), {});
+                    modalMensaje.show();
                 },
                 mostrarItemDetalle(item) {
                     if (item.material.tipo == "CHAPA") {
@@ -466,7 +464,7 @@
                 },
                 async hacerPeticion(url) {
                     try{
-                        const response = await fetch(url);
+                        const response = await fetch(url, { headers: { "Authorization": `Bearer ${sessionStorage.getItem("jwt")}` } });
                         if (response.ok) {
                             return await response.json();
                         } else {
@@ -543,7 +541,9 @@
                         if (this.search.trim() == 0)
                             return;
                         try {
-                            const response = await fetch(`/api/clientes?busqueda=${this.search}`);
+                            const response = await fetch(`/api/clientes?busqueda=${this.search}`, { 
+                                headers: { "Authorization": `Bearer ${sessionStorage.getItem("jwt")}` } 
+                            });
                             if (response.ok) {
                                 const data = await response.json();
                                 this.itemsClientes = data.clientes;
@@ -654,7 +654,7 @@
                             body: JSON.stringify(this.trabajo),
                             headers: {
                                 'Content-Type': 'application/json',
-                                'RequestVerificationToken': document.getElementsByName("__RequestVerificationToken")?.item(0)?.value
+                                "Authorization": `Bearer ${sessionStorage.getItem("jwt")}`
                             }
                         };
                         if (this.trabajo.id > 0) {
@@ -665,6 +665,10 @@
                             fetchOptions.method = "POST";
                         const response = await fetch(url, fetchOptions);
                         if (response.ok) {
+                            if (trabajoId == 0) {
+                                const { trabajo } = await response.json();
+                                this.trabajoId = trabajo.id;
+                            }
                             this.mostrarMensaje("Trabajo Guardado");
                         } else {
                             const { mensaje, errors } = await response.json();

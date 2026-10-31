@@ -2,12 +2,15 @@ using metalurgicaMVC.Exceptions;
 using metalurgicaMVC.Interfaces;
 using metalurgicaMVC.Models;
 using metalurgicaMVC.ViewModels;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace metalurgicaMVC.Api;
 
 [ApiController]
 [Route("api/materiales")]
+[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
 public class MaterialController(IMaterialRepository materialRepository) : ControllerBase
 {
     private readonly IMaterialRepository _repo = materialRepository;
@@ -16,7 +19,7 @@ public class MaterialController(IMaterialRepository materialRepository) : Contro
     public async Task<IActionResult> Get([FromRoute] int id)
     {
         if (id <= 0)
-            return BadRequest();
+            return BadRequest(new { mensaje = "id incorrecta"});
 
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
@@ -43,10 +46,12 @@ public class MaterialController(IMaterialRepository materialRepository) : Contro
     [HttpGet]
     public async Task<IActionResult> Get([FromQuery] FiltrosMaterial filters)
     {
+        List<Material> materiales = [];
         try
         {
-            List<Material> materiales = await _repo.ListAsync(filters);
             long cantidadMateriales = await _repo.CountAsync(filters);
+            if (cantidadMateriales > 0)
+                materiales = await _repo.ListAsync(filters);
 
             decimal cp = Math.Ceiling((decimal)cantidadMateriales / filters.Limit);
 
@@ -66,7 +71,6 @@ public class MaterialController(IMaterialRepository materialRepository) : Contro
     }
 
     [HttpPost]
-	[ValidateAntiForgeryToken]
     public async Task<IActionResult> Post([FromBody] MaterialVM vm)
     {
         if (!ModelState.IsValid)
@@ -95,11 +99,10 @@ public class MaterialController(IMaterialRepository materialRepository) : Contro
     }
 
     [HttpPut("{id}")]
-	[ValidateAntiForgeryToken]
     public async Task<IActionResult> Put([FromRoute] int id, [FromBody] MaterialVM vm)
     {
         if (id <= 0)
-            return BadRequest();
+            return BadRequest(new { mensaje = "id incorrecta"});
 
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
@@ -108,7 +111,7 @@ public class MaterialController(IMaterialRepository materialRepository) : Contro
         {
             var material = await _repo.GetByIdAsync(id);
             if (material == null)
-                return NotFound();
+                return NotFound(new { mensaje = "El material no existe" });
             
             material.UpdateFrom(vm);
             vm.Id = id;
@@ -129,10 +132,11 @@ public class MaterialController(IMaterialRepository materialRepository) : Contro
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Policy = "ADMIN")]
     public async Task<IActionResult> Delete([FromRoute] int id)
     {
         if (id <= 0)
-            return BadRequest();
+            return BadRequest(new { mensaje = "id incorrecta" });
 
         try
         {

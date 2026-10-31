@@ -2,12 +2,15 @@ using metalurgicaMVC.Exceptions;
 using metalurgicaMVC.Interfaces;
 using metalurgicaMVC.Models;
 using metalurgicaMVC.ViewModels;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace metalurgicaMVC.Api;
 
 [ApiController]
 [Route("api/trabajos")]
+[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
 public class TrabajoController(ITrabajoRepository repo) : ControllerBase
 {
     private readonly ITrabajoRepository _repo = repo;
@@ -40,10 +43,12 @@ public class TrabajoController(ITrabajoRepository repo) : ControllerBase
     [HttpGet]
     public async Task<IActionResult> Get([FromQuery] FiltrosTrabajo filters)
     {
+        List<Trabajo> trabajos = [];
         try
         {
-            List<Trabajo> trabajos = await _repo.ListAsync(filters);
             long cantidadTrabajos = await _repo.CountAsync(filters);
+            if (cantidadTrabajos > 0)
+                trabajos = await _repo.ListAsync(filters);
 
             decimal cp = Math.Ceiling((decimal)cantidadTrabajos / filters.Limit);
 
@@ -63,11 +68,17 @@ public class TrabajoController(ITrabajoRepository repo) : ControllerBase
     }
 
     [HttpPost]
-	[ValidateAntiForgeryToken]
-    public async Task<IActionResult> Post([FromBody] TrabajoVM vm)
+    public async Task<IActionResult> Post([FromBody] TrabajoVM vm, [FromServices] IUserService userService)
     {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        var userId = userService.GetUserId(User);
+        if (!userId.HasValue)
+            return Unauthorized(new { mensaje = "" });
+
         Trabajo trabajo = Trabajo.From(vm);
-        trabajo.RegistradorId = 1;
+        trabajo.RegistradorId = userId.Value;
 
         try
         {
@@ -90,7 +101,6 @@ public class TrabajoController(ITrabajoRepository repo) : ControllerBase
     }
 
     [HttpPut("{id}")]
-	[ValidateAntiForgeryToken]
     public async Task<IActionResult> Put([FromRoute] long id, [FromBody] TrabajoVM vm)
     {
         if (id <= 0)
@@ -120,13 +130,25 @@ public class TrabajoController(ITrabajoRepository repo) : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    public async Task<IActionResult> Delete([FromRoute] long id)
+    [Authorize(Policy = "ADMIN")]
+    public async Task<IActionResult> Delete([FromRoute] long id, [FromServices] IUserService userService)
     {
         if (id <= 0)
             return BadRequest(new { mensaje = "id incorrecta" });
 
+        var userId = userService.GetUserId(User);
+        if (!userId.HasValue)
+            return Unauthorized(new { mensaje = "" });
+
         try
         {
+            Trabajo? trabajo = await _repo.GetByIdAsync(id);
+            if (trabajo == null)
+                return NotFound(new { mensaje = "" });
+
+            trabajo.AnuladorId = userId.Value;
+            trabajo.Anulado = true;
+            
             if (await _repo.DeleteAsync(id))
                 return Ok();
             else

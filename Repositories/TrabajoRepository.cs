@@ -66,11 +66,11 @@ public class TrabajoRepository(DBContext dbContext) : BaseRepository(dbContext),
 
     public async Task<bool> DeleteAsync(long id)
     {
-        Trabajo? trabajo = await GetByIdAsync(id);
+        // Trabajo? trabajo = await GetByIdAsync(id);
 
         try
         {
-            trabajo?.Anulado = true;
+            // trabajo?.Anulado = true;
             return await _context.SaveChangesAsync() > 0;
         }
         catch (OperationCanceledException ex)

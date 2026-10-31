@@ -69,4 +69,16 @@ public class Usuario
         Nombre = vm.Nombre;
         Apellido = vm.Apellido;
     }
+
+    public void UpdateFrom(UsuarioVM vm)
+    {
+        if (Username != vm.Username)
+            Username = vm.Username;
+        if (Rol != vm.Rol)
+            Rol = vm.Rol;
+        if (Nombre != vm.Nombre)
+            Nombre = vm.Nombre;
+        if (Apellido != vm.Apellido)
+            Apellido = vm.Apellido;
+    }
 }

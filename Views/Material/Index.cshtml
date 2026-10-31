@@ -14,6 +14,7 @@
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase
     };
     bool hayMensajeError = !string.IsNullOrWhiteSpace(ViewBag.MensajeError);
+    bool esAdmin = User.IsInRole("ADMIN");
 }
 
 <div id="app-materiales" class="container-fluid bg-light-subtle" v-cloak>
@@ -63,12 +64,15 @@
                                         @@click="abrirFormModal(m)" 
                                         data-bs-toggle="tooltip" data-bs-title="Editar"
                                     ></i>
-                                    <i 
-                                        :data-material-id="m.id" 
-                                        class="bi bi-trash fs-3 text-danger icon-hover" 
-                                        @@click="abrirModalEliminar(m.id)" 
-                                        data-bs-toggle="tooltip" data-bs-title="Eliminar"
-                                    ></i>
+                                    @if(esAdmin)
+                                    {
+                                        <i 
+                                            :data-material-id="m.id" 
+                                            class="bi bi-trash fs-3 text-danger icon-hover" 
+                                            @@click="abrirModalEliminar(m.id)" 
+                                            data-bs-toggle="tooltip" data-bs-title="Eliminar"
+                                        ></i>
+                                    }
                                 </div>
                             </td>
                         </tr>
@@ -101,7 +105,7 @@
         </div>
     </div>
 
-    <partial name="_ModalEliminar" model="mensajeEliminar"/>
+    @if(esAdmin) {<partial name="_ModalEliminar" model="mensajeEliminar"/>}
     <partial name="_FormModal" model="new MaterialVM()"/>
     <partial name="_ModalMensaje"/>
 </div>
@@ -112,7 +116,7 @@
             const { createApp } = Vue;
             let modalEliminar;
             let formModal;
-            let modalMonseaje;
+            let modalMensaje;
             const materialDefault = { id: 0, tipo: "", descripcion: "", precio: undefined, precioXkg: undefined, pesoXm2: undefined }
             const erroresMaterialDefault = { tipo: null, descripcion: null, precio: null, precioXkg: null, pesoXm2: null };
             createApp({
@@ -158,7 +162,7 @@
                     },
                     async hacerPeticion(url) {
                         try{
-                            const response = await fetch(url);
+                            const response = await fetch(url, { headers: { "Authorization": `Bearer ${sessionStorage.getItem("jwt")}` } });
                             if (response.ok) {
                                 return await response.json();
                             } else {
@@ -204,7 +208,10 @@
                         if (this.materialIdEliminar > 0) {
                             this.estaEliminando = true;
                             try {
-                                const response = await fetch(`${this.urlBase}/${this.materialIdEliminar}`, { method: "DELETE" });
+                                const response = await fetch(`${this.urlBase}/${this.materialIdEliminar}`, { 
+                                    method: "DELETE",
+                                    headers: { "Authorization": `Bearer ${sessionStorage.getItem("jwt")}` }
+                                });
                                 if (response.ok) {
                                     let url = `${this.urlBase}?Limit=${this.limit}&Pagina=${this.paginaActual}`;
                                     const data = await this.hacerPeticion(url);
@@ -255,7 +262,7 @@
                             method: "POST",
                             headers: { 
                                 'Content-Type': 'application/json',
-                                'RequestVerificationToken': document.getElementsByName("__RequestVerificationToken")?.item(0)?.value
+                                "Authorization": `Bearer ${sessionStorage.getItem("jwt")}`
                             },
                             body: JSON.stringify(this.material)
                         };
@@ -359,9 +366,9 @@
                     mostrarMensaje(mensaje, ok = true) {
                         this.mensaje = mensaje;
                         this.esMensajeError = !ok;
-                        if (!modalMonseaje)
-                            modalMonseaje = new bootstrap.Modal(document.getElementById('modal-mensaje'), {});
-                        modalMonseaje.show();
+                        if (!modalMensaje)
+                            modalMensaje = new bootstrap.Modal(document.getElementById('modal-mensaje'), {});
+                        modalMensaje.show();
                     },
                     inicializarTooltips() {
                         this.tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
