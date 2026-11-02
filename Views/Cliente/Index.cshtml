@@ -10,7 +10,7 @@
     int paginaSiguiente = pagina + 1;
     int limit = ViewBag.cantidadPaginado;
     string busqueda = ViewBag.busqueda ?? string.Empty;
-    string mensajeEliminar = "el Cliente";
+    string mensajeEliminar = "¿Eliminar el Cliente?";
     var serializationOptions = new JsonSerializerOptions {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase
     };
@@ -261,39 +261,36 @@
                     },
                     abrirModalEliminar(id) {
                         this.clienteIdEliminar = id;
-                        if (modalEliminar  == undefined)
+                        if (!modalEliminar)
                             modalEliminar = new bootstrap.Modal(document.getElementById('modal-eliminar'), {});
                         modalEliminar.show();
                     },
                     async eliminar() {
-                        if (this.clienteIdEliminar > 0) {
+                        if (this.clienteIdEliminar > 0 && !estaEliminando) {
+                            if (modalEliminar)
+                                modalEliminar.hide();
                             this.estaEliminando = true;
                             try {
-                                const response = await fetch(`${this.urlBase}/${this.clienteIdEliminar}`, { 
+                                let url = `${this.urlBase}/${this.clienteIdEliminar}?ReturnUpdated=true&Limit=${this.limit}&Pagina=${this.paginaActual}`;
+                                if (this.busqueda.length > 0)
+                                    url += `&Busqueda=${this.busqueda}`;
+                                const response = await fetch(url, { 
                                     method: "DELETE",
-                                    headers: { "Authorization": `Bearer ${sessionStorage.getItem("jwt")}` }
+                                    headers: { Authorization: `Bearer ${sessionStorage.getItem("jwt")}` }
                                 });
                                 if (response.ok) {
-                                    let url = `${this.urlBase}?Limit=${this.limit}&Pagina=${this.paginaActual}`;
-                                    if (this.busqueda.length > 0)
-                                        url += `&Busqueda=${this.busqueda}`;
-                                    const data = await this.hacerPeticion(url);
-                                    if (data) {
-                                        this.actualizarDOM(data, this.paginaActual);
-                                    }
+                                    const { listaActualizada } = await response.json();
+                                    this.clientes = listaActualizada;
                                     this.mostrarMensaje("Cliente eliminado");
                                 } else {
                                     const { mensaje } = await response.json();
-                                    this.mostrarMensaje(mensaje, false);
+                                    this.mostrarMensaje(mensaje ?? "No se pudo eliminar", false);
                                 }
-                            }
-                            catch {
+                            } catch {
                                 this.mostrarMensaje("Error al eliminar el cliente", false);
+                            } finally {
+                                this.estaEliminando = false;
                             }
-                            this.estaEliminando = false;
-
-                            if (modalEliminar != undefined)
-                                modalEliminar.hide();
                         }
                     },
                     abrirFormModal(cliente) {

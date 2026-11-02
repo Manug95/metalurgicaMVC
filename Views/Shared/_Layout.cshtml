@@ -40,8 +40,17 @@
                             <li class="nav-item@(linkActivo == "clientes" ? " active-link" : "")">
                                 <a class="nav-link text-dark nav-font" asp-area="" asp-controller="Cliente" asp-action="Index">Clientes</a>
                             </li>
-                            <li class="nav-item@(linkActivo == "trabajos" ? " active-link" : "")">
+                            @* <li class="nav-item@(linkActivo == "trabajos" ? " active-link" : "")">
                                 <a class="nav-link text-dark nav-font" asp-area="" asp-controller="Trabajo" asp-action="Index">Trabajos</a>
+                            </li> *@
+                            <li class="nav-item dropdown @(ViewBag?.linkActivo == "trabajos" ? "active-link" : "")">
+                                <a class="nav-link dropdown-toggle text-dark nav-font" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Trabajos
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item text-dark nav-font" asp-area="" asp-controller="Trabajo" asp-action="Index">Ver Listado</a></li>
+                                    <li><a class="dropdown-item text-dark nav-font" asp-area="" asp-controller="Trabajo" asp-action="Create">Nuevo</a></li>
+                                </ul>
                             </li>
                             <li class="nav-item@(linkActivo == "materiales" ? " active-link" : "")">
                                 <a class="nav-link text-dark nav-font" asp-area="" asp-controller="Material" asp-action="Index">Materiales</a>

@@ -61,9 +61,6 @@
                     <thead class="table-light border border-start-0 border-top-0 border-end-0 border-2 border-black">
                         <tr>
                             <th>
-                                @Html.DisplayNameFor(model => model.Id).ToUpper()
-                            </th>
-                            <th>
                                 @Html.DisplayNameFor(model => model.Cliente).ToUpper()
                             </th>
                             <th>
@@ -80,7 +77,6 @@
                     </thead>
                     <tbody id="cuerpo">
                         <tr :id="t.id" v-for="t in trabajos" :key="t.id">
-                            <td class="align-middle py-0 ps-2"> {{ t.id }} </td>
                             <td class="align-middle py-0 ps-2"> {{ getNombreCliente(t) }} </td>
                             <td class="align-middle py-0 ps-2"> {{ toLocalDate(t.fechaSolicitado) }} </td>
                             <td class="align-middle py-0 ps-2"> {{ formatImporte(t.importe) }} </td>
@@ -163,7 +159,8 @@
                         mensaje: "",
                         esMensajeError: false,
                         tooltipTriggerList: [],
-                        tooltipList: []
+                        tooltipList: [],
+                        formateador: new Intl.NumberFormat('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
                     }
                 },
                 methods: {
@@ -244,38 +241,36 @@
                     },
                     abrirModalEliminar(id) {
                         this.trabajoIdEliminar = id;
-                        if (modalEliminar  == undefined)
+                        if (!modalEliminar)
                             modalEliminar = new bootstrap.Modal(document.getElementById('modal-eliminar'), {});
                         modalEliminar.show();
                     },
                     async eliminar() {
-                        if (this.trabajoIdEliminar > 0) {
+                        if (this.trabajoIdEliminar > 0 && !estaEliminando) {
+                            if (modalEliminar)
+                                modalEliminar.hide();
                             this.estaEliminando = true;
                             try {
-                                const response = await fetch(`${this.urlBase}/${this.trabajoIdEliminar}`, { 
+                                let url = `${this.urlBase}/${this.trabajoIdEliminar}?ReturnUpdated=true&Limit=${this.limit}&Pagina=${this.paginaActual}`;
+                                if (this.busqueda.length > 0)
+                                    url += `&Cliente=${this.busqueda}`;
+                                const response = await fetch(url, { 
                                     method: "DELETE",
                                     headers: { Authorization: `Bearer ${sessionStorage.getItem("jwt")}` }
                                 });
                                 if (response.ok) {
-                                    let url = `${this.urlBase}?Limit=${this.limit}&Pagina=${this.paginaActual}`;
-                                    if (this.busqueda.length > 0)
-                                        url += `&Cliente=${this.busqueda}`;
-                                    const data = await this.hacerPeticion(url);
-                                    if (data) {
-                                        this.actualizarDOM(data, this.paginaActual);
-                                    }
+                                    const { listaActualizada } = await response.json();
+                                    this.trabajos = listaActualizada;
                                     this.mostrarMensaje("Trabajo eliminado");
                                 } else {
                                     const { mensaje } = await response.json();
-                                    this.mostrarMensaje(mensaje, false);
+                                    this.mostrarMensaje(mensaje ?? "No se pudo eliminar", false);
                                 }
-                            }
-                            catch {
+                            } catch {
                                 this.mostrarMensaje("Error al eliminar el trabajo", false);
+                            } finally {
+                                this.estaEliminando = false;
                             }
-                            this.estaEliminando = false;
-                            if (modalEliminar != undefined)
-                                modalEliminar.hide();
                         }
                     },
                     mostrarMensaje(mensaje, ok = true) {
@@ -289,7 +284,7 @@
                         return `${t.cliente.apellido}, ${t.cliente.nombre}`;
                     },
                     formatImporte(i) {
-                        return `$ ${i}`;
+                        return `$ ${this.formateador.format(i)}`;
                     },
                     toLocalDate(fechaUTC) {
                         const fecha = new Date(fechaUTC);

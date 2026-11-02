@@ -55,7 +55,7 @@
                             <td class="align-middle py-0 ps-2"> {{ m.id }} </td>
                             <td class="align-middle py-0 ps-2"> {{ m.tipo }} </td>
                             <td class="align-middle py-0 ps-2" colspan="2"> {{ m.descripcion }} </td>
-                            <td class="align-middle py-0 ps-2"> {{ m.precio }} </td>
+                            <td class="align-middle py-0 ps-2"> {{ formatPrecio(m.precio) }} </td>
                             <td>
                                 <div class="d-flex justify-content-evenly align-items-center">
                                     <i 
@@ -143,7 +143,8 @@
                         mensaje: "",
                         esMensajeError: false,
                         tooltipTriggerList: [],
-                        tooltipList: []
+                        tooltipList: [],
+                        formateador: new Intl.NumberFormat('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
                     };
                 },
                 methods: {
@@ -205,7 +206,9 @@
                         modalEliminar.show();
                     },
                     async eliminar() {
-                        if (this.materialIdEliminar > 0) {
+                        if (this.materialIdEliminar > 0 && !estaEliminando) {
+                            if (modalEliminar)
+                                modalEliminar.hide();
                             this.estaEliminando = true;
                             try {
                                 const response = await fetch(`${this.urlBase}/${this.materialIdEliminar}`, { 
@@ -221,16 +224,15 @@
                                     this.mostrarMensaje("Material eliminado");
                                 } else {
                                     const { mensaje } = await response.json();
-                                    this.mostrarMensaje(mensaje, false);
+                                    this.mostrarMensaje(mensaje ?? "No se pudo eliminar", false);
                                 }
                             }
                             catch {
                                 this.mostrarMensaje("Error al eliminar el material", false);
                             }
-                            this.estaEliminando = false;
-
-                            if (modalEliminar)
-                                modalEliminar.hide();
+                            finally {
+                                this.estaEliminando = false;
+                            }
                         }
                     },
                     abrirFormModal(material) {
@@ -373,6 +375,9 @@
                     inicializarTooltips() {
                         this.tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
                         this.tooltipList = [...this.tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
+                    },
+                    formatPrecio(p) {
+                        return `$ ${this.formateador.format(p)}`;
                     }
                 },
                 mounted() {

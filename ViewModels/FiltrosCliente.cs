@@ -6,4 +6,5 @@ public class FiltrosCliente : Paginado
 {
     [MaxLength(60, ErrorMessage = "La búsqueda acepta 60 caracteres máximo")]
     public string? Busqueda { get; set; }
+    public bool ReturnUpdated { get; set; } = false;
 }

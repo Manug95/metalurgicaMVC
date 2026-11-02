@@ -172,7 +172,13 @@
             <div class="row mt-4">
                 <div class="col">
                     <ul id="lista-detalles" class="list-group list-group-flush">
-                        <li class="list-group-item d-flex justify-content-between align-items-center" v-for="(i, index) in listaDetalle" :key="i.id">
+                        <li 
+                            class="list-group-item d-flex justify-content-between align-items-center" 
+                            :class="{ 'border border-warning-subtle': i.id==itemDetalle.id }"
+                            :class="{ 'border border-danger': i.hasError }"
+                            v-for="(i, index) in listaDetalle" 
+                            :key="i.id"
+                        >
                             <span>
                                 <i 
                                     class="bi bi-x-circle text-danger fw-bold me-2" 
@@ -197,6 +203,7 @@
                                         @@click="eliminarItemDetalle(i, index)"
                                     ></i>
                                 </span>
+                                <span class="ms-2 text-warning" v-show="i.id==itemDetalle.id">editando...</span>
                             </span>
                             <span class="badge text-bg-primary rounded-pill" v-if="i.cantidad">{{ i.cantidad }}</span>
                         </li>
@@ -282,13 +289,13 @@
                         <div class="row border-top position-relative">
                             <nav id="nav" class="border-top pt-3">
                                 <ul class="pagination justify-content-center">
-                                    <li id="flecha-pag-izq" class="page-item" :class="{ disabled: esPrimeraPaginaMateriales }" data-bs-toggle="tooltip" data-bs-title="Anterior">
+                                    <li id="flecha-pag-izq" class="page-item" :class="{ disabled: esPrimeraPaginaMateriales||cargandoMateriales }" data-bs-toggle="tooltip" data-bs-title="Anterior">
                                         <span @@click="getMateriales(paginaAnteriorMateriales)" class="page-link"><span>&laquo;</span></span>
                                     </li>
                                     <li class="page-item" v-for="p in cantidadPaginasMateriales">
-                                        <a  @@click="getMateriales(p)" class="page-link" :class="{ active: p == paginaActualMateriales, disabled: cantidadPaginasMateriales == 1 }">{{ p }}</a>
+                                        <a  @@click="getMateriales(p)" class="page-link" :class="{ active: p == paginaActualMateriales, disabled: cantidadPaginasMateriales == 1 || cargandoMateriales }">{{ p }}</a>
                                     </li>
-                                    <li id="flecha-pag-der" class="page-item" :class="{ disabled: esUltimaPaginaMateriales }" data-bs-toggle="tooltip" data-bs-title="Siguiente">
+                                    <li id="flecha-pag-der" class="page-item" :class="{ disabled: esUltimaPaginaMateriales||cargandoMateriales }" data-bs-toggle="tooltip" data-bs-title="Siguiente">
                                         <span @@click="getMateriales(paginaSiguienteMateriales)" class="page-link"><span>&raquo;</span></span>
                                     </li>
                                 </ul>
@@ -524,6 +531,7 @@
                         return "Requerido";
                     if (valor <= 0)
                         return "Debe ser mayor a 0";
+                    return;
                 },
                 borrarDetalle() {
                     this.listaDetalle = [];
@@ -603,7 +611,7 @@
                     this.importe.total = this.importe.monto + this.importe.iva;
                 },
                 async guadarTrabajo() {
-                    let hayErroresEnDetalles = true; // si el detalle puede estar vacio ponerlo en false
+                    let cantidadDetallesConError = 0;
                     this.listaDetalle.forEach(d => {
                         const estadosValidez = [];
                         if (d.material.tipo == "CHAPA") {
@@ -611,17 +619,15 @@
                             estadosValidez.push(this.validarNumeroMayorACero(d.largo));
                             estadosValidez.push(this.validarNumeroMayorACero(d.ancho));
                             estadosValidez.push(this.validarNumeroMayorACero(d.cantidad));
-                            d.hasError = estadosValidez.some(ev => ev !== undefined);
-                            hayErroresEnDetalles = hayErroresEnDetalles && d.hasError;
+                            d.hasError = estadosValidez.some(ev => ev);
                         } else if(d.material.tipo == "CAÑO") {
                             estadosValidez.push(this.validarNumeroMayorACero(d.largo));
                             estadosValidez.push(this.validarNumeroMayorACero(d.cantidad));
-                            d.hasError = estadosValidez.some(ev => ev !== undefined);
-                            hayErroresEnDetalles = hayErroresEnDetalles && d.hasError;
-                        } else 
-                            hayErroresEnDetalles = hayErroresEnDetalles && d.hasError;
+                            d.hasError = estadosValidez.some(ev => ev);
+                        }
+                        cantidadDetallesConError += d.hasError ? 1 : 0;
                     });
-                    if (!this.esTrabajoValido() || hayErroresEnDetalles || this.estaGuardando)
+                    if (!this.esTrabajoValido() || cantidadDetallesConError > 0 || this.estaGuardando)
                         return;
                     this.trabajo.clienteId = this.clienteSeleccionado.id;
                     this.trabajo.importe = this.importe.monto;
@@ -642,9 +648,9 @@
                         if (d.material.tipo == "CHAPA") {
                             item.kgPlegados = (( (d.largo/1000) * (d.ancho/1000) ) * d.material.pesoXm2) * d.cantidad;
                             item.tipoOperacionId = d.tipoOperacionId;
+                            item.precioTipoOperacion = this.tiposOperacion.find(to => to.id == d.tipoOperacionId)?.costoFijo;
                         }
                         item.precioMaterial = d.material.precio;
-                        item.precioTipoOperacion = this.tiposOperacion.find(to => to.id == d.tipoOperacionId).costoFijo;
                         return item;
                     });
                     try {
@@ -654,7 +660,7 @@
                             body: JSON.stringify(this.trabajo),
                             headers: {
                                 'Content-Type': 'application/json',
-                                "Authorization": `Bearer ${sessionStorage.getItem("jwt")}`
+                                Authorization: `Bearer ${sessionStorage.getItem("jwt")}`
                             }
                         };
                         if (this.trabajo.id > 0) {
@@ -665,15 +671,14 @@
                             fetchOptions.method = "POST";
                         const response = await fetch(url, fetchOptions);
                         if (response.ok) {
-                            if (trabajoId == 0) {
+                            if (this.trabajo.id == 0) {
                                 const { trabajo } = await response.json();
-                                this.trabajoId = trabajo.id;
+                                this.trabajo.id = trabajo.id;
                             }
-                            this.mostrarMensaje("Trabajo Guardado");
+                            this.mostrarMensaje(`Trabajo ${fetchOptions.method == "PUT" ? "Actualizado" : "Guardado" }`);
                         } else {
                             const { mensaje, errors } = await response.json();
-                            if (mensaje)
-                                this.mostrarMensaje(mensaje, false);
+                            this.mostrarMensaje(mensaje ?? "No se pudo Guardar/Actualizar", false);
                             if (errors) {
                                 Object.keys(errors).forEach(e => {
                                     this.erroresTrabajo[e[0].toLowerCase()+e.substring(1)] = errors[e].join(", ");
@@ -681,7 +686,7 @@
                             }
                         }
                     } catch {
-                        this.mostrarMensaje(`Se produjo un error al ${this.trabajo.id > 0 ? "Actualizar" : "Guardar" } el trabajo`, false);
+                        this.mostrarMensaje(`Se produjo un error al ${fetchOptions.method == "PUT" ? "Actualizar" : "Guardar" } el trabajo`, false);
                     } finally {
                         this.estaGuardando = false;
                     }
@@ -749,6 +754,7 @@
                 }
             },
             mounted() {
+                const splitFecha = (f) => f?.split("T")[0];
                 if (this.trabajo.id > 0) {
                     this.listaDetalle = this.trabajo.detalles.map(d => {
                         d.hasError = false;
@@ -757,14 +763,14 @@
                     this.calcularPrecio(this.trabajo.importe);
                     this.clienteSeleccionado = this.trabajo.cliente;
                     this.search = `${this.trabajo.cliente.apellido}, ${this.trabajo.cliente.nombre}`;
-                    this.trabajo.fechaSolicitado = this.trabajo.fechaSolicitado?.split("T")[0];
-                    this.trabajo.fechaIniciado = this.trabajo.fechaIniciado?.split("T")[0];
-                    this.trabajo.fechaFinalizado = this.trabajo.fechaFinalizado?.split("T")[0];
-                    this.trabajo.fechaRetirado = this.trabajo.fechaRetirado?.split("T")[0];
+                    this.trabajo.fechaSolicitado = splitFecha(this.trabajo.fechaSolicitado);
+                    this.trabajo.fechaIniciado = splitFecha(this.trabajo.fechaIniciado);
+                    this.trabajo.fechaFinalizado = splitFecha(this.trabajo.fechaFinalizado);
+                    this.trabajo.fechaRetirado = splitFecha(this.trabajo.fechaRetirado);
                 } else {
-                    this.trabajo.fechaSolicitado = new Date().toJSON().split("T")[0];
+                    this.trabajo.fechaSolicitado = splitFecha(new Date().toJSON());
                 }
-                this.inicializarTooltips();
+                setTimeout(() => { this.inicializarTooltips(); }, 1000+(this.listaDetalle.length*100));
             }
         }).mount("#app");
     </script>

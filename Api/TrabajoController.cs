@@ -131,7 +131,7 @@ public class TrabajoController(ITrabajoRepository repo) : ControllerBase
 
     [HttpDelete("{id}")]
     [Authorize(Policy = "ADMIN")]
-    public async Task<IActionResult> Delete([FromRoute] long id, [FromServices] IUserService userService)
+    public async Task<IActionResult> Delete([FromRoute] long id, [FromQuery] FiltrosTrabajo filters, [FromServices] IUserService userService)
     {
         if (id <= 0)
             return BadRequest(new { mensaje = "id incorrecta" });
@@ -150,7 +150,17 @@ public class TrabajoController(ITrabajoRepository repo) : ControllerBase
             trabajo.Anulado = true;
             
             if (await _repo.DeleteAsync(id))
-                return Ok();
+            {
+                if (filters.ReturnUpdated)
+                {
+                    var trabajos = await _repo.ListAsync(filters);
+                    return Ok(new { listaActualizada = TrabajoVM.FromList(trabajos) });
+                }
+                else
+                {
+                    return Ok();
+                }
+            }
             else
                 return BadRequest(new { mensaje = "No se pudo borrar el trabajo" });
         }

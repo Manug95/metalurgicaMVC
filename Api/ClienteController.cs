@@ -130,7 +130,7 @@ public class ClienteController(IClienteRepository repo) : ControllerBase
 
     [HttpDelete("{id}")]
     [Authorize(Policy = "ADMIN")]
-    public async Task<IActionResult> Delete([FromRoute] int id)
+    public async Task<IActionResult> Delete([FromRoute] int id, [FromQuery] FiltrosCliente filters)
     {
         if (id <= 0)
             return BadRequest(new { mensaje = "id incorrecta" });
@@ -138,7 +138,17 @@ public class ClienteController(IClienteRepository repo) : ControllerBase
         try
         {
             if (await _repo.DeleteAsync(id))
-                return Ok();
+            {
+                if (filters.ReturnUpdated)
+                {
+                    var clientes = await _repo.ListAsync(filters);
+                    return Ok(new { listaActualizada = ClienteVM.FromList(clientes) });
+                } 
+                else
+                {
+                    return Ok();
+                }
+            }
             else
                 return BadRequest(new { mensaje = "No se pudo borrar el cliente" });
         }

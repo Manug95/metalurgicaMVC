@@ -21,8 +21,6 @@ public class Trabajo
 
     public string? Descripcion { get; set; }
 
-    // public string? Observacion { get; set; }
-
     public string? Estado { get; set; }
 
     public int ClienteId { get; set; }
@@ -57,12 +55,11 @@ public class Trabajo
             FechaFinalizado = vm.FechaFinalizado,
             Importe = vm.Importe,
             Descripcion = vm.Descripcion,
-            // Observacion = vm.Observacion,
             Estado = vm.Estado
         };
 
         if (vm.Fotos != null)
-            trabajo.Fotos = Foto.FromList(vm.Fotos);
+            trabajo.Fotos = vm.Fotos;
         if (vm.Detalles != null)
             trabajo.Detalles = Detalle.FromList(vm.Detalles);
         if (vm.Anulador != null)
@@ -102,8 +99,6 @@ public class Trabajo
             Estado = vm.Estado;
         if (vm.Descripcion != Descripcion)
             Descripcion = vm.Descripcion;
-        // if (vm.Observacion != Observacion)
-        //     Observacion = vm.Observacion;
         if (vm.Detalles != null)
         {
             foreach (var dVM in vm.Detalles)
