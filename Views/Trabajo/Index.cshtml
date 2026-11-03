@@ -246,7 +246,7 @@
                         modalEliminar.show();
                     },
                     async eliminar() {
-                        if (this.trabajoIdEliminar > 0 && !estaEliminando) {
+                        if (this.trabajoIdEliminar > 0 && !this.estaEliminando) {
                             if (modalEliminar)
                                 modalEliminar.hide();
                             this.estaEliminando = true;

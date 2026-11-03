@@ -193,7 +193,7 @@
                         modalEliminar.show();
                     },
                     async eliminar() {
-                        if (this.tipoOperacionIdEliminar > 0 && !estaEliminando) {
+                        if (this.tipoOperacionIdEliminar > 0 && !this.estaEliminando) {
                             if (modalEliminar)
                                 modalEliminar.hide();
                             this.estaEliminando = true;

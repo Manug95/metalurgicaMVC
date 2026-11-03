@@ -75,7 +75,7 @@ public class TrabajoController(ITrabajoRepository repo) : ControllerBase
 
         var userId = userService.GetUserId(User);
         if (!userId.HasValue)
-            return Unauthorized(new { mensaje = "" });
+            return Unauthorized(new { mensaje = "sin permisos" });
 
         Trabajo trabajo = Trabajo.From(vm);
         trabajo.RegistradorId = userId.Value;
@@ -138,7 +138,7 @@ public class TrabajoController(ITrabajoRepository repo) : ControllerBase
 
         var userId = userService.GetUserId(User);
         if (!userId.HasValue)
-            return Unauthorized(new { mensaje = "" });
+            return Unauthorized(new { mensaje = "sin permisos" });
 
         try
         {

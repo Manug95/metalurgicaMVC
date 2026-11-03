@@ -99,6 +99,7 @@ public class UsuarioController(
             if ((await _repo.CreateAsync(usuario)) > 0)
             {
                 vm.Id = usuario.Id;
+                vm.Activo = true;
                 return Created($"api/usuarios/{usuario.Id}", new { usuario = vm });
             }
             else
@@ -178,10 +179,8 @@ public class UsuarioController(
             return BadRequest(new { mensaje = "id incorrecta" });
 
         var userId = _userService.GetUserId(User);
-        if (!userId.HasValue)
-            return Unauthorized();
-        if (!User.IsInRole("ADMIN") && (userId.Value != id))
-            return Unauthorized(new { mensaje = "Usuario equivocado" });
+        if (!userId.HasValue || (!User.IsInRole("ADMIN") && userId.Value != id))
+            return Unauthorized(new { mensaje = "Sin permisos" });
 
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
@@ -226,10 +225,9 @@ public class UsuarioController(
             return BadRequest(new { mensaje = "id incorrecta" });
 
         var userId = _userService.GetUserId(User);
-        if (!userId.HasValue)
-            return Unauthorized();
-        if (!User.IsInRole("ADMIN") && (userId.Value != id))
-            return Unauthorized(new { mensaje = "Usuario equivocado" });
+        var esAdmin = User.IsInRole("ADMIN");
+        if (!userId.HasValue || (!esAdmin && userId.Value != id))
+            return Unauthorized(new { mensaje = "Sin permisos" });
 
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
@@ -243,11 +241,43 @@ public class UsuarioController(
             usuario.Username = vm.Username;
             usuario.Nombre = vm.Nombre;
             usuario.Apellido = vm.Apellido;
-            if (User.IsInRole("ADMIN"))
+            if (esAdmin && !string.IsNullOrWhiteSpace(vm.Rol))
                 usuario.Rol = vm.Rol;
 
             if (await _repo.UpdateAsync(usuario))
+            {
+                if (userId.Value == id)
+                {
+                    if (User.Identity is ClaimsIdentity identity)
+                    {
+                        var claimUsername = identity.FindFirst(ClaimTypes.Name);
+                        var claimFullName = identity.FindFirst("FullName");
+                        var claimRol = identity.FindFirst(ClaimTypes.Role);
+                        if (claimFullName != null)
+                        {
+                            identity.RemoveClaim(claimFullName);
+                            var newClaim = new Claim("FullName", $"{usuario.Apellido}, {usuario.Nombre}");
+                            identity.AddClaim(newClaim);
+                        }
+                        if (claimUsername != null)
+                        {
+                            identity.RemoveClaim(claimUsername);
+                            var newClaim = new Claim(ClaimTypes.Name, usuario.Username ?? "Usuario");
+                            identity.AddClaim(newClaim);
+                        }
+                        if (claimRol != null)
+                        {
+                            identity.RemoveClaim(claimRol);
+                            var newClaim = new Claim(ClaimTypes.Role, usuario.Rol ?? "");
+                            identity.AddClaim(newClaim);
+                        }
+                        await HttpContext.SignInAsync(
+                            CookieAuthenticationDefaults.AuthenticationScheme,
+                            new ClaimsPrincipal(identity));
+                    }
+                }
                 return Ok();
+            }
             else
                 return BadRequest(new { mensaje = "No se pudo actualizar el usuario" });
         }
@@ -256,6 +286,10 @@ public class UsuarioController(
             return BadRequest(new { mensaje = ex.Message });
         }
         catch (AppException)
+        {
+            return StatusCode(500, new { mensaje = "Error interno del servidor" });
+        }
+        catch (Exception)
         {
             return StatusCode(500, new { mensaje = "Error interno del servidor" });
         }
@@ -268,10 +302,8 @@ public class UsuarioController(
             return BadRequest(new { mensaje = "id incorrecta" });
 
         var userId = _userService.GetUserId(User);
-        if (!userId.HasValue)
-            return Unauthorized();
-        if (!User.IsInRole("ADMIN") && (userId.Value != id))
-            return Unauthorized(new { mensaje = "Usuario equivocado" });
+        if (!userId.HasValue || (!User.IsInRole("ADMIN") && userId.Value != id))
+            return Unauthorized(new { mensaje = "Sin permisos" });
 
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
@@ -291,7 +323,22 @@ public class UsuarioController(
             usuario.Avatar = await fileService.SaveAvatar(vm.AvatarFile, $"avatar_{usuario.Id}_{DateTime.Now.Ticks}");
 
             if (await _repo.UpdateAsync(usuario))
+            {
+                if (userId.Value == id)
+                {
+                    if (User.Identity is ClaimsIdentity identity)
+                    {
+                        var claimAvatar = identity.FindFirst(ClaimTypes.Uri);
+                        if (claimAvatar != null)
+                        {
+                            identity.RemoveClaim(claimAvatar);
+                            var newClaim = new Claim("FullName", usuario.Avatar);
+                            identity.AddClaim(newClaim);
+                        }
+                    }
+                }
                 return Ok(new { avatar = usuario.Avatar });
+            }
             else
                 return BadRequest(new { mensaje = "No se pudo actualizar la foto de perfil" });
         }
@@ -300,6 +347,10 @@ public class UsuarioController(
             return BadRequest(new { mensaje = ex.Message });
         }
         catch (AppException)
+        {
+            return StatusCode(500, new { mensaje = "Error interno del servidor" });
+        }
+        catch (Exception)
         {
             return StatusCode(500, new { mensaje = "Error interno del servidor" });
         }
@@ -312,10 +363,8 @@ public class UsuarioController(
             return BadRequest(new { mensaje = "id incorrecta" });
 
         var userId = _userService.GetUserId(User);
-        if (!userId.HasValue)
-            return Unauthorized();
-        if (!User.IsInRole("ADMIN") && (userId.Value != id))
-            return Unauthorized(new { mensaje = "Usuario equivocado" });
+        if (!userId.HasValue || (!User.IsInRole("ADMIN") && userId.Value != id))
+            return Unauthorized(new { mensaje = "Sin permisos" });
 
         try
         {

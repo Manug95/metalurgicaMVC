@@ -140,7 +140,6 @@
 
 
 @section Scripts {
-    @* <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script> *@
     <script>
 
         document.addEventListener("DOMContentLoaded", _ => {
@@ -148,13 +147,13 @@
             let modalEliminar;
             let formModal;
             let modalMensaje;
-            const usuarioDefault = { id: 0, username: "", password: "", rol: "", avatar: "", nombre: "", apellido: "" };
+            const usuarioDefault = { id: 0, username: "", password: "", rol: "", avatar: null, nombre: "", apellido: "" };
             const erroresUsuarioDefault = { username: null, password: null, rol: null, nombre: null, apellido: null };
             createApp({
                 data() {
                     return {
                         usuarios: @Html.Raw(JsonSerializer.Serialize(Model, serializationOptions)),
-                        urlBase: "api/usuarios",
+                        urlBase: "/api/usuarios",
                         opcionesFetch: { 
                             method: "POST",
                             headers: { 
@@ -271,7 +270,7 @@
                         modalEliminar.show();
                     },
                     async eliminar() {
-                        if (this.usuarioIdEliminar > 0 && !estaEliminando) {
+                        if (this.usuarioIdEliminar > 0 && !this.estaEliminando) {
                             if (modalEliminar)
                                 modalEliminar.hide();
                             this.estaEliminando = true;
@@ -401,7 +400,7 @@
                         if (u.avatar && u.avatar.length > 0)
                             return u.avatar;
                         else
-                            return `https://ui-avatars.com/api/?name=${u.nombre}+${u.apellido}&background=random&rounded=true)`;
+                            return `https://ui-avatars.com/api/?name=${u.apellido}+${u.nombre}&background=random&rounded=true)`;
                     },
                     inicializarTooltips() {
                         this.tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');

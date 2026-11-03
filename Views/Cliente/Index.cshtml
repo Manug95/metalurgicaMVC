@@ -154,7 +154,7 @@
                 data() {
                     const estadoApp = {
                         clientes: @Html.Raw(JsonSerializer.Serialize(Model, serializationOptions)),
-                        urlBase: "api/clientes",
+                        urlBase: "/api/clientes",
                         limit: @limit,
                         paginaActual: @pagina,
                         busqueda: "@busqueda",
@@ -266,7 +266,7 @@
                         modalEliminar.show();
                     },
                     async eliminar() {
-                        if (this.clienteIdEliminar > 0 && !estaEliminando) {
+                        if (this.clienteIdEliminar > 0 && !this.estaEliminando) {
                             if (modalEliminar)
                                 modalEliminar.hide();
                             this.estaEliminando = true;

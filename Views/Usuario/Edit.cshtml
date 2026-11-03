@@ -333,7 +333,12 @@
                             try{
                                 const response = await fetch(url, this.opcionesFetch);
                                 if (response.ok) {
-                                    @* const data = await response.json(); *@
+                                    const spanUsername = document.getElementById("nav_username");
+                                    if (spanUsername)
+                                        spanUsername.innerText = this.editUsuario.username;
+                                    const spanFullname = document.getElementById("nav_fullname");
+                                    if (spanFullname)
+                                        spanFullname.innerText = `${this.editUsuario.apellido}, ${this.editUsuario.nombre}`;
                                     this.mostrarMensaje("Datos de Usuario Actualizados");
                                 } else {
                                     const { mensaje, errors } = await response.json();
@@ -373,7 +378,6 @@
                             try{
                                 const response = await fetch(url, this.opcionesFetch);
                                 if (response.ok) {
-                                    @* const data = await response.json(); *@
                                     this.editPassword = { ...editPasswordDefault };
                                     this.mostrarMensaje("Contraseña Actualizada");
                                 } else {
@@ -427,6 +431,9 @@
                             const response = await fetch(url, opFectch);
                             if (response.ok) {
                                 const { avatar } = await response.json();
+                                const imgAvatar = document.getElementById("nav_avatar");
+                                if (imgAvatar)
+                                    imgAvatar.src = avatar;
                                 this.editAvatar = { avatarFile: null, avatar };
                                 this.erroresEditAvatar = { ...erroresEditAvatarDefault };
                                 this.mostrarMensaje("Foto de Perfil Actualizada");
@@ -470,7 +477,10 @@
                                 headers: { "Authorization": `Bearer ${sessionStorage.getItem("jwt")}` }
                             });
                             if (response.ok) {
-                                this.editAvatar.avatar = null;
+                                const imgAvatar = document.getElementById("nav_avatar");
+                                if (imgAvatar)
+                                    imgAvatar.src = `https://ui-avatars.com/api/?name=${this.editUsuario.apellido}+${this.editUsuario.nombre}&background=random&rounded=true`;
+                                this.editAvatar.avatar = "";
                                 this.mostrarMensaje("Foto de Perfil Eliminada");
                             } else {
                                 const { mensaje, errors } = await response.json();

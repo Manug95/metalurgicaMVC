@@ -64,7 +64,7 @@ public class UsuarioController(IUsuarioRepository repo, IConfiguration config) :
         }
 
         var userId = userService.GetUserId(User);
-        if (userId.HasValue && userId.Value != id)
+        if (!userId.HasValue || (!User.IsInRole("ADMIN") && userId.Value != id))
         {
             Response.StatusCode = StatusCodes.Status403Forbidden;
             return View("Unauthorized");

@@ -40,9 +40,6 @@
                             <li class="nav-item@(linkActivo == "clientes" ? " active-link" : "")">
                                 <a class="nav-link text-dark nav-font" asp-area="" asp-controller="Cliente" asp-action="Index">Clientes</a>
                             </li>
-                            @* <li class="nav-item@(linkActivo == "trabajos" ? " active-link" : "")">
-                                <a class="nav-link text-dark nav-font" asp-area="" asp-controller="Trabajo" asp-action="Index">Trabajos</a>
-                            </li> *@
                             <li class="nav-item dropdown @(ViewBag?.linkActivo == "trabajos" ? "active-link" : "")">
                                 <a class="nav-link dropdown-toggle text-dark nav-font" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                     Trabajos
@@ -68,17 +65,23 @@
                             <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                                 @{
                                     string? avatarURL = user?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Uri)?.Value;
-                                    string username = indentity?.Name ?? "Usuario";
+                                    string? username = user?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value;
+                                    var fullname = user?.Claims.FirstOrDefault(c => c.Type == "FullName");
+                                    string nombre = fullname != null ? fullname.Value.Split(", ")[0] : "Nombre";
+                                    string apellido = fullname != null ? fullname.Value.Split(", ")[1] : "Apellido";
                                 }
-                                <span class="pe-3 ps-1 fs-5 nav-font">@username</span>
-                                @if (avatarURL != null && avatarURL.Length > 0) {
-                                    <img width="32" src="@avatarURL" alt="" class="rounded-circle" asp-append-version="true" >
-                                } else {
-                                    <img width="32" src="https://ui-avatars.com/api/?name=@(username)&background=random&rounded=true" alt="" asp-append-version="true" >
-                                }
+                                <span id="nav_username" class="pe-3 ps-1 fs-5 nav-font">@(username??"Usuario")</span>
+                                <img 
+                                    id="nav_avatar" 
+                                    width="32" 
+                                    src="@(avatarURL != null && avatarURL.Length > 0 ? avatarURL : $"https://ui-avatars.com/api/?name={apellido}+{nombre}&background=random&rounded=true")" 
+                                    alt="" 
+                                    class="rounded-circle" 
+                                    asp-append-version="true"
+                                >
                             </button>
                             <ul class="dropdown-menu">
-                                <li><span class="dropdown-item">@(User.Claims.FirstOrDefault(c => c.Type == "FullName")?.Value ?? "nombre completo")</span></li>
+                                <li><span id="nav_fullname" class="dropdown-item">@(User.Claims.FirstOrDefault(c => c.Type == "FullName")?.Value ?? "nombre completo")</span></li>
                                 <li><hr class="dropdown-divider"></li>
                                 @{string? id = User.Claims.FirstOrDefault(c => c.Type == "id")?.Value;}
                                 <li><a class="dropdown-item nav-font" asp-area="" asp-controller="Usuario" asp-action="Edit" asp-route-id="@id">Actualizar Perfil</a></li>
