@@ -80,6 +80,12 @@ public class ClienteController(IClienteRepository repo) : ControllerBase
             return BadRequest(ModelState);
 
         Cliente cliente = Cliente.From(vm);
+        if (string.IsNullOrWhiteSpace(cliente.Telefono))
+            cliente.Telefono = null;
+        if (string.IsNullOrWhiteSpace(cliente.Direccion))
+            cliente.Direccion = null;
+        if (string.IsNullOrWhiteSpace(cliente.Cuit))
+            cliente.Cuit = null;
 
         try
         {
@@ -111,6 +117,13 @@ public class ClienteController(IClienteRepository repo) : ControllerBase
             return BadRequest(ModelState);
             
         vm.Id = id;
+        if (string.IsNullOrWhiteSpace(vm.Telefono))
+            vm.Telefono = null;
+        if (string.IsNullOrWhiteSpace(vm.Direccion))
+            vm.Direccion = null;
+        if (string.IsNullOrWhiteSpace(vm.Cuit))
+            vm.Cuit = null;
+
         try
         {
             if (await _repo.UpdateAsync(Cliente.From(vm)))
