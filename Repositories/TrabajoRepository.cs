@@ -15,13 +15,15 @@ public class TrabajoRepository(DBContext dbContext) : BaseRepository(dbContext),
         {
             IQueryable<Trabajo> trabajos = _context.Trabajos;
 
-            // if (!string.IsNullOrWhiteSpace(filters.Busqueda))
-            // {
-            //     return await empleados
-            //         .CountAsync(e => EF.Functions.Like(e.Nombre, $"{filters.Busqueda}%") || EF.Functions.Like(e.Apellido, $"{filters.Busqueda}%"));
-            // }
-            // else
-                return await trabajos.CountAsync();
+            if (!string.IsNullOrWhiteSpace(filters.Cliente))
+            {
+                return await trabajos
+                    .Include(t => t.Cliente)
+                    .Where(t => EF.Functions.Like(t.Cliente!.Nombre, $"{filters.Cliente}%") || EF.Functions.Like(t.Cliente!.Apellido, $"{filters.Cliente}%"))
+                    .LongCountAsync();
+            }
+            else
+                return await trabajos.LongCountAsync();
         }
         catch (OperationCanceledException ex)
         {
